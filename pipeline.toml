@@ -1,0 +1,11 @@
+# The shape of the pipeline. This file, not the code, decides what runs.
+#
+# - Add a stage: write its file in a plugin package, then add its name below.
+# - Remove a stage: delete its name. If a later stage needs an artifact that
+#   only the removed stage produced, the pipeline refuses to start and names both.
+# - Settings for one stage go in an [options.<stage>] table; it reaches the
+#   stage as ctx.options. A switched-off stage may keep its table.
+
+[pipeline]
+stages = []    # in run order; the first real stages arrive in step 6
+plugins = []   # packages whose modules register stages, e.g. "irpipe.frontend"

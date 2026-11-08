@@ -31,7 +31,7 @@ irpipe = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --import-mode=importlib"
 markers = [
     "manim: needs Manim and LaTeX installed (slow)",
 ]
