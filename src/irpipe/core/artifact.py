@@ -19,6 +19,9 @@ from typing import Generic, TypeVar
 # syntax, mypy infers this frozen dataclass as covariant and then accepts
 # ``ctx.write(COUNT, "three")`` by widening T to ``object``. An invariant T keeps
 # writing the wrong type a static error as well as a runtime one.
+# The price: mypy infers T from the surrounding call when a read is passed
+# straight into a generic function, so ``enumerate(ctx.read(WORDS))`` fails to
+# type-check. Assign the read to a variable first: ``words = ctx.read(WORDS)``.
 T = TypeVar("T")
 
 

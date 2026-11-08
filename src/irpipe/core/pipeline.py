@@ -10,9 +10,16 @@ stages in order and refuses to start when
 Every error names the stage and the artifact. While running, each stage gets a
 ``StageContext`` that enforces its declared reads and writes.
 
+A stage either writes everything it promised, or reports at least one error
+that says why it could not. In the second case the run stops after that stage
+(``RunResult.stopped_at``), since the stages after it would lack their input.
+A stage that reports errors but still writes its outputs (a lint check, say)
+does not stop the run, so a picture with problems is still drawn.
+
     pipeline = Pipeline.build(["validate", "resolve"], inputs=[IR])
     result = pipeline.run({IR: ir_document})
     lir = result.get(LIR)
+    report = Report.build(result.issues, stopped_at=result.stopped_at)
 """
 
 import time
@@ -30,6 +37,7 @@ from irpipe.core.errors import (
     StageContractError,
     StageFailedError,
 )
+from irpipe.core.issues import ISSUE_CODES, Issue, IssueCode, Severity
 from irpipe.core.plugins import load_plugins
 from irpipe.core.registry import Registry
 from irpipe.core.stage import STAGES, Stage
@@ -47,15 +55,25 @@ class StageRun:
 
 @dataclass(frozen=True)
 class RunResult:
-    """Everything a run produced: all artifacts, and the stages in the order they ran."""
+    """Everything a run produced.
+
+    ``stages`` lists the stages that ran, in order; ``issues`` every issue they
+    reported; ``stopped_at`` the stage the run stopped after, or ``None`` when
+    every stage ran.
+    """
 
     artifacts: Mapping[str, object]
     stages: tuple[StageRun, ...]
+    issues: tuple[Issue, ...] = ()
+    stopped_at: str | None = None
 
     def get[T](self, key: ArtifactKey[T]) -> T:
         """The artifact ``key``, type-checked."""
         if key.name not in self.artifacts:
-            raise KeyError(f"the run produced no artifact '{key}'")
+            message = f"the run produced no artifact '{key}'"
+            if self.stopped_at is not None:
+                message += f" (it stopped after stage '{self.stopped_at}')"
+            raise KeyError(message)
         value = self.artifacts[key.name]
         if not isinstance(value, key.value_type):
             raise TypeError(f"artifact '{key}' is a {type(value).__name__}")
@@ -70,10 +88,12 @@ class Pipeline:
         stages: Sequence[Stage],
         inputs: Iterable[ArtifactKey[Any]],
         options: StageOptions | None = None,
+        codes: Registry[IssueCode] = ISSUE_CODES,
     ) -> None:
         self._stages = tuple(stages)
         self._inputs = tuple(inputs)
         self._options = {name: dict(values) for name, values in (options or {}).items()}
+        self._codes = codes
         _check_chain(self._stages, self._inputs)
 
     @classmethod
@@ -84,6 +104,7 @@ class Pipeline:
         inputs: Iterable[ArtifactKey[Any]],
         options: StageOptions | None = None,
         registry: Registry[type[Stage]] = STAGES,
+        codes: Registry[IssueCode] = ISSUE_CODES,
     ) -> "Pipeline":
         """Look the stages up by name and create the pipeline.
 
@@ -94,7 +115,7 @@ class Pipeline:
         for name in options or {}:
             registry.get(name)  # raises UnknownPluginError, with a "did you mean"
         stages = [registry.get(name)() for name in stage_names]
-        return cls(stages, inputs, options)
+        return cls(stages, inputs, options, codes)
 
     @classmethod
     def from_config(
@@ -103,11 +124,16 @@ class Pipeline:
         *,
         inputs: Iterable[ArtifactKey[Any]],
         registry: Registry[type[Stage]] = STAGES,
+        codes: Registry[IssueCode] = ISSUE_CODES,
     ) -> "Pipeline":
         """Import the configured plugin packages, then build the configured stages."""
         load_plugins(config.pipeline.plugins)
         return cls.build(
-            config.pipeline.stages, inputs=inputs, options=config.options, registry=registry
+            config.pipeline.stages,
+            inputs=inputs,
+            options=config.options,
+            registry=registry,
+            codes=codes,
         )
 
     @property
@@ -119,9 +145,10 @@ class Pipeline:
         return self._inputs
 
     def run(self, inputs: Mapping[ArtifactKey[Any], object]) -> RunResult:
-        """Run every stage in order on the given input artifacts."""
+        """Run the stages in order; stop after a stage that could not write its outputs."""
         artifacts = self._take_inputs(inputs)
         runs: list[StageRun] = []
+        issues: list[Issue] = []
         for stage in self._stages:
             ctx = StageContext(
                 stage.name,
@@ -129,6 +156,7 @@ class Pipeline:
                 readable=stage.requires,
                 writable=stage.provides,
                 options=self._options.get(stage.name, {}),
+                codes=self._codes,
             )
             started = time.perf_counter()
             try:
@@ -137,13 +165,20 @@ class Pipeline:
                 raise
             except Exception as exc:
                 raise StageFailedError(stage.name, exc) from exc
-            missing = ctx.unwritten()
-            if missing:
-                raise StageContractError(
-                    f"stage '{stage.name}' finished without writing {', '.join(missing)}"
-                )
             runs.append(StageRun(stage.name, time.perf_counter() - started))
-        return RunResult(MappingProxyType(artifacts), tuple(runs))
+            issues.extend(ctx.issues)
+            missing = ctx.unwritten()
+            if not missing:
+                continue
+            if not any(issue.severity is Severity.ERROR for issue in ctx.issues):
+                raise StageContractError(
+                    f"stage '{stage.name}' finished without writing {', '.join(missing)} "
+                    "and reported no error that says why"
+                )
+            return RunResult(
+                MappingProxyType(artifacts), tuple(runs), tuple(issues), stopped_at=stage.name
+            )
+        return RunResult(MappingProxyType(artifacts), tuple(runs), tuple(issues))
 
     def _take_inputs(self, inputs: Mapping[ArtifactKey[Any], object]) -> dict[str, object]:
         expected = {key.name for key in self._inputs}

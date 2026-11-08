@@ -1,22 +1,31 @@
 """Pipeline: building checks the chain of stages; running enforces each stage's contract.
 
 The toy stages split a sentence into words and count them. They stand in for
-real stages (validate, resolve...) that arrive in later steps.
+real stages (validate, resolve...) that arrive in later steps. ``split``
+reports an error and writes nothing for an empty sentence, the way validate
+will for a broken IR.
 """
 
 import pytest
 
 from irpipe.core import (
     ArtifactKey,
+    Issue,
+    IssueCode,
+    Origin,
     Pipeline,
     PipelineConfig,
     PipelineConfigError,
     Registry,
+    Report,
+    Severity,
     Stage,
     StageContext,
     StageContractError,
     StageFailedError,
+    Status,
     UnknownPluginError,
+    make_issue_code_registry,
     make_stage_registry,
 )
 
@@ -26,6 +35,11 @@ COUNT = ArtifactKey("count", int, "how many words")
 
 SENTENCE = "a picture is worth a thousand words"
 
+CODES = make_issue_code_registry()
+E_NO_WORDS = CODES.register(IssueCode("E-NO-WORDS", Origin.IR, "the sentence has no words"))
+W_SHORT = CODES.register(IssueCode("W-SHORT", Origin.IR, "the sentence is short"))
+E_LONG_WORD = CODES.register(IssueCode("E-LONG-WORD", Origin.IR, "a word is too long"))
+
 
 class Split(Stage):
     name = "split"
@@ -33,7 +47,26 @@ class Split(Stage):
     provides = (WORDS,)
 
     def run(self, ctx: StageContext) -> None:
-        ctx.write(WORDS, tuple(ctx.read(TEXT).split()))
+        words = tuple(ctx.read(TEXT).split())
+        if not words:
+            ctx.report(E_NO_WORDS("the text is empty", path="text", hint="write a sentence"))
+            return  # nothing to write, and the error says why
+        if len(words) < 3:
+            ctx.report(W_SHORT(f"only {len(words)} words"))
+        ctx.write(WORDS, words)
+
+
+class Lint(Stage):
+    """Like a lint check: reports problems but writes nothing, so it never stops the run."""
+
+    name = "lint"
+    requires = (WORDS,)
+
+    def run(self, ctx: StageContext) -> None:
+        words = ctx.read(WORDS)
+        for k, word in enumerate(words):
+            if len(word) > 7:
+                ctx.report(E_LONG_WORD(f"'{word}' is too long", path=f"words[{k}]"))
 
 
 class Count(Stage):
@@ -188,7 +221,9 @@ def test_a_promised_artifact_must_be_written() -> None:
         def run(self, ctx: StageContext) -> None:
             pass
 
-    with pytest.raises(StageContractError, match="'lazy' finished without writing count"):
+    with pytest.raises(
+        StageContractError, match="'lazy' finished without writing count and reported no error"
+    ):
         Pipeline([Lazy()], inputs=[TEXT]).run({TEXT: SENTENCE})
 
 
@@ -227,3 +262,78 @@ def test_an_unexpected_exception_names_its_stage() -> None:
     with pytest.raises(StageFailedError, match="stage 'boom' failed: ValueError: no luck") as err:
         Pipeline([Boom()], inputs=[]).run({})
     assert isinstance(err.value.__cause__, ValueError)
+
+
+# Issues: problems in the picture are reported, and a stage that cannot go on stops the run.
+
+
+def test_reported_issues_are_collected_with_their_stage() -> None:
+    result = Pipeline([Split(), Count()], inputs=[TEXT], codes=CODES).run({TEXT: "two words"})
+    (issue,) = result.issues
+    assert (issue.code, issue.stage, issue.message) == ("W-SHORT", "split", "only 2 words")
+    assert result.stopped_at is None
+    assert result.get(COUNT) == 2  # a warning does not stop anything
+    assert Report.build(result.issues, codes=CODES).status is Status.NOT_READY
+
+
+def test_an_error_instead_of_the_output_stops_the_run() -> None:
+    result = Pipeline([Split(), Count()], inputs=[TEXT], codes=CODES).run({TEXT: "   "})
+    assert result.stopped_at == "split"
+    assert [run.name for run in result.stages] == ["split"]  # count never ran
+    assert [issue.code for issue in result.issues] == ["E-NO-WORDS"]
+    with pytest.raises(KeyError, match="stopped after stage 'split'"):
+        result.get(COUNT)
+    report = Report.build(result.issues, stopped_at=result.stopped_at, codes=CODES)
+    assert report.headline == "STOPPED at 'split' (1 error, 0 warnings)"
+
+
+def test_an_error_next_to_the_output_does_not_stop_the_run() -> None:
+    pipeline = Pipeline([Split(), Lint(), Count()], inputs=[TEXT], codes=CODES)
+    result = pipeline.run({TEXT: SENTENCE})
+    assert result.stopped_at is None
+    assert result.get(COUNT) == 7  # count ran after lint's error
+    (issue,) = result.issues
+    assert (issue.code, issue.severity, issue.stage) == ("E-LONG-WORD", Severity.ERROR, "lint")
+
+
+def test_a_warning_is_not_a_reason_to_skip_the_output() -> None:
+    class Shrug(Stage):
+        name = "shrug"
+        provides = (COUNT,)
+
+        def run(self, ctx: StageContext) -> None:
+            ctx.report(W_SHORT("too short to count"))
+
+    with pytest.raises(StageContractError, match="reported no error that says why"):
+        Pipeline([Shrug()], inputs=[], codes=CODES).run({})
+
+
+def test_only_registered_codes_can_be_reported() -> None:
+    e_no_word = IssueCode("E-NO-WORD", Origin.IR, "a code nobody registered")
+
+    class Stray(Stage):
+        name = "stray"
+
+        def run(self, ctx: StageContext) -> None:
+            ctx.report(e_no_word("nothing here"))
+
+    with pytest.raises(StageContractError, match="not a registered issue code; did you mean"):
+        Pipeline([Stray()], inputs=[], codes=CODES).run({})
+
+
+def test_an_issue_keeps_the_origin_of_its_code() -> None:
+    class Blame(Stage):
+        name = "blame"
+
+        def run(self, ctx: StageContext) -> None:
+            ctx.report(
+                Issue(
+                    code="E-NO-WORDS",
+                    severity=Severity.ERROR,
+                    origin=Origin.ENVIRONMENT,
+                    message="blaming the machine",
+                )
+            )
+
+    with pytest.raises(StageContractError, match="defined with origin ir"):
+        Pipeline([Blame()], inputs=[], codes=CODES).run({})

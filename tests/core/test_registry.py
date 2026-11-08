@@ -67,3 +67,10 @@ def test_check_runs_before_an_item_is_accepted() -> None:
     with pytest.raises(ValueError, match="spoon"):
         tools.register(Tool("spoon"))
     assert "spoon" not in tools
+
+
+def test_closest_finds_a_near_name_or_nothing() -> None:
+    tools = make_registry()
+    tools.register(Tool("hammer"))
+    assert tools.closest("hamer") == "hammer"
+    assert tools.closest("screwdriver") is None

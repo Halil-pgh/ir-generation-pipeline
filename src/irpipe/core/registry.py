@@ -48,6 +48,11 @@ class Registry[T]:
         except KeyError:
             raise UnknownPluginError(self._unknown_message(name)) from None
 
+    def closest(self, name: str) -> str | None:
+        """The registered name most like ``name``, if any is close; for "did you mean" hints."""
+        close = difflib.get_close_matches(name, self._items, n=1)
+        return close[0] if close else None
+
     def names(self) -> list[str]:
         """All registered names, sorted."""
         return sorted(self._items)
@@ -60,8 +65,8 @@ class Registry[T]:
 
     def _unknown_message(self, name: str) -> str:
         message = f"unknown {self.kind} '{name}'"
-        close = difflib.get_close_matches(name, self._items, n=1)
+        close = self.closest(name)
         if close:
-            message += f"; did you mean '{close[0]}'?"
+            message += f"; did you mean '{close}'?"
         known = ", ".join(self.names()) or "none"
         return f"{message} (registered {self.kind}s: {known})"
