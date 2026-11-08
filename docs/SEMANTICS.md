@@ -51,3 +51,27 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - The reason needs at least four words, so stock answers such as "ok"
   or "this is intended" do not pass. Each issue is accepted by the first
   entry that matches it.
+
+## Canvas
+
+- The short side of every frame is 9 units. The origin is at the center
+  and y points up. At the reference size (short side 1080 px) one unit
+  is 120 px.
+- **Reference pixels** are pixels of the frame at that reference size.
+  Margins, platform overlays, type sizes and stroke widths are given in
+  reference pixels, so they mean the same at every output resolution.
+- Pixel sizes are rounded up to the next even number, at the reference
+  size and at the output size. The long side in units is the rounded
+  reference long side divided by 120, so units and reference pixels
+  always agree exactly. The output resolution changes how many pixels a
+  unit is, never the units.
+- Any `W:H` aspect between 1:4 and 4:1 is allowed; the presets are only
+  names for common ones.
+- Safe area = frame − margins − platform overlays − subtitle band. A
+  platform that draws an interface over the picture accepts only the
+  aspect its overlays were measured on.
+- The subtitle band (modes `reserve` and `burn_in`) is
+  lines × line spacing × caption size + one caption size of padding high.
+  It runs between the side margins and overlays, and its bottom edge sits
+  on the bottom margin plus the bottom overlay. The safe area ends at its
+  top edge.
