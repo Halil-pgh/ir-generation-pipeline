@@ -8,7 +8,7 @@ unexport PYTHONPATH
 VENV := .venv
 BIN  := $(VENV)/bin
 
-.PHONY: venv test lint format typecheck check
+.PHONY: venv test lint format typecheck spec check
 
 venv:            ## create .venv and install the package with dev tools
 	python3 -m venv $(VENV)
@@ -27,5 +27,8 @@ format:          ## apply formatting and safe lint fixes
 
 typecheck:       ## strict mypy over src/ and tests/
 	$(BIN)/mypy
+
+spec:            ## regenerate docs/spec/*.schema.json from the pydantic models
+	$(BIN)/python -m irpipe.schema.spec docs/spec
 
 check: lint typecheck test   ## everything a step must pass before its report

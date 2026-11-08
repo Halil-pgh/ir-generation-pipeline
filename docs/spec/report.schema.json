@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Issue": {
+      "additionalProperties": false,
+      "description": "One problem found in one run, as report.json lists it.\n\nBuild issues by calling their ``IssueCode``, which fills in ``severity``\nand ``origin``. ``path`` is a JSON path into the IR (``objects[3].size``),\n``objects`` the ids involved (``v`` or a part of it such as ``v.label``).\nThe pipeline fills in ``stage``; ``allowed_because`` is set when an\n``allow`` entry accepts the issue (core/allow.py).",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "origin": {
+          "$ref": "#/$defs/Origin"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "objects": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Objects",
+          "type": "array"
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stage"
+        },
+        "allowed_because": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Allowed Because"
+        }
+      },
+      "required": [
+        "code",
+        "severity",
+        "origin",
+        "message"
+      ],
+      "title": "Issue",
+      "type": "object"
+    },
+    "Origin": {
+      "description": "Where a problem comes from; see the module docstring for where each one goes.",
+      "enum": [
+        "ir",
+        "capability",
+        "internal",
+        "environment",
+        "infeasible"
+      ],
+      "title": "Origin",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "error",
+        "warning"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Status": {
+      "enum": [
+        "READY",
+        "NOT_READY",
+        "STOPPED"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Status, open-issue counts and every issue of one run (allowed ones included).",
+  "properties": {
+    "status": {
+      "$ref": "#/$defs/Status"
+    },
+    "stopped_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Stopped At"
+    },
+    "errors": {
+      "title": "Errors",
+      "type": "integer"
+    },
+    "warnings": {
+      "title": "Warnings",
+      "type": "integer"
+    },
+    "allowed": {
+      "title": "Allowed",
+      "type": "integer"
+    },
+    "issues": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Issue"
+      },
+      "title": "Issues",
+      "type": "array"
+    }
+  },
+  "required": [
+    "status",
+    "errors",
+    "warnings",
+    "allowed"
+  ],
+  "title": "Report",
+  "type": "object"
+}

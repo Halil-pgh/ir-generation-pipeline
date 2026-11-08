@@ -18,7 +18,7 @@ dependencies = [
 geometry = ["shapely>=2.0"]       # region algebra, flood_fill, clip (step 12)
 svg = ["cairosvg>=2.7"]           # SVG reference backend: frame.svg -> frame.png (step 7)
 manim = ["manim==0.22.1"]         # Manim backend, pinned as the analysis asks (step 15)
-dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "jsonschema>=4.23", "types-jsonschema"]
 
 [tool.setuptools.dynamic]
 version = { attr = "irpipe.__version__" }

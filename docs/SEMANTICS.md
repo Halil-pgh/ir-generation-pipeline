@@ -113,3 +113,27 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - A group's children are ids of other objects. Its transform is applied
   as: scale, then rotate (degrees, counterclockwise), both about `pivot`;
   then translate.
+
+## LIR
+
+- `lir.json` holds `version`, `canvas` (`units`, output `pixels`,
+  `background`) and `items`. Every item is a group carrying the id of the
+  IR object it draws; pieces a component makes get dotted ids
+  (`axes.tick_3`). Group ids are unique in the whole document.
+- Everything is resolved: colors are `"#RRGGBB"`, opacities are final
+  (a group's opacity is already multiplied into its children, and clips
+  are already cut), text boxes and baselines are measured. A backend
+  never lays out, never resolves a name and never reorders.
+- Drawing order is list order at every level. The front-end sorts by `z`
+  before writing, so siblings' `z` never decreases; `z` stays in the file
+  only so a reader can see why things are in that order.
+- Positions are in units. A backend draws them at
+  `pixels[i] / units[i]` pixels per unit. Stroke widths, dashes and type
+  sizes are in reference pixels: multiply by `short side px / 1080`.
+- A group's `transform` `[a, b, c, d, e, f]` maps (x, y) to
+  (a x + c y + e, b x + d y + f), in units, applied to all its children.
+- A path is drawn from its subpaths; its `hint` (circle, rect, line) only
+  lets a backend use its library's own class, and must describe the same
+  geometry. A path always has a fill, a stroke or both.
+- A text or math item is placed so that its `anchor` point sits at `at`.
+  Math `glyphs` are the formula's outlines for backends without LaTeX.

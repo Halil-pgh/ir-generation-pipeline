@@ -1,0 +1,163 @@
+{
+  "version": "lir/1.0",
+  "canvas": {"units": [16, 9], "pixels": [1920, 1080], "background": "#0E1117"},
+  "items": [
+    {
+      "type": "group",
+      "id": "title",
+      "source": "objects[0]",
+      "children": [
+        {
+          "type": "text",
+          "text": "Projection of a onto b",
+          "font": "Inter",
+          "size": 52,
+          "weight": "bold",
+          "color": "#FFFFFF",
+          "at": [0, 3.6],
+          "anchor": "center_baseline",
+          "box": [-3.1, 3.5, 3.1, 3.96],
+          "baseline": 3.6
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "id": "drop",
+      "source": "objects[1]",
+      "children": [
+        {
+          "type": "path",
+          "subpaths": [{"start": [2, 3], "segments": [{"line": [2, 0]}]}],
+          "stroke": {"color": "#FFFFFF", "opacity": 0.6, "width": 3, "dash": [14, 10]},
+          "hint": {"shape": "line", "start": [2, 3], "end": [2, 0]}
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "id": "vectors",
+      "source": "objects[2]",
+      "children": [
+        {
+          "type": "group",
+          "id": "b",
+          "source": "objects[3]",
+          "children": [
+            {
+              "type": "path",
+              "subpaths": [{"start": [0, 0], "segments": [{"line": [4, 0]}]}],
+              "stroke": {"color": "#58C4DD", "width": 6, "cap": "round"},
+              "hint": {"shape": "line", "start": [0, 0], "end": [4, 0]}
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "id": "a",
+          "source": "objects[4]",
+          "children": [
+            {
+              "type": "path",
+              "subpaths": [{"start": [0, 0], "segments": [{"line": [2, 3]}]}],
+              "stroke": {"color": "#FFD43B", "width": 6, "cap": "round"},
+              "hint": {"shape": "line", "start": [0, 0], "end": [2, 3]}
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "id": "proj_ab",
+          "source": "objects[5]",
+          "z": 1,
+          "children": [
+            {
+              "type": "path",
+              "subpaths": [{"start": [0, 0], "segments": [{"line": [2, 0]}]}],
+              "stroke": {"color": "#83C167", "width": 9, "cap": "round"},
+              "hint": {"shape": "line", "start": [0, 0], "end": [2, 0]}
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "id": "a_label",
+      "source": "objects[6]",
+      "children": [
+        {
+          "type": "text",
+          "text": "a",
+          "font": "Inter",
+          "size": 38,
+          "color": "#FFD43B",
+          "at": [2.15, 3.05],
+          "anchor": "left_baseline",
+          "box": [2.15, 3.0, 2.33, 3.25],
+          "baseline": 3.05
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "id": "b_label",
+      "source": "objects[7]",
+      "children": [
+        {
+          "type": "text",
+          "text": "b",
+          "font": "Inter",
+          "size": 38,
+          "color": "#58C4DD",
+          "at": [4.15, 0.1],
+          "anchor": "left_baseline",
+          "box": [4.15, 0.05, 4.34, 0.38],
+          "baseline": 0.1
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "id": "formula",
+      "source": "objects[8]",
+      "children": [
+        {
+          "type": "math",
+          "tex": "\\operatorname{proj}_b a = \\frac{a \\cdot b}{b \\cdot b}\\, b",
+          "size": 42,
+          "color": "#FFFFFF",
+          "at": [0, -3],
+          "anchor": "center",
+          "box": [-2.3, -3.42, 2.3, -2.58],
+          "baseline": -3.08
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "id": "origin",
+      "source": "objects[9]",
+      "z": 1,
+      "children": [
+        {
+          "type": "path",
+          "subpaths": [
+            {
+              "start": [0.08, 0],
+              "segments": [
+                {"cubic": [[0.08, 0.04418], [0.04418, 0.08], [0, 0.08]]},
+                {"cubic": [[-0.04418, 0.08], [-0.08, 0.04418], [-0.08, 0]]},
+                {"cubic": [[-0.08, -0.04418], [-0.04418, -0.08], [0, -0.08]]},
+                {"cubic": [[0.04418, -0.08], [0.08, -0.04418], [0.08, 0]]}
+              ],
+              "closed": true
+            }
+          ],
+          "fill": {"color": "#FFFFFF"},
+          "hint": {"shape": "circle", "center": [0, 0], "radius": 0.08}
+        }
+      ]
+    }
+  ]
+}

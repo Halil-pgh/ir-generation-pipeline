@@ -30,6 +30,7 @@ Optional extras, installed when their layer is built: `geometry` (shapely),
 make check       # lint + strict type check + tests
 make test        # tests only
 make format      # apply formatting
+make spec        # regenerate docs/spec/ after changing a contract model
 ```
 
 The Makefile clears `PYTHONPATH`. If a ROS environment is sourced in your
@@ -41,4 +42,7 @@ shell, its packages and pytest plugins otherwise load ahead of `.venv` and
 ```
 src/irpipe/   the package (layers are added step by step, see the plan)
 tests/        unit, end-to-end and backend conformance tests
+docs/         SEMANTICS.md (behaviour the schemas leave open) and spec/
+              (JSON Schema of ir.json, lir.json, the render profile and report.json)
+examples/     hand-written inputs and outputs, such as a lir.json
 ```

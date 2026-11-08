@@ -8,6 +8,8 @@ Module map:
     render_profile.py  RenderProfile: aspect, resolution, platform, margins,
                        subtitle, typography and theme of one picture
     ir/                IR 1.0: header, body and the core objects
+    lir.py             LIR 1.0: the resolved draw list backends draw
+    spec.py            writes the JSON Schema of every contract to docs/spec/
     color.py           Color, ColorRef: how contracts write colors
     base.py            StrictModel: immutable, refuses unknown fields
 """

@@ -1,0 +1,2172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Allow": {
+      "additionalProperties": false,
+      "description": "One entry of the IR's ``allow`` list.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "objects": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Objects",
+          "type": "array"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "reason"
+      ],
+      "title": "Allow",
+      "type": "object"
+    },
+    "Circle": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "circle",
+          "default": "circle",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill"
+        },
+        "fill_opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Opacity"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "radius": {
+          "exclusiveMinimum": 0,
+          "title": "Radius",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "center",
+        "radius"
+      ],
+      "title": "Circle",
+      "type": "object"
+    },
+    "CubicTo": {
+      "additionalProperties": false,
+      "properties": {
+        "cubic": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "title": "Cubic",
+          "type": "array"
+        }
+      },
+      "required": [
+        "cubic"
+      ],
+      "title": "CubicTo",
+      "type": "object"
+    },
+    "FrameHeader": {
+      "additionalProperties": false,
+      "properties": {
+        "aspect": {
+          "title": "Aspect",
+          "type": "string"
+        },
+        "pixels": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            }
+          ],
+          "title": "Pixels",
+          "type": "array"
+        },
+        "units": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Units",
+          "type": "array"
+        },
+        "platform": {
+          "title": "Platform",
+          "type": "string"
+        },
+        "background": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "title": "Background"
+        },
+        "subtitle": {
+          "$ref": "#/$defs/SubtitleHeader"
+        },
+        "safe": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Safe",
+          "type": "array"
+        }
+      },
+      "required": [
+        "aspect",
+        "pixels",
+        "units",
+        "platform",
+        "background",
+        "subtitle",
+        "safe"
+      ],
+      "title": "FrameHeader",
+      "type": "object"
+    },
+    "Group": {
+      "additionalProperties": false,
+      "description": "Objects that move together.\n\n``children`` are ids of other objects. The transform scales and rotates\nthem about ``pivot`` (degrees, counterclockwise), then translates them.\nThe group's opacity multiplies each child's.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "group",
+          "default": "group",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "children": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Children",
+          "type": "array"
+        },
+        "translate": {
+          "default": [
+            0,
+            0
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Translate",
+          "type": "array"
+        },
+        "rotate": {
+          "default": 0,
+          "title": "Rotate",
+          "type": "number"
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "default": 1,
+          "title": "Scale"
+        },
+        "pivot": {
+          "default": [
+            0,
+            0
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Pivot",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "children"
+      ],
+      "title": "Group",
+      "type": "object"
+    },
+    "Line": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "line",
+          "default": "line",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "start": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Start",
+          "type": "array"
+        },
+        "end": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "End",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "start",
+        "end"
+      ],
+      "title": "Line",
+      "type": "object"
+    },
+    "LineTo": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Line",
+          "type": "array"
+        }
+      },
+      "required": [
+        "line"
+      ],
+      "title": "LineTo",
+      "type": "object"
+    },
+    "Mix": {
+      "additionalProperties": false,
+      "description": "An extra color mixed from two others, for example the overlap of two concepts.",
+      "properties": {
+        "mix": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+                  "type": "string"
+                },
+                {
+                  "maxItems": 3,
+                  "minItems": 3,
+                  "prefixItems": [
+                    {
+                      "maximum": 255,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "maximum": 255,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "maximum": 255,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+                  "type": "string"
+                },
+                {
+                  "maxItems": 3,
+                  "minItems": 3,
+                  "prefixItems": [
+                    {
+                      "maximum": 255,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "maximum": 255,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    {
+                      "maximum": 255,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ]
+            }
+          ],
+          "title": "Mix",
+          "type": "array"
+        }
+      },
+      "required": [
+        "mix"
+      ],
+      "title": "Mix",
+      "type": "object"
+    },
+    "Path": {
+      "additionalProperties": false,
+      "description": "Straight and Bezier segments, in one or more subpaths (holes are subpaths).",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "path",
+          "default": "path",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill"
+        },
+        "fill_opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Opacity"
+        },
+        "subpaths": {
+          "items": {
+            "$ref": "#/$defs/Subpath"
+          },
+          "minItems": 1,
+          "title": "Subpaths",
+          "type": "array"
+        },
+        "fill_rule": {
+          "default": "nonzero",
+          "enum": [
+            "nonzero",
+            "evenodd"
+          ],
+          "title": "Fill Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "subpaths"
+      ],
+      "title": "Path",
+      "type": "object"
+    },
+    "QuadTo": {
+      "additionalProperties": false,
+      "properties": {
+        "quad": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "title": "Quad",
+          "type": "array"
+        }
+      },
+      "required": [
+        "quad"
+      ],
+      "title": "QuadTo",
+      "type": "object"
+    },
+    "Rect": {
+      "additionalProperties": false,
+      "description": "An axis-aligned rectangle; turn it with a group.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "rect",
+          "default": "rect",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill"
+        },
+        "fill_opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Opacity"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "corner_radius": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Corner Radius",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "center",
+        "width",
+        "height"
+      ],
+      "title": "Rect",
+      "type": "object"
+    },
+    "RoleSizes": {
+      "additionalProperties": false,
+      "description": "Type size of each text role, in reference pixels.",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "number"
+        },
+        "heading": {
+          "title": "Heading",
+          "type": "number"
+        },
+        "body": {
+          "title": "Body",
+          "type": "number"
+        },
+        "label": {
+          "title": "Label",
+          "type": "number"
+        },
+        "caption": {
+          "title": "Caption",
+          "type": "number"
+        }
+      },
+      "required": [
+        "title",
+        "heading",
+        "body",
+        "label",
+        "caption"
+      ],
+      "title": "RoleSizes",
+      "type": "object"
+    },
+    "Space": {
+      "additionalProperties": false,
+      "description": "A coordinate space objects can be placed in; its fields arrive with step 11.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "cartesian2d",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind"
+      ],
+      "title": "Space",
+      "type": "object"
+    },
+    "Style": {
+      "additionalProperties": false,
+      "description": "A style class: any paint or text field, applied to every object that names it.",
+      "properties": {
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill"
+        },
+        "fill_opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Opacity"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "enum": [
+                "title",
+                "heading",
+                "body",
+                "label",
+                "caption"
+              ],
+              "type": "string"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size"
+        },
+        "weight": {
+          "anyOf": [
+            {
+              "enum": [
+                "regular",
+                "bold"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weight"
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Italic"
+        }
+      },
+      "title": "Style",
+      "type": "object"
+    },
+    "Subpath": {
+      "additionalProperties": false,
+      "description": "One pen stroke: a start point and the segments that follow it.",
+      "properties": {
+        "start": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Start",
+          "type": "array"
+        },
+        "segments": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LineTo"
+              },
+              {
+                "$ref": "#/$defs/QuadTo"
+              },
+              {
+                "$ref": "#/$defs/CubicTo"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Segments",
+          "type": "array"
+        },
+        "closed": {
+          "default": false,
+          "title": "Closed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "start",
+        "segments"
+      ],
+      "title": "Subpath",
+      "type": "object"
+    },
+    "SubtitleHeader": {
+      "additionalProperties": false,
+      "description": "The subtitle setting and, unless the mode is ``none``, the band it keeps.",
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/SubtitleMode"
+        },
+        "lines": {
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Lines",
+          "type": "integer"
+        },
+        "band": {
+          "anyOf": [
+            {
+              "maxItems": 4,
+              "minItems": 4,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Band"
+        }
+      },
+      "required": [
+        "mode",
+        "lines"
+      ],
+      "title": "SubtitleHeader",
+      "type": "object"
+    },
+    "SubtitleMode": {
+      "enum": [
+        "none",
+        "reserve",
+        "burn_in"
+      ],
+      "title": "SubtitleMode",
+      "type": "string"
+    },
+    "Text": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "text",
+          "default": "text",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "at": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "At",
+          "type": "array"
+        },
+        "anchor": {
+          "default": "center",
+          "enum": [
+            "left_top",
+            "center_top",
+            "right_top",
+            "left_center",
+            "center",
+            "right_center",
+            "left_baseline",
+            "center_baseline",
+            "right_baseline",
+            "left_bottom",
+            "center_bottom",
+            "right_bottom"
+          ],
+          "title": "Anchor",
+          "type": "string"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "enum": [
+                "title",
+                "heading",
+                "body",
+                "label",
+                "caption"
+              ],
+              "type": "string"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "weight": {
+          "anyOf": [
+            {
+              "enum": [
+                "regular",
+                "bold"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weight"
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Italic"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "at"
+      ],
+      "title": "Text",
+      "type": "object"
+    },
+    "TypographyHeader": {
+      "additionalProperties": false,
+      "properties": {
+        "lang": {
+          "pattern": "^[a-z]{2,3}(-[A-Z]{2})?$",
+          "title": "Lang",
+          "type": "string"
+        },
+        "text_font": {
+          "title": "Text Font",
+          "type": "string"
+        },
+        "math": {
+          "title": "Math",
+          "type": "string"
+        },
+        "sizes": {
+          "$ref": "#/$defs/RoleSizes"
+        }
+      },
+      "required": [
+        "lang",
+        "text_font",
+        "math",
+        "sizes"
+      ],
+      "title": "TypographyHeader",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A whole ``ir.json``: header fields first, then body fields.",
+  "properties": {
+    "version": {
+      "const": "frame-ir/1.0",
+      "default": "frame-ir/1.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "intent": {
+      "minLength": 1,
+      "title": "Intent",
+      "type": "string"
+    },
+    "frame": {
+      "$ref": "#/$defs/FrameHeader"
+    },
+    "typography": {
+      "$ref": "#/$defs/TypographyHeader"
+    },
+    "colors": {
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_]*$": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "title": "Colors",
+      "type": "object"
+    },
+    "styles": {
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_]*$": {
+          "$ref": "#/$defs/Style"
+        }
+      },
+      "title": "Styles",
+      "type": "object"
+    },
+    "focus": {
+      "default": [],
+      "items": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+        "type": "string"
+      },
+      "title": "Focus",
+      "type": "array"
+    },
+    "extra_colors": {
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_]*$": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "$ref": "#/$defs/Mix"
+            }
+          ]
+        }
+      },
+      "title": "Extra Colors",
+      "type": "object"
+    },
+    "zones": {
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_]*$": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        }
+      },
+      "title": "Zones",
+      "type": "object"
+    },
+    "spaces": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Space"
+      },
+      "title": "Spaces",
+      "type": "array"
+    },
+    "defs": {
+      "default": [],
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "circle": "#/$defs/Circle",
+            "group": "#/$defs/Group",
+            "line": "#/$defs/Line",
+            "path": "#/$defs/Path",
+            "rect": "#/$defs/Rect",
+            "text": "#/$defs/Text"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Circle"
+          },
+          {
+            "$ref": "#/$defs/Rect"
+          },
+          {
+            "$ref": "#/$defs/Line"
+          },
+          {
+            "$ref": "#/$defs/Path"
+          },
+          {
+            "$ref": "#/$defs/Text"
+          },
+          {
+            "$ref": "#/$defs/Group"
+          }
+        ]
+      },
+      "title": "Defs",
+      "type": "array"
+    },
+    "objects": {
+      "default": [],
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "circle": "#/$defs/Circle",
+            "group": "#/$defs/Group",
+            "line": "#/$defs/Line",
+            "path": "#/$defs/Path",
+            "rect": "#/$defs/Rect",
+            "text": "#/$defs/Text"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Circle"
+          },
+          {
+            "$ref": "#/$defs/Rect"
+          },
+          {
+            "$ref": "#/$defs/Line"
+          },
+          {
+            "$ref": "#/$defs/Path"
+          },
+          {
+            "$ref": "#/$defs/Text"
+          },
+          {
+            "$ref": "#/$defs/Group"
+          }
+        ]
+      },
+      "title": "Objects",
+      "type": "array"
+    },
+    "allow": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Allow"
+      },
+      "title": "Allow",
+      "type": "array"
+    }
+  },
+  "required": [
+    "intent",
+    "frame",
+    "typography"
+  ],
+  "title": "IRDocument",
+  "type": "object"
+}

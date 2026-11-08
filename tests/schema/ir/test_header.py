@@ -1,6 +1,8 @@
 """The header and the body: the analysis's draft validates, and the two halves stay apart."""
 
 import copy
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,38 +19,12 @@ from irpipe.schema.ir import (
 )
 from irpipe.schema.render_profile import RenderProfile
 
+DATA = Path(__file__).parents[2] / "data"
+
 # The header draft of the analysis (§2.1), as it is printed there, without its comments.
-ANALYSIS_DRAFT: dict[str, Any] = {
-    "version": "frame-ir/1.0",
-    "intent": "Bir vektörün başka bir vektör üzerine izdüşümü",
-    "frame": {
-        "aspect": "4:5",
-        "pixels": [1080, 1350],
-        "units": [9, 11.25],
-        "platform": "instagram_feed",
-        "background": "#0E1117",
-        "subtitle": {"mode": "reserve", "lines": 2, "band": [-4.2, -5.3, 4.2, -4.1]},
-        "safe": [-4.1, -3.8, 4.1, 5.2],
-    },
-    "typography": {
-        "lang": "tr",
-        "text_font": "Inter",
-        "math": "latin-modern",
-        "sizes": {"title": 64, "heading": 52, "body": 42, "label": 38, "caption": 34},
-    },
-    "colors": {"a": "#FFD43B", "b": [88, 196, 221], "proj": "#83C167"},
-    "styles": {
-        "muted": {"opacity": 0.35},
-        "construction": {"dash": [14, 10], "stroke_width": 3},
-    },
-    "focus": ["proj_ab"],
-    "extra_colors": {},
-    "zones": {},
-    "spaces": [],
-    "defs": [],
-    "objects": [],
-    "allow": [],
-}
+ANALYSIS_DRAFT: dict[str, Any] = json.loads(
+    (DATA / "analysis_header_draft.json").read_text(encoding="utf-8")
+)
 
 
 def draft(**changes: Any) -> dict[str, Any]:

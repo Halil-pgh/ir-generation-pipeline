@@ -1,0 +1,1001 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "CircleHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "circle",
+          "default": "circle",
+          "title": "Shape",
+          "type": "string"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "radius": {
+          "exclusiveMinimum": 0,
+          "title": "Radius",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "radius"
+      ],
+      "title": "CircleHint",
+      "type": "object"
+    },
+    "CubicTo": {
+      "additionalProperties": false,
+      "properties": {
+        "cubic": {
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "title": "Cubic",
+          "type": "array"
+        }
+      },
+      "required": [
+        "cubic"
+      ],
+      "title": "CubicTo",
+      "type": "object"
+    },
+    "FillPaint": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Opacity",
+          "type": "number"
+        },
+        "rule": {
+          "default": "nonzero",
+          "enum": [
+            "nonzero",
+            "evenodd"
+          ],
+          "title": "Rule",
+          "type": "string"
+        }
+      },
+      "required": [
+        "color"
+      ],
+      "title": "FillPaint",
+      "type": "object"
+    },
+    "Group": {
+      "additionalProperties": false,
+      "description": "One IR object (or a part of one) and the primitives it was drawn with.\n\n``transform`` is an affine matrix ``[a, b, c, d, e, f]``: a point (x, y)\ngoes to (a x + c y + e, b x + d y + f). ``source`` is the object's JSON path\nin the IR. Children are already in drawing order: each group's ``z`` is at\nleast the one before it.",
+      "properties": {
+        "type": {
+          "const": "group",
+          "default": "group",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "transform": {
+          "default": [
+            1.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0
+          ],
+          "maxItems": 6,
+          "minItems": 6,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Transform",
+          "type": "array"
+        },
+        "z": {
+          "default": 0,
+          "title": "Z",
+          "type": "number"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "children": {
+          "default": [],
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "group": "#/$defs/Group",
+                "image": "#/$defs/ImageItem",
+                "math": "#/$defs/MathItem",
+                "path": "#/$defs/PathItem",
+                "text": "#/$defs/TextItem"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/PathItem"
+              },
+              {
+                "$ref": "#/$defs/TextItem"
+              },
+              {
+                "$ref": "#/$defs/MathItem"
+              },
+              {
+                "$ref": "#/$defs/ImageItem"
+              },
+              {
+                "$ref": "#/$defs/Group"
+              }
+            ]
+          },
+          "title": "Children",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Group",
+      "type": "object"
+    },
+    "ImageItem": {
+      "additionalProperties": false,
+      "description": "A raster image stretched over ``box``; SVG assets arrive as paths instead.",
+      "properties": {
+        "type": {
+          "const": "image",
+          "default": "image",
+          "title": "Type",
+          "type": "string"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "src": {
+          "minLength": 1,
+          "title": "Src",
+          "type": "string"
+        },
+        "box": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Box",
+          "type": "array"
+        },
+        "opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Opacity",
+          "type": "number"
+        }
+      },
+      "required": [
+        "src",
+        "box"
+      ],
+      "title": "ImageItem",
+      "type": "object"
+    },
+    "LIRCanvas": {
+      "additionalProperties": false,
+      "description": "The frame: units per side, output pixels and the background.",
+      "properties": {
+        "units": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            }
+          ],
+          "title": "Units",
+          "type": "array"
+        },
+        "pixels": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            }
+          ],
+          "title": "Pixels",
+          "type": "array"
+        },
+        "background": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Background",
+          "type": "string"
+        }
+      },
+      "required": [
+        "units",
+        "pixels",
+        "background"
+      ],
+      "title": "LIRCanvas",
+      "type": "object"
+    },
+    "LineHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "line",
+          "default": "line",
+          "title": "Shape",
+          "type": "string"
+        },
+        "start": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Start",
+          "type": "array"
+        },
+        "end": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "End",
+          "type": "array"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "LineHint",
+      "type": "object"
+    },
+    "LineTo": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Line",
+          "type": "array"
+        }
+      },
+      "required": [
+        "line"
+      ],
+      "title": "LineTo",
+      "type": "object"
+    },
+    "MathItem": {
+      "additionalProperties": false,
+      "description": "A formula; ``glyphs`` are its outlines, for backends that have no LaTeX.",
+      "properties": {
+        "type": {
+          "const": "math",
+          "default": "math",
+          "title": "Type",
+          "type": "string"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "tex": {
+          "minLength": 1,
+          "title": "Tex",
+          "type": "string"
+        },
+        "size": {
+          "exclusiveMinimum": 0,
+          "title": "Size",
+          "type": "number"
+        },
+        "color": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Opacity",
+          "type": "number"
+        },
+        "at": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "At",
+          "type": "array"
+        },
+        "anchor": {
+          "enum": [
+            "left_top",
+            "center_top",
+            "right_top",
+            "left_center",
+            "center",
+            "right_center",
+            "left_baseline",
+            "center_baseline",
+            "right_baseline",
+            "left_bottom",
+            "center_bottom",
+            "right_bottom"
+          ],
+          "title": "Anchor",
+          "type": "string"
+        },
+        "box": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Box",
+          "type": "array"
+        },
+        "baseline": {
+          "title": "Baseline",
+          "type": "number"
+        },
+        "glyphs": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Subpath"
+          },
+          "title": "Glyphs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tex",
+        "size",
+        "color",
+        "at",
+        "anchor",
+        "box",
+        "baseline"
+      ],
+      "title": "MathItem",
+      "type": "object"
+    },
+    "PathItem": {
+      "additionalProperties": false,
+      "description": "Straight and Bezier subpaths with an optional fill and stroke.\n\n``hint`` lets a backend use its library's own class (Manim's ``Circle``);\nthe geometry drawn must still be the one in ``subpaths``.",
+      "properties": {
+        "type": {
+          "const": "path",
+          "default": "path",
+          "title": "Type",
+          "type": "string"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "subpaths": {
+          "items": {
+            "$ref": "#/$defs/Subpath"
+          },
+          "minItems": 1,
+          "title": "Subpaths",
+          "type": "array"
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FillPaint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StrokePaint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "hint": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "circle": "#/$defs/CircleHint",
+                  "line": "#/$defs/LineHint",
+                  "rect": "#/$defs/RectHint"
+                },
+                "propertyName": "shape"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/CircleHint"
+                },
+                {
+                  "$ref": "#/$defs/RectHint"
+                },
+                {
+                  "$ref": "#/$defs/LineHint"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hint"
+        }
+      },
+      "required": [
+        "subpaths"
+      ],
+      "title": "PathItem",
+      "type": "object"
+    },
+    "QuadTo": {
+      "additionalProperties": false,
+      "properties": {
+        "quad": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "title": "Quad",
+          "type": "array"
+        }
+      },
+      "required": [
+        "quad"
+      ],
+      "title": "QuadTo",
+      "type": "object"
+    },
+    "RectHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "rect",
+          "default": "rect",
+          "title": "Shape",
+          "type": "string"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "corner_radius": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Corner Radius",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "width",
+        "height"
+      ],
+      "title": "RectHint",
+      "type": "object"
+    },
+    "StrokePaint": {
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Opacity",
+          "type": "number"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "cap": {
+          "default": "butt",
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ],
+          "title": "Cap",
+          "type": "string"
+        },
+        "join": {
+          "default": "miter",
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ],
+          "title": "Join",
+          "type": "string"
+        }
+      },
+      "required": [
+        "color",
+        "width"
+      ],
+      "title": "StrokePaint",
+      "type": "object"
+    },
+    "Subpath": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Start",
+          "type": "array"
+        },
+        "segments": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LineTo"
+              },
+              {
+                "$ref": "#/$defs/QuadTo"
+              },
+              {
+                "$ref": "#/$defs/CubicTo"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Segments",
+          "type": "array"
+        },
+        "closed": {
+          "default": false,
+          "title": "Closed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "start",
+        "segments"
+      ],
+      "title": "Subpath",
+      "type": "object"
+    },
+    "TextItem": {
+      "additionalProperties": false,
+      "description": "A line of text, with the box and baseline the front-end measured.",
+      "properties": {
+        "type": {
+          "const": "text",
+          "default": "text",
+          "title": "Type",
+          "type": "string"
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Depth"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "font": {
+          "title": "Font",
+          "type": "string"
+        },
+        "size": {
+          "exclusiveMinimum": 0,
+          "title": "Size",
+          "type": "number"
+        },
+        "weight": {
+          "default": "regular",
+          "enum": [
+            "regular",
+            "bold"
+          ],
+          "title": "Weight",
+          "type": "string"
+        },
+        "italic": {
+          "default": false,
+          "title": "Italic",
+          "type": "boolean"
+        },
+        "color": {
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "title": "Color",
+          "type": "string"
+        },
+        "opacity": {
+          "default": 1,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Opacity",
+          "type": "number"
+        },
+        "at": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "At",
+          "type": "array"
+        },
+        "anchor": {
+          "enum": [
+            "left_top",
+            "center_top",
+            "right_top",
+            "left_center",
+            "center",
+            "right_center",
+            "left_baseline",
+            "center_baseline",
+            "right_baseline",
+            "left_bottom",
+            "center_bottom",
+            "right_bottom"
+          ],
+          "title": "Anchor",
+          "type": "string"
+        },
+        "box": {
+          "maxItems": 4,
+          "minItems": 4,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Box",
+          "type": "array"
+        },
+        "baseline": {
+          "title": "Baseline",
+          "type": "number"
+        }
+      },
+      "required": [
+        "text",
+        "font",
+        "size",
+        "color",
+        "at",
+        "anchor",
+        "box",
+        "baseline"
+      ],
+      "title": "TextItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A whole ``lir.json``: one group per drawn IR object, in drawing order.",
+  "properties": {
+    "version": {
+      "const": "lir/1.0",
+      "default": "lir/1.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "canvas": {
+      "$ref": "#/$defs/LIRCanvas"
+    },
+    "items": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Group"
+      },
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "canvas"
+  ],
+  "title": "LIRDocument",
+  "type": "object"
+}
