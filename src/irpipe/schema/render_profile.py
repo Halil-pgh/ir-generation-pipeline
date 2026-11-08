@@ -20,7 +20,10 @@ from enum import StrEnum
 from fractions import Fraction
 from typing import Annotated, Literal, Self
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, Field
+
+from irpipe.schema.base import StrictModel
+from irpipe.schema.color import Color
 
 MIN_RATIO = Fraction(1, 4)
 MAX_RATIO = Fraction(4, 1)
@@ -92,7 +95,8 @@ ASPECT_PRESETS: dict[str, AspectPreset] = dict(
 """The analysis's table of common aspects; any other W:H in range works too."""
 
 
-def _check_aspect(text: str) -> str:
+def check_aspect(text: str) -> str:
+    """Validate an aspect and return it stripped; for models that store the text."""
     Aspect.parse(text)
     return text.strip()
 
@@ -105,11 +109,7 @@ def _check_resolution(value: int) -> int:
     return value
 
 
-class _Model(BaseModel):
-    model_config = ConfigDict(frozen=True, extra="forbid")
-
-
-class Insets(_Model):
+class Insets(StrictModel):
     """Space on each side of the picture, in reference pixels."""
 
     top: float = Field(0, ge=0)
@@ -132,13 +132,13 @@ class SubtitleMode(StrEnum):
     BURN_IN = "burn_in"  # the front-end draws the brief's subtitle text into the band
 
 
-class Subtitle(_Model):
+class Subtitle(StrictModel):
     mode: SubtitleMode = SubtitleMode.NONE
     lines: int = Field(2, ge=1, le=4)
     line_spacing: float = Field(1.2, ge=1.0, le=2.0)
 
 
-class RoleSizes(_Model):
+class RoleSizes(StrictModel):
     """Type size of each text role, in reference pixels."""
 
     title: float
@@ -158,7 +158,7 @@ SCALE_PRESETS: dict[str, RoleSizes] = {
 """``comfortable`` is the analysis's header example; the other two are it times 0.85 and 1.2."""
 
 
-class ModularScale(_Model):
+class ModularScale(StrictModel):
     """A base size and a ratio: each role is one step of the ratio from the next."""
 
     base: float = Field(gt=0, description="the body size, in reference px")
@@ -169,14 +169,14 @@ class ModularScale(_Model):
         return RoleSizes(title=b * r * r, heading=b * r, body=b, label=b / r, caption=b / r / r)
 
 
-class FontPair(_Model):
+class FontPair(StrictModel):
     """A text font and a matching math font; which pairs are allowed is decided later."""
 
     text: str = "Inter"
     math: str = "latin-modern"
 
 
-class Typography(_Model):
+class Typography(StrictModel):
     font_pair: FontPair = Field(default_factory=FontPair)
     scale: ScalePreset | ModularScale = "comfortable"
     lang: str = Field("en", pattern=r"^[a-z]{2,3}(-[A-Z]{2})?$")
@@ -188,14 +188,14 @@ class Typography(_Model):
         return SCALE_PRESETS[self.scale]
 
 
-class Theme(_Model):
-    background: str = Field("#0E1117", pattern=r"^#[0-9A-Fa-f]{6}$")
+class Theme(StrictModel):
+    background: Color = "#0E1117"
 
 
-class RenderProfile(_Model):
+class RenderProfile(StrictModel):
     """Everything about the frame that is decided before any object is drawn."""
 
-    aspect: Annotated[str, AfterValidator(_check_aspect)]
+    aspect: Annotated[str, AfterValidator(check_aspect)]
     resolution: Annotated[int, Field(ge=360, le=4320), AfterValidator(_check_resolution)] = 1080
     platform: str = "plain"
     margins: Insets = Field(default_factory=lambda: Insets.uniform(DEFAULT_MARGIN))

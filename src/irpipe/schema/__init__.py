@@ -7,4 +7,7 @@ these models (step 5), so the models are the single source of truth.
 Module map:
     render_profile.py  RenderProfile: aspect, resolution, platform, margins,
                        subtitle, typography and theme of one picture
+    ir/                IR 1.0: header, body and the core objects
+    color.py           Color, ColorRef: how contracts write colors
+    base.py            StrictModel: immutable, refuses unknown fields
 """

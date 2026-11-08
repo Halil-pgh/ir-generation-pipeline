@@ -75,3 +75,41 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   It runs between the side margins and overlays, and its bottom edge sits
   on the bottom margin plus the bottom overlay. The safe area ends at its
   top edge.
+
+## IR document
+
+- `ir.json` is one flat object: the header fields (`version`, `intent`,
+  `frame`, `typography`, `colors`, `styles`) followed by the body fields
+  (`focus`, `extra_colors`, `zones`, `spaces`, `defs`, `objects`,
+  `allow`). The orchestrator owns the header and the agent owns the body;
+  no field belongs to both.
+- Every contract refuses unknown fields. Each thing has exactly one way
+  to be written: a path is a start point plus segments, never a list of
+  points; a color is `"#RRGGBB"` or `[r, g, b]`, never with alpha.
+- Ids start with a letter and use letters, digits and `_`. A dot names a
+  part of an object (`v.label`, `v.tip`), so ids never contain one.
+
+## Paint
+
+- Paint fields left out are inherited, in this order: theme defaults,
+  then the object's style classes in the order listed (a later class
+  wins), then the object's own fields.
+- `"none"` as a color means no paint. It is reserved and cannot name a
+  header color.
+- `opacity` multiplies everything about the object. `fill_opacity`
+  multiplies its fill as well. A group's opacity is multiplied into each
+  child's, and is never applied to the group as one layer.
+- Stroke widths, dashes and type sizes are in reference pixels; a size
+  may also be a text role (`title`, `heading`, `body`, `label`,
+  `caption`) from the header.
+
+## Objects
+
+- Drawing order is list order; an object's `z` moves it, higher drawn
+  later, and ties keep list order. `defs` are never drawn.
+- A text's `anchor` names the point of its box that sits at `at`:
+  horizontal part (`left`, `center`, `right`), then vertical part
+  (`top`, `center`, `baseline`, `bottom`). `center` alone is both.
+- A group's children are ids of other objects. Its transform is applied
+  as: scale, then rotate (degrees, counterclockwise), both about `pivot`;
+  then translate.
