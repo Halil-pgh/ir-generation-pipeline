@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "irpipe"
+dynamic = ["version"]
+description = "Turns a frame brief into a picture through a library-independent IR (Manim, SVG backends)."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.12,<3",
+]
+
+[project.optional-dependencies]
+# Each extra belongs to one layer, so a layer's heavy dependency is only
+# installed when that layer is used.
+geometry = ["shapely>=2.0"]       # region algebra, flood_fill, clip (step 12)
+svg = ["cairosvg>=2.7"]           # SVG reference backend: frame.svg -> frame.png (step 7)
+manim = ["manim==0.22.1"]         # Manim backend, pinned as the analysis asks (step 15)
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+
+[tool.setuptools.dynamic]
+version = { attr = "irpipe.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+irpipe = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "manim: needs Manim and LaTeX installed (slow)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import order
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "SIM",      # simplify
+    "N",        # naming
+    "RUF",      # ruff-specific
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
