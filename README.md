@@ -63,7 +63,8 @@ shell, its packages and pytest plugins otherwise load ahead of `.venv` and
 ```
 src/irpipe/   the package (layers are added step by step, see the plan)
 tests/        unit, end-to-end and backend conformance tests
-docs/         SEMANTICS.md (behaviour the schemas leave open) and spec/
+docs/         SEMANTICS.md (behaviour the schemas leave open), spec/
               (JSON Schema of ir.json, lir.json, the render profile and report.json)
+              and PLAN.md (the team's step-by-step plan, decisions and reports, in Turkish)
 examples/     hand-written inputs and outputs, such as a lir.json
 ```
