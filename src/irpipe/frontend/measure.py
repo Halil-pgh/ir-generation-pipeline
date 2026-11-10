@@ -19,6 +19,7 @@ from typing import Any
 from irpipe.artifacts import IR_NORMAL, MEASURED
 from irpipe.backends.base import E_ENVIRONMENT
 from irpipe.core import ISSUE_CODES, STAGES, Issue, IssueCode, Origin, Stage, StageContext
+from irpipe.frontend.labels import source_paths
 from irpipe.metrics import (
     METRICS,
     CachedMetrics,
@@ -74,7 +75,8 @@ def measure(
         )
     measured: dict[str, TextBox] = {}
     failed = False
-    for k, obj in enumerate(document.objects):
+    paths = source_paths(document)
+    for obj in document.objects:
         if isinstance(obj, Text):
             measured[obj.id] = metrics.text(
                 obj.text,
@@ -93,7 +95,7 @@ def measure(
                 problems.append(
                     E_TEX(
                         str(exc),
-                        path=f"objects[{k}].tex",
+                        path=f"{paths[obj.id]}.tex",
                         objects=[obj.id],
                         hint="check braces and command names; words inside a formula go "
                         "in \\text{...}",

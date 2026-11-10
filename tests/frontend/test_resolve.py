@@ -1,7 +1,8 @@
-"""resolve: a normalized IR with absolute positions becomes LIR, one group per object.
+"""resolve: a placed IR becomes LIR, one group per object.
 
-The tests write IRs the way an agent would and normalize them first, as the
-pipeline does; the cascade itself is tested in test_paint and test_normalize.
+The tests write IRs the way an agent would and normalize, measure and place
+them first, as the pipeline does; the cascade is tested in test_paint and
+test_normalize, positions in test_place.
 """
 
 from collections.abc import Callable
@@ -9,11 +10,13 @@ from typing import Any
 
 import pytest
 
-from irpipe.artifacts import IR_NORMAL, LIR, MEASURED
+from irpipe.artifacts import IR_PLACED, LIR, MEASURED
 from irpipe.core import Pipeline
+from irpipe.frontend.layout import box_at
 from irpipe.frontend.measure import measure
 from irpipe.frontend.normalize import normalize
-from irpipe.frontend.resolve import Resolve, Resolver, place_text
+from irpipe.frontend.place import place
+from irpipe.frontend.resolve import Resolve, Resolver
 from irpipe.metrics import MathBox, TextBox
 from irpipe.metrics.fixed import FixedMetrics
 from irpipe.metrics.svgpath import Subpath
@@ -26,11 +29,21 @@ LINE = {"id": "l", "type": "line", "start": [0, 0], "end": [2, 1], "color": "b"}
 type Make = Callable[..., IRDocument]
 
 
+def placed(document: IRDocument, measured: dict[str, TextBox] | None = None) -> IRDocument:
+    normal = normalize(document)
+    if measured is None:
+        measured, _ = measure(normal, FixedMetrics())
+        assert measured is not None
+    result, problems = place(normal, measured)
+    assert result is not None, problems
+    return result
+
+
 def resolve(document: IRDocument) -> lir.LIRDocument:
     normal = normalize(document)
     measured, _ = measure(normal, FixedMetrics())
     assert measured is not None
-    return Resolver(normal, measured).resolve()
+    return Resolver(placed(document), measured).resolve()
 
 
 def first_item(group: lir.Group) -> Any:
@@ -205,8 +218,7 @@ def test_a_text_is_measured_and_placed_by_its_anchor(document: Make) -> None:
     ],
 )
 def test_the_anchor_point_sits_at_at(anchor: str, x0: float, baseline: float) -> None:
-    box = TextBox(width=240, ascent=360, descent=120)  # 2 x 3 x 1 units
-    (bx0, _, _, _), found = place_text((0, 0), anchor, box)
+    (bx0, _, _, _), found = box_at((0, 0), anchor, 2, 3, 1)
     assert (bx0, found) == pytest.approx((x0, baseline))
 
 
@@ -220,21 +232,19 @@ def test_a_text_without_color_or_size_takes_the_theme_and_body(document: Make) -
 # The stage
 
 
-def test_the_stage_reads_ir_and_writes_lir(document: Make) -> None:
-    normal = normalize(document([CIRCLE]))
-    pipeline = Pipeline([Resolve()], inputs=[IR_NORMAL, MEASURED])
-    result = pipeline.run({IR_NORMAL: normal, MEASURED: {}})
+def test_the_stage_reads_the_placed_ir_and_writes_lir(document: Make) -> None:
+    pipeline = Pipeline([Resolve()], inputs=[IR_PLACED, MEASURED])
+    result = pipeline.run({IR_PLACED: placed(document([CIRCLE])), MEASURED: {}})
     assert isinstance(result.get(LIR), lir.LIRDocument)
 
 
 def test_a_formula_carries_its_glyphs_placed_on_its_box(document: Make) -> None:
     formula = {"id": "f", "type": "math", "tex": "x", "at": [1, 2], "anchor": "left_baseline"}
-    normal = normalize(document([formula]))
     square = Subpath((0, 0), [("line", ((120, 0),)), ("line", ((120, 120),))], closed=True)
     measured: dict[str, TextBox] = {
         "f": MathBox(width=120, ascent=120, descent=0, outlines=(square,))
     }
-    (group,) = Resolver(normal, measured).resolve().items
+    (group,) = Resolver(placed(document([formula]), measured), measured).resolve().items
     item = first_item(group)
     assert isinstance(item, lir.MathItem)
     assert item.box == pytest.approx((1, 2, 2, 3))  # 120 reference px is one unit
@@ -248,3 +258,67 @@ def test_the_light_theme_draws_in_black(ir: Callable[..., dict[str, Any]]) -> No
     data["frame"]["background"] = "#FAFAFA"
     item = first_item(resolve(IRDocument.model_validate(data)).items[0])
     assert item.stroke.color == "#000000"
+
+
+# Arrowheads
+
+
+def items(document: IRDocument, oid: str) -> tuple[Any, ...]:
+    group = next(g for g in lir.walk_groups(resolve(document).items) if g.id == oid)
+    return group.children
+
+
+def test_an_arrow_is_a_head_at_the_tip_and_a_line_that_stops_inside_it(document: Make) -> None:
+    vector = {**LINE, "end": [2, 0], "stroke_width": 4, "arrows": ["end"]}
+    line, head = items(document([vector]), "l")
+    length = (4 * 4 + 10) / 120  # 26 reference px
+    assert head.fill.color == line.stroke.color == "#58C4DD"
+    assert head.stroke is None
+    (triangle,) = head.subpaths
+    assert triangle.start == (2, 0)  # the tip is the line's end
+    assert triangle.segments[0].line == pytest.approx((2 - length, 0.4 * length))
+    assert line.subpaths[0].segments[-1].line == pytest.approx((2 - 0.6 * length, 0))
+    assert line.hint == lir.LineHint(start=(0, 0), end=line.subpaths[0].segments[-1].line)
+
+
+def test_arrows_at_the_start_and_midway_point_the_way_the_line_runs(document: Make) -> None:
+    vector = {**LINE, "end": [2, 0], "arrows": ["start", "mid"], "arrow_size": 24}
+    _, head = items(document([vector]), "l")
+    start, middle = head.subpaths
+    assert start.start == (0, 0)
+    assert start.segments[0].line[0] == pytest.approx(0.2)  # the head points back, to -x
+    assert middle.start == pytest.approx((1.1, 0))  # centered on the middle, pointing +x
+
+
+def test_an_arc_with_an_arrow_goes_without_a_hint(document: Make) -> None:
+    arc = {"id": "a", "type": "arc", "center": [0, 0], "radius": 1, "start_angle": 0,
+           "end_angle": 90, "arrows": ["end"]}  # fmt: skip
+    line, _ = items(document([arc]), "a")
+    assert line.hint is None
+
+
+def test_a_line_that_paints_nothing_has_no_arrow(document: Make) -> None:
+    assert items(document([{**LINE, "color": "none", "arrows": ["end"]}]), "l") == ()
+
+
+# Spaces
+
+
+def test_a_space_maps_points_and_lengths_but_not_the_stroke(document: Make) -> None:
+    circle = {**CIRCLE, "in": "P", "center": [1, 0], "stroke_width": 5}
+    spaces = [{"id": "P", "origin": [1, 1], "unit": 2}]
+    (path,) = items(document([circle], spaces=spaces), "c")
+    assert path.hint == lir.CircleHint(center=(3, 1), radius=1)
+    assert path.stroke.width == 5
+
+
+def test_different_scales_make_a_circle_an_ellipse(document: Make) -> None:
+    spaces = [{"id": "P", "unit": [2, 1]}]
+    (path,) = items(document([{**CIRCLE, "in": "P"}], spaces=spaces), "c")
+    assert path.hint == lir.EllipseHint(center=(2, 2), rx=1, ry=0.5)
+
+
+def test_a_text_in_a_space_sits_at_its_mapped_point(document: Make) -> None:
+    label = {"id": "t", "type": "text", "text": "x", "in": "P", "at": [1, 1]}
+    (item,) = items(document([label], spaces=[{"id": "P", "origin": [0, 1], "unit": 2}]), "t")
+    assert item.at == (2, 3)

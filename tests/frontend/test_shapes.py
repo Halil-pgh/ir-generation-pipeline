@@ -7,6 +7,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from irpipe.frontend import shapes
+from irpipe.frontend.geometry.affine import Matrix
 from irpipe.schema import lir
 from irpipe.schema.ir import Group, Shape
 
@@ -196,7 +197,7 @@ def group(**fields: object) -> Group:
     return Group.model_validate({"id": "g", "type": "group", "children": ["a"], **fields})
 
 
-def apply(matrix: shapes.Matrix, x: float, y: float) -> tuple[float, float]:
+def apply(matrix: Matrix, x: float, y: float) -> tuple[float, float]:
     a, b, c, d, e, f = matrix
     return a * x + c * y + e, b * x + d * y + f
 

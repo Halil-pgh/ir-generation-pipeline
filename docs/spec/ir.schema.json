@@ -33,6 +33,32 @@
       "additionalProperties": false,
       "description": "Part of a circle, from ``start_angle`` to ``end_angle``.\n\nThe arc runs counterclockwise when ``end_angle`` is larger, clockwise\nwhen it is smaller.",
       "properties": {
+        "arrows": {
+          "default": [],
+          "items": {
+            "enum": [
+              "start",
+              "mid",
+              "end"
+            ],
+            "type": "string"
+          },
+          "title": "Arrows",
+          "type": "array"
+        },
+        "arrow_size": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arrow Size"
+        },
         "id": {
           "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
           "title": "Id",
@@ -106,6 +132,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -170,33 +209,55 @@
           "default": null,
           "title": "Dash"
         },
-        "center": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+        "label": {
+          "anyOf": [
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "$ref": "#/$defs/Label"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "type": "null"
             }
           ],
-          "title": "Center",
-          "type": "array"
+          "default": null
+        },
+        "center": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            }
+          ],
+          "title": "Center"
         },
         "radius": {
           "anyOf": [
@@ -319,6 +380,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -383,6 +457,17 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "fill": {
           "anyOf": [
             {
@@ -433,32 +518,43 @@
           "title": "Fill Opacity"
         },
         "center": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Center",
-          "type": "array"
+          "title": "Center"
         },
         "radius": {
           "anyOf": [
@@ -489,85 +585,118 @@
           "minItems": 3,
           "prefixItems": [
             {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
+              "anyOf": [
                 {
-                  "anyOf": [
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
                     {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "array"
                 },
                 {
-                  "anyOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
                 }
-              ],
-              "type": "array"
+              ]
             },
             {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
+              "anyOf": [
                 {
-                  "anyOf": [
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
                     {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "array"
                 },
                 {
-                  "anyOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
                 }
-              ],
-              "type": "array"
+              ]
             },
             {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
+              "anyOf": [
                 {
-                  "anyOf": [
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
                     {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "array"
                 },
                 {
-                  "anyOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
                 }
-              ],
-              "type": "array"
+              ]
             }
           ],
           "title": "Cubic",
@@ -657,6 +786,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -721,6 +863,17 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "fill": {
           "anyOf": [
             {
@@ -771,32 +924,43 @@
           "title": "Fill Opacity"
         },
         "center": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Center",
-          "type": "array"
+          "title": "Center"
         },
         "rx": {
           "anyOf": [
@@ -944,7 +1108,7 @@
     },
     "Group": {
       "additionalProperties": false,
-      "description": "Objects that move together.\n\n``children`` are ids of other objects. The transform scales and rotates\nthem about ``pivot`` (degrees, counterclockwise), then translates them.\nThe group's opacity multiplies each child's.",
+      "description": "Objects that move together.\n\n``children`` are ids of other objects. The transform scales and rotates\nthem about ``pivot`` (degrees, counterclockwise), then translates them;\nit turns and scales their drawings too, strokes and texts included. The\ngroup's opacity multiplies each child's.",
       "properties": {
         "id": {
           "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
@@ -1119,36 +1283,47 @@
           "title": "Scale"
         },
         "pivot": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            }
+          ],
           "default": [
             0,
             0
           ],
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
-            {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "title": "Pivot",
-          "type": "array"
+          "title": "Pivot"
         }
       },
       "required": [
@@ -1158,9 +1333,219 @@
       "title": "Group",
       "type": "object"
     },
+    "Label": {
+      "additionalProperties": false,
+      "description": "A text or formula that belongs to a shape and is drawn beside one of its points.\n\n``at`` names the owner's anchor (``\"tip\"``, ``\"center\"``, ``\"right_top\"``).\nWith ``dir`` the label sits beside that point, ``gap`` away; without it,\nit is centered on the point. It is drawn as the object ``<owner>.label``,\nin the owner's color unless it says otherwise, at the ``label`` size.",
+      "properties": {
+        "text": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "tex": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tex"
+        },
+        "at": {
+          "default": "center",
+          "pattern": "^[a-z_]+$",
+          "title": "At",
+          "type": "string"
+        },
+        "dir": {
+          "anyOf": [
+            {
+              "enum": [
+                "up",
+                "down",
+                "left",
+                "right",
+                "up_left",
+                "up_right",
+                "down_left",
+                "down_right"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dir"
+        },
+        "gap": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "ge": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gap"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "enum": [
+                "title",
+                "heading",
+                "body",
+                "label",
+                "caption"
+              ],
+              "type": "string"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "weight": {
+          "anyOf": [
+            {
+              "enum": [
+                "regular",
+                "bold"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Weight"
+        },
+        "italic": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Italic"
+        }
+      },
+      "title": "Label",
+      "type": "object"
+    },
     "Line": {
       "additionalProperties": false,
       "properties": {
+        "arrows": {
+          "default": [],
+          "items": {
+            "enum": [
+              "start",
+              "mid",
+              "end"
+            ],
+            "type": "string"
+          },
+          "title": "Arrows",
+          "type": "array"
+        },
+        "arrow_size": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arrow Size"
+        },
         "id": {
           "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
           "title": "Id",
@@ -1234,6 +1619,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -1298,61 +1696,94 @@
           "default": null,
           "title": "Dash"
         },
-        "start": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+        "label": {
+          "anyOf": [
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "$ref": "#/$defs/Label"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "type": "null"
             }
           ],
-          "title": "Start",
-          "type": "array"
+          "default": null
+        },
+        "start": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            }
+          ],
+          "title": "Start"
         },
         "end": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "End",
-          "type": "array"
+          "title": "End"
         }
       },
       "required": [
@@ -1367,32 +1798,43 @@
       "additionalProperties": false,
       "properties": {
         "line": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Line",
-          "type": "array"
+          "title": "Line"
         }
       },
       "required": [
@@ -1478,56 +1920,162 @@
           "title": "Covers",
           "type": "array"
         },
+        "at": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "At"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "enum": [
+                "left_top",
+                "center_top",
+                "right_top",
+                "left_center",
+                "center",
+                "right_center",
+                "left_baseline",
+                "center_baseline",
+                "right_baseline",
+                "left_bottom",
+                "center_bottom",
+                "right_bottom"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor"
+        },
+        "next_to": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next To"
+        },
+        "dir": {
+          "anyOf": [
+            {
+              "enum": [
+                "up",
+                "down",
+                "left",
+                "right",
+                "up_left",
+                "up_right",
+                "down_left",
+                "down_right"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dir"
+        },
+        "gap": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "ge": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gap"
+        },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "tex": {
           "minLength": 1,
           "title": "Tex",
-          "type": "string"
-        },
-        "at": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
-            {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "title": "At",
-          "type": "array"
-        },
-        "anchor": {
-          "default": "center",
-          "enum": [
-            "left_top",
-            "center_top",
-            "right_top",
-            "left_center",
-            "center",
-            "right_center",
-            "left_baseline",
-            "center_baseline",
-            "right_baseline",
-            "left_bottom",
-            "center_bottom",
-            "right_bottom"
-          ],
-          "title": "Anchor",
           "type": "string"
         },
         "size": {
@@ -1591,8 +2139,7 @@
       },
       "required": [
         "id",
-        "tex",
-        "at"
+        "tex"
       ],
       "title": "Math",
       "type": "object"
@@ -1676,10 +2223,81 @@
       "title": "Mix",
       "type": "object"
     },
+    "OnRef": {
+      "additionalProperties": false,
+      "description": "A point on an object's outline: ``t`` of the way along it, or where it reaches ``x``.\n\n``t`` runs from 0 at the start to 1 at the end, by length. ``x`` is in the\nobject's own coordinates (its space, if it has one); the first point in\ndrawing order that reaches it is taken.",
+      "properties": {
+        "on": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "On",
+          "type": "string"
+        },
+        "t": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "T"
+        },
+        "x": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "X"
+        }
+      },
+      "required": [
+        "on"
+      ],
+      "title": "OnRef",
+      "type": "object"
+    },
     "Path": {
       "additionalProperties": false,
       "description": "Straight and Bezier segments, in one or more subpaths (holes are subpaths).",
       "properties": {
+        "arrows": {
+          "default": [],
+          "items": {
+            "enum": [
+              "start",
+              "mid",
+              "end"
+            ],
+            "type": "string"
+          },
+          "title": "Arrows",
+          "type": "array"
+        },
+        "arrow_size": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arrow Size"
+        },
         "id": {
           "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
           "title": "Id",
@@ -1753,6 +2371,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -1816,6 +2447,17 @@
           ],
           "default": null,
           "title": "Dash"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "fill": {
           "anyOf": [
@@ -1968,6 +2610,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -2032,6 +2687,17 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "fill": {
           "anyOf": [
             {
@@ -2083,31 +2749,42 @@
         },
         "points": {
           "items": {
-            "maxItems": 2,
-            "minItems": 2,
-            "prefixItems": [
+            "anyOf": [
               {
-                "anyOf": [
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
                   {
-                    "type": "number"
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
                   },
                   {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
                   }
-                ]
+                ],
+                "type": "array"
               },
               {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/OnRef"
               }
-            ],
-            "type": "array"
+            ]
           },
           "minItems": 3,
           "title": "Points",
@@ -2125,6 +2802,32 @@
       "additionalProperties": false,
       "description": "An open line through ``points``, in order.",
       "properties": {
+        "arrows": {
+          "default": [],
+          "items": {
+            "enum": [
+              "start",
+              "mid",
+              "end"
+            ],
+            "type": "string"
+          },
+          "title": "Arrows",
+          "type": "array"
+        },
+        "arrow_size": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Arrow Size"
+        },
         "id": {
           "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
           "title": "Id",
@@ -2198,6 +2901,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -2262,33 +2978,55 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "points": {
           "items": {
-            "maxItems": 2,
-            "minItems": 2,
-            "prefixItems": [
+            "anyOf": [
               {
-                "anyOf": [
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
                   {
-                    "type": "number"
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
                   },
                   {
-                    "type": "string"
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ]
                   }
-                ]
+                ],
+                "type": "array"
               },
               {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/OnRef"
               }
-            ],
-            "type": "array"
+            ]
           },
           "minItems": 2,
           "title": "Points",
@@ -2310,58 +3048,80 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
+              "anyOf": [
                 {
-                  "anyOf": [
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
                     {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "array"
                 },
                 {
-                  "anyOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
                 }
-              ],
-              "type": "array"
+              ]
             },
             {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
+              "anyOf": [
                 {
-                  "anyOf": [
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
                     {
-                      "type": "number"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     },
                     {
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
                     }
-                  ]
+                  ],
+                  "type": "array"
                 },
                 {
-                  "anyOf": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "string"
-                    }
-                  ]
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
                 }
-              ],
-              "type": "array"
+              ]
             }
           ],
           "title": "Quad",
@@ -2451,6 +3211,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -2515,6 +3288,17 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "fill": {
           "anyOf": [
             {
@@ -2565,32 +3349,43 @@
           "title": "Fill Opacity"
         },
         "center": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Center",
-          "type": "array"
+          "title": "Center"
         },
         "width": {
           "anyOf": [
@@ -2716,6 +3511,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -2780,6 +3588,17 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "fill": {
           "anyOf": [
             {
@@ -2830,32 +3649,43 @@
           "title": "Fill Opacity"
         },
         "center": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Center",
-          "type": "array"
+          "title": "Center"
         },
         "radius": {
           "anyOf": [
@@ -3009,6 +3839,19 @@
           "title": "Covers",
           "type": "array"
         },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "color": {
           "anyOf": [
             {
@@ -3073,6 +3916,17 @@
           "default": null,
           "title": "Dash"
         },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "fill": {
           "anyOf": [
             {
@@ -3123,32 +3977,43 @@
           "title": "Fill Opacity"
         },
         "center": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Center",
-          "type": "array"
+          "title": "Center"
         },
         "radius": {
           "anyOf": [
@@ -3197,7 +4062,7 @@
     },
     "Space": {
       "additionalProperties": false,
-      "description": "A coordinate space objects can be placed in; its fields arrive with step 11.",
+      "description": "A coordinate system objects can be drawn in with ``\"in\": \"<id>\"`` (analysis §2.3).\n\nA point (x, y) of the space is drawn at ``origin + (x * ux, y * uy)``,\nwhere ``unit`` is ``ux`` (and ``uy``) frame units per space unit; lengths\nscale the same way. Stroke widths and type sizes do not. ``origin`` may\nbe a reference (``\"safe.center\"``). ``kind`` leaves room for 3D later\n(analysis §5).",
       "properties": {
         "id": {
           "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
@@ -3206,15 +4071,426 @@
         },
         "kind": {
           "const": "cartesian2d",
+          "default": "cartesian2d",
           "title": "Kind",
+          "type": "string"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            }
+          ],
+          "default": [
+            0,
+            0
+          ],
+          "title": "Origin"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "gt": 0
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "gt": 0
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "gt": 0
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "default": 1,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "title": "Space",
+      "type": "object"
+    },
+    "Stack": {
+      "additionalProperties": false,
+      "description": "Objects laid out in a column, a row or a grid, as one box (analysis §2.8).\n\n``children`` are ids of other objects, in reading order; a grid fills\nrows of ``columns`` children, left to right, top to bottom. Each child\nsits in its cell so that its ``align`` point meets the cell's: ``left_center``\nlines a column up on the left, ``center_baseline`` a row on its\nbaselines. ``spacing`` is the room between cells: one number, or\n``[between columns, between rows]``. The stack itself is placed like a\ntext; its baseline is its first row's.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "stack",
+          "default": "stack",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "at": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "At"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "enum": [
+                "left_top",
+                "center_top",
+                "right_top",
+                "left_center",
+                "center",
+                "right_center",
+                "left_baseline",
+                "center_baseline",
+                "right_baseline",
+                "left_bottom",
+                "center_bottom",
+                "right_bottom"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor"
+        },
+        "next_to": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next To"
+        },
+        "dir": {
+          "anyOf": [
+            {
+              "enum": [
+                "up",
+                "down",
+                "left",
+                "right",
+                "up_left",
+                "up_right",
+                "down_left",
+                "down_right"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dir"
+        },
+        "gap": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "ge": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gap"
+        },
+        "children": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Children",
+          "type": "array"
+        },
+        "arrange": {
+          "default": "column",
+          "enum": [
+            "column",
+            "row",
+            "grid"
+          ],
+          "title": "Arrange",
+          "type": "string"
+        },
+        "columns": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Columns"
+        },
+        "spacing": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "ge": 0
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "ge": 0
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "ge": 0
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "default": 0.25,
+          "title": "Spacing"
+        },
+        "align": {
+          "default": "center",
+          "enum": [
+            "left_top",
+            "center_top",
+            "right_top",
+            "left_center",
+            "center",
+            "right_center",
+            "left_baseline",
+            "center_baseline",
+            "right_baseline",
+            "left_bottom",
+            "center_bottom",
+            "right_bottom"
+          ],
+          "title": "Align",
           "type": "string"
         }
       },
       "required": [
         "id",
-        "kind"
+        "children"
       ],
-      "title": "Space",
+      "title": "Stack",
       "type": "object"
     },
     "Style": {
@@ -3408,32 +4684,43 @@
       "description": "One pen stroke: a start point and the segments that follow it.",
       "properties": {
         "start": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
+          "anyOf": [
             {
-              "anyOf": [
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "type": "array"
             },
             {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
             }
           ],
-          "title": "Start",
-          "type": "array"
+          "title": "Start"
         },
         "segments": {
           "items": {
@@ -3600,56 +4887,162 @@
           "title": "Covers",
           "type": "array"
         },
+        "at": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "At"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "enum": [
+                "left_top",
+                "center_top",
+                "right_top",
+                "left_center",
+                "center",
+                "right_center",
+                "left_baseline",
+                "center_baseline",
+                "right_baseline",
+                "left_bottom",
+                "center_bottom",
+                "right_bottom"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor"
+        },
+        "next_to": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next To"
+        },
+        "dir": {
+          "anyOf": [
+            {
+              "enum": [
+                "up",
+                "down",
+                "left",
+                "right",
+                "up_left",
+                "up_right",
+                "down_left",
+                "down_right"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dir"
+        },
+        "gap": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "ge": 0
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Gap"
+        },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
         "text": {
           "minLength": 1,
           "title": "Text",
-          "type": "string"
-        },
-        "at": {
-          "maxItems": 2,
-          "minItems": 2,
-          "prefixItems": [
-            {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "anyOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "title": "At",
-          "type": "array"
-        },
-        "anchor": {
-          "default": "center",
-          "enum": [
-            "left_top",
-            "center_top",
-            "right_top",
-            "left_center",
-            "center",
-            "right_center",
-            "left_baseline",
-            "center_baseline",
-            "right_baseline",
-            "left_bottom",
-            "center_bottom",
-            "right_bottom"
-          ],
-          "title": "Anchor",
           "type": "string"
         },
         "size": {
@@ -3741,8 +5134,7 @@
       },
       "required": [
         "id",
-        "text",
-        "at"
+        "text"
       ],
       "title": "Text",
       "type": "object"
@@ -4043,6 +5435,7 @@
             "rect": "#/$defs/Rect",
             "regular_polygon": "#/$defs/RegularPolygon",
             "sector": "#/$defs/Sector",
+            "stack": "#/$defs/Stack",
             "text": "#/$defs/Text"
           },
           "propertyName": "type"
@@ -4086,6 +5479,9 @@
           },
           {
             "$ref": "#/$defs/Group"
+          },
+          {
+            "$ref": "#/$defs/Stack"
           }
         ]
       },
@@ -4109,6 +5505,7 @@
             "rect": "#/$defs/Rect",
             "regular_polygon": "#/$defs/RegularPolygon",
             "sector": "#/$defs/Sector",
+            "stack": "#/$defs/Stack",
             "text": "#/$defs/Text"
           },
           "propertyName": "type"
@@ -4152,6 +5549,9 @@
           },
           {
             "$ref": "#/$defs/Group"
+          },
+          {
+            "$ref": "#/$defs/Stack"
           }
         ]
       },

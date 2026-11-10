@@ -6,7 +6,8 @@
 After normalize no later stage needs the header's styles, color names or
 type scale: every object carries its own hex colors (or ``"none"``),
 opacity, stroke width and dash, and every text its size in reference pixels.
-The cascade itself is in paint.py.
+The cascade itself is in paint.py. Each shape's ``label`` becomes an object
+of its own first (labels.py), so it goes through the cascade too.
 
 It also reports W-UNDECLARED-COLOR where an object writes a color directly
 instead of naming one: "one concept, one color" holds only while colors have
@@ -19,6 +20,7 @@ from collections.abc import Iterator
 
 from irpipe.artifacts import IR, IR_NORMAL
 from irpipe.core import ISSUE_CODES, STAGES, Issue, IssueCode, Origin, Stage, StageContext
+from irpipe.frontend.labels import with_labels
 from irpipe.frontend.paint import PaintResolver, to_hex
 from irpipe.schema.ir import IRDocument
 
@@ -45,8 +47,9 @@ class Normalize(Stage):
 
 
 def normalize(document: IRDocument) -> IRDocument:
-    """``document`` with the paint of every object and def written out."""
+    """``document`` with labels as objects, and the paint of every object and def written out."""
     resolver = PaintResolver(document)
+    document = with_labels(document, resolver)
     return document.model_copy(
         update={
             "objects": tuple(resolver.normalized(obj) for obj in document.objects),
@@ -58,8 +61,10 @@ def normalize(document: IRDocument) -> IRDocument:
 def undeclared_colors(document: IRDocument) -> Iterator[Issue]:
     """A W-UNDECLARED-COLOR for every literal color an object writes."""
     for k, obj in enumerate(document.objects):
-        for field in ("color", "fill"):
-            value = getattr(obj, field, None)
+        label = getattr(obj, "label", None)
+        fields = [("color", obj), ("fill", obj), ("label.color", label)]
+        for field, owner in fields:
+            value = getattr(owner, field.rpartition(".")[2], None)
             if isinstance(value, tuple) or (isinstance(value, str) and value.startswith("#")):
                 written = json.dumps(value) if isinstance(value, str) else json.dumps(list(value))
                 yield W_UNDECLARED_COLOR(

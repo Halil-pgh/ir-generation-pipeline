@@ -19,16 +19,29 @@ from pydantic import Field
 from irpipe.core.allow import Allow
 from irpipe.schema.base import StrictModel
 from irpipe.schema.color import Color, ColorName, Mix
-from irpipe.schema.ir.common import Box, Id, Name, Number
+from irpipe.schema.ir.common import Box, Id, Name, Number, Point, PositiveNumber
 from irpipe.schema.ir.header import IRHeader
 from irpipe.schema.ir.objects import IRObject
 
 
 class Space(StrictModel):
-    """A coordinate space objects can be placed in; its fields arrive with step 11."""
+    """A coordinate system objects can be drawn in with ``"in": "<id>"`` (analysis §2.3).
+
+    A point (x, y) of the space is drawn at ``origin + (x * ux, y * uy)``,
+    where ``unit`` is ``ux`` (and ``uy``) frame units per space unit; lengths
+    scale the same way. Stroke widths and type sizes do not. ``origin`` may
+    be a reference (``"safe.center"``). ``kind`` leaves room for 3D later
+    (analysis §5).
+    """
 
     id: Id
-    kind: Literal["cartesian2d"]
+    kind: Literal["cartesian2d"] = "cartesian2d"
+    origin: Point = (0, 0)
+    unit: PositiveNumber | tuple[PositiveNumber, PositiveNumber] = 1
+
+    @property
+    def units(self) -> tuple[float, float]:
+        return self.unit if isinstance(self.unit, tuple) else (self.unit, self.unit)
 
 
 class IRBody(StrictModel):
@@ -38,6 +51,7 @@ class IRBody(StrictModel):
     (``"k": "44/17"``, then ``"radius": "k/2"``); they may use each other, but
     not in a loop. ``focus`` names the objects the eye should go to first. ``defs`` are
     shapes that are only operands (of a region, say) and are not drawn.
+    ``zones`` are named boxes other objects may refer to (``"plot.left_top"``).
     ``allow`` accepts warnings on purpose (core/allow.py).
     """
 

@@ -14,6 +14,7 @@ of two (the average of their channels). ``"none"`` means nothing is painted.
 
 ``PaintResolver.normalized`` writes the result back into the object's own
 fields (the normalize stage); ``painted`` reads it from there (resolve).
+A label's paint comes from its owner (labels.py).
 """
 
 from dataclasses import dataclass
@@ -104,7 +105,7 @@ class PaintResolver:
         """``obj`` with every paint field it has written out and its style classes gone."""
         paint = self.paint(obj)
         fields = type(obj).model_fields
-        update: dict[str, Any] = {"style": None, "opacity": paint.opacity}
+        update: dict[str, Any] = {"style": None, "opacity": paint.opacity, "label": None}
         if "color" in fields:
             update["color"] = paint.color or NO_PAINT
         if "fill" in fields:

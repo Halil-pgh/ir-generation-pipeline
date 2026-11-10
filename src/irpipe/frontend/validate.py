@@ -10,7 +10,8 @@ run, because resolve cannot draw what does not exist:
     E-EXPR, E-CYCLE   the named ``values`` cannot be computed, or loop
     E-SCHEMA  a field is unknown, missing or of the wrong form
     E-EXPR    an expression in the geometry cannot be read or computed
-    E-ID, E-REF, E-GROUP   names point at nothing, or groups are built wrongly
+    E-ID, E-REF, E-GROUP   names point at nothing (objects, points, spaces,
+              styles, colors), or groups and stacks are built wrongly
 
 Expressions are computed here: the IR handed on holds plain numbers. The
 schema is checked strictly: a number written as text (``"0.5"``) is only an
@@ -27,6 +28,7 @@ from pydantic import ValidationError
 from irpipe.artifacts import IR, IR_SOURCE
 from irpipe.core import STAGES, Stage, StageContext, check_allows
 from irpipe.frontend.expressions import computed_values
+from irpipe.frontend.labels import label_ids
 from irpipe.frontend.references import body_objects, reference_issues
 from irpipe.frontend.schema_errors import parse_json, schema_issues
 from irpipe.schema.ir import IRDocument
@@ -68,6 +70,6 @@ class Validate(Stage):
         if problems:
             ctx.report(*problems)
             return
-        known_ids = {obj.id for _, obj in body_objects(document)}
+        known_ids = {obj.id for _, obj in body_objects(document)} | set(label_ids(document))
         ctx.report(*check_allows(document.allow, known_ids=known_ids))
         ctx.write(IR, document)

@@ -7,6 +7,7 @@ import pytest
 
 from irpipe.artifacts import IR, IR_SOURCE
 from irpipe.core import Issue, Pipeline, RunResult
+from irpipe.frontend.normalize import W_UNDECLARED_COLOR
 from irpipe.frontend.validate import Validate
 from irpipe.schema.ir import IRDocument
 
@@ -196,7 +197,7 @@ def test_a_mix_is_made_of_two_real_colors(check: Callable[..., RunResult]) -> No
                 {"id": "h", "type": "group", "children": ["c"]},
             ],
             [],
-            "'c' is already in group 'g'; an object belongs to at most one group",
+            "'c' is already in group 'g'; an object belongs to at most one group or stack",
         ),
     ],
 )
@@ -216,7 +217,7 @@ def test_groups_that_contain_each_other_are_a_loop(check: Callable[..., RunResul
         {"id": "h", "type": "group", "children": ["g"]},
     ]
     issue = only(check(groups))
-    assert issue.message == "groups contain each other: g -> h -> g"
+    assert issue.message == "groups or stacks contain each other: g -> h -> g"
     assert issue.path == "objects[0]"
 
 
@@ -243,3 +244,125 @@ def test_an_error_in_a_text_is_placed_on_the_right_field(check: Callable[..., Ru
     text = {"id": "t", "type": "text", "text": "x", "at": [0, 0], "anchor": "middle"}
     issue = only(check([text]))
     assert issue.path == "objects[0].anchor"  # not under its "text" field, which shares the tag
+
+
+# References, spaces, next_to and labels
+
+V = {"id": "v", "type": "line", "start": [0, 0], "end": [2, 1]}
+
+
+def text_at(at: Any, **fields: Any) -> dict[str, Any]:
+    return {"id": "t", "type": "text", "text": "x", "at": at, **fields}
+
+
+@pytest.mark.parametrize(
+    ("objects", "path", "message", "hint"),
+    [
+        (
+            [V, text_at("vv.tip")],
+            "objects[1].at",
+            "'vv.tip' refers to 'vv', which is not an object, zone, frame or safe",
+            "did you mean 'v'?",
+        ),
+        (
+            [V, text_at("v.top")],
+            "objects[1].at",
+            "'v' has no point 'top'",
+            "did you mean 'tip'?",
+        ),
+        (
+            [CIRCLE, text_at("c.left_baseline")],
+            "objects[1].at",
+            "'c' has no point 'left_baseline'",
+            "only texts, formulas and stacks have a baseline; 'left_bottom' is the box's",
+        ),
+        (
+            [text_at([0, 0]), {**text_at({"on": "t", "t": 0.5}), "id": "u"}],
+            "objects[1].at.on",
+            '{"on": "t"} needs a shape to follow, and \'t\' is not one',
+            "a point on an outline needs a shape",
+        ),
+        (
+            [{**CIRCLE, "in": "Q"}],
+            "objects[0].in",
+            "'c' is drawn in space 'Q', which is not in spaces",
+            "spaces: none",
+        ),
+        (
+            [{"id": "t", "type": "text", "text": "x", "next_to": "t"}],
+            "objects[0].next_to",
+            "'t' is next to 't', which is itself",
+            None,
+        ),
+        (
+            [{**V, "label": {"text": "v", "at": "tipp"}}],
+            "objects[0].label.at",
+            "the label of 'v' sits at 'tipp', which line has not",
+            "did you mean 'tip'?",
+        ),
+    ],
+)
+def test_a_reference_that_names_nothing(
+    check: Callable[..., RunResult],
+    objects: list[dict[str, Any]],
+    path: str,
+    message: str,
+    hint: str | None,
+) -> None:
+    issue = only(check(objects))
+    assert (issue.code, issue.path, issue.message, issue.hint) == ("E-REF", path, message, hint)
+
+
+def test_zones_and_the_frame_can_be_named_and_spaces_found(
+    check: Callable[..., RunResult],
+) -> None:
+    objects = [
+        text_at("plot.center"),
+        {**text_at("frame.left_top"), "id": "u"},
+        {**CIRCLE, "in": "P"},
+    ]
+    result = check(objects, zones={"plot": [0, 0, 2, 2]}, spaces=[{"id": "P", "unit": 2}])
+    assert result.issues == ()
+
+
+def test_frame_and_safe_cannot_be_ids(check: Callable[..., RunResult]) -> None:
+    issue = only(check([{**CIRCLE, "id": "safe"}]))
+    assert (issue.code, issue.path) == ("E-ID", "objects[0].id")
+    assert issue.message == "'safe' names the picture's own box and cannot be an id"
+
+
+def test_a_zone_and_an_object_cannot_share_a_name(check: Callable[..., RunResult]) -> None:
+    issue = only(check([CIRCLE], zones={"c": [0, 0, 1, 1]}))
+    assert (issue.code, issue.path, issue.message) == (
+        "E-ID",
+        "objects[0].id",
+        "id 'c' is already used by zones.c",
+    )
+
+
+def test_an_object_in_a_group_and_a_stack_is_in_two_places(
+    check: Callable[..., RunResult],
+) -> None:
+    objects = [
+        text_at([0, 0]),
+        {"id": "g", "type": "group", "children": ["t"]},
+        {"id": "s", "type": "stack", "children": ["t"], "at": [0, 0]},
+    ]
+    issue = only(check(objects))
+    assert (issue.code, issue.message) == (
+        "E-GROUP",
+        "'t' is already in group 'g'; an object belongs to at most one group or stack",
+    )
+
+
+def test_a_point_of_no_allowed_form_names_the_forms(check: Callable[..., RunResult]) -> None:
+    issue = only(check([text_at("vtip")]))
+    assert (issue.code, issue.path) == ("E-SCHEMA", "objects[0].at")
+    assert issue.hint is not None and issue.hint.startswith("a point is [x, y]")
+
+
+def test_an_allow_entry_may_name_a_label(check: Callable[..., RunResult]) -> None:
+    allow = [{"code": W_UNDECLARED_COLOR.code, "objects": ["v.label"],
+              "reason": "the label is meant to stand out"}]  # fmt: skip
+    result = check([{**V, "label": {"text": "v"}}], allow=allow)
+    assert result.issues == ()

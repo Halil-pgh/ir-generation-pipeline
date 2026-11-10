@@ -128,6 +128,6 @@ def test_a_literal_color_on_purpose_can_be_allowed(ir_text: Callable[..., str]) 
 # Plug and play
 
 
-def test_without_normalize_resolve_has_nothing_to_draw_from() -> None:
-    with pytest.raises(PipelineConfigError, match="'resolve' requires artifact 'ir_normal'"):
+def test_without_normalize_and_place_resolve_has_nothing_to_draw_from() -> None:
+    with pytest.raises(PipelineConfigError, match="'resolve' requires artifact 'ir_placed'"):
         Pipeline([Validate(), Resolve()], inputs=[IR_SOURCE])

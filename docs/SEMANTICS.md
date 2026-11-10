@@ -88,7 +88,10 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   plus segments; a named shape (`polygon`, `arc`…) is the way to say a
   common figure, and `path` is for everything else.
 - Ids start with a letter and use letters, digits and `_`. A dot names a
-  part of an object (`v.label`, `v.tip`), so ids never contain one.
+  part of an object (`v.label`) or one of its points (`v.tip`), so ids
+  never contain one.
+- `zones` are named boxes `[left, bottom, right, top]` other objects may
+  refer to (`"plot.left_top"`); they are not drawn.
 
 ## Paint
 
@@ -133,12 +136,19 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - `ellipse` and `rect` are axis-aligned; turn them with a group.
 - Drawing order is list order; an object's `z` moves it, higher drawn
   later, and ties keep list order. `defs` are never drawn.
-- A text's `anchor` names the point of its box that sits at `at`:
-  horizontal part (`left`, `center`, `right`), then vertical part
-  (`top`, `center`, `baseline`, `bottom`). `center` alone is both.
 - A group's children are ids of other objects. Its transform is applied
   as: scale, then rotate (degrees, counterclockwise), both about `pivot`;
-  then translate.
+  then translate. It turns and scales the children's drawings, strokes
+  and texts included. `pivot` is in the group's own coordinates.
+- A stack's children are ids of other objects, laid out as a `column`
+  (the default), a `row` or a `grid` of `columns`; see Placement.
+- `line`, `polyline`, `arc` and `path` may carry `arrows` at their
+  `start`, their `end` and `mid`way along. A head is a filled triangle in
+  the line's color, pointing the way the line runs (at the start,
+  backwards), `arrow_size` reference px long (4 x the stroke width + 10
+  when left out) and 0.8 of that wide; the line stops 0.6 of a head's
+  length short of the tip. A line that paints nothing has no heads.
+- Every shape may carry a `label` (see Placement).
 
 ## LIR
 
@@ -176,15 +186,84 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   (ids, references, groups). The first kind that finds a problem stops
   the run there. A malformed `allow` entry is reported, but the IR is
   still handed on: the picture can be drawn, it just cannot be READY.
-- Spaces, defs and objects share one set of ids.
-- An object belongs to at most one group, a group never ends up inside
-  itself, and defs are never group members.
+- Spaces, zones, defs and objects share one set of ids; `frame` and
+  `safe` are taken by the picture's own boxes.
+- An object belongs to at most one group or stack, neither ever ends up
+  inside itself, and defs are never members.
+- Every reference names something that has that point: an object, a
+  label (`v.label`), a zone, `frame` or `safe` for `"id.anchor"`, a shape
+  for `{"on": ...}`. `in` names a space, `next_to` another object or a
+  zone, and a label's `at` a point its owner has.
 - A header style may only name header colors. A mix in `extra_colors`
   mixes two header colors or literal colors, never `"none"` and never
   another extra color.
 
+## Placement
+
+- Positions and lengths are in frame units, or in the units of the space
+  an object names with `in`. Type sizes, stroke widths, dashes and arrow
+  sizes are always reference px.
+- A space maps its point (x, y) to `origin + (x * ux, y * uy)`, where
+  `unit` is `ux` (and `uy`); lengths scale the same way, so a circle in a
+  space with two different scales is drawn as an ellipse. The map takes
+  the object into the coordinates it is drawn in: the frame, or its
+  group's content. A space's `origin` may be a reference (a point of the
+  frame).
+- A point is `[x, y]` or a reference. `"id.anchor"` names a point of an
+  object, a label, a zone, `frame` (the whole picture) or `safe` (the
+  header's safe area). `{"on": id, "t": t}` is the point `t` of the way
+  along a shape's outline by length (0 its start, 1 its end; moving from
+  one subpath to the next adds nothing); `{"on": id, "x": x}` the first
+  point, in drawing order, where the outline reaches `x` in the shape's
+  own coordinates. An `x` it never reaches is `E-PLACE`.
+- Anchors: every object, zone, `frame` and `safe` has the nine points of
+  its box: `left_top`, `center_top`, `right_top`, `left_center`,
+  `center`, `right_center`, `left_bottom`, `center_bottom`,
+  `right_bottom`. Texts, formulas and stacks also have `left_baseline`,
+  `center_baseline` and `right_baseline`. For a circle, ellipse,
+  rectangle, regular polygon, arc or sector, `center` is its `center`
+  field. A line, polyline, arc or path has `start`, `end` and `mid`
+  (halfway along by length); `tail` and `tip` are `start` and `end`.
+- A shape's box is its geometry's, without the stroke; its baseline is
+  its bottom. A group's box surrounds its children's boxes after the
+  group's transform. Box points of a turned object are its own box's
+  points, turned with it.
+- A reference is read in the picture: whatever spaces, groups and stacks
+  the two objects are in, the point lands exactly on the anchor. The one
+  exception is a group's `pivot` naming something inside that group: it
+  is read in the group's content, before the group turns it. Positions
+  may name objects written later; positions that depend on each other in
+  a loop are `E-CYCLE`.
+- A text, formula or stack is a box placed one of three ways: `at` with
+  `anchor` (the `anchor` point of the box sits at `at`; `center` when left
+  out); `at` with `dir` (the box sits beside the point); `next_to` with
+  `dir` (the box sits beside another object's box or a zone; `dir` is
+  `right` when left out). Beside means: on the ray from the point (or the
+  other box's center) in direction `dir`, with `gap` (0.2 units when left
+  out) between the two along that ray. `dir` is `up`, `down`, `left`,
+  `right`, `up_left`, `up_right`, `down_left`, `down_right`, an angle in
+  degrees, or `[dx, dy]`. Inside a turned group, directions turn with it.
+- A box with no place that is not in a stack is `E-PLACE`, and so is a
+  stack child that gives `at` or `next_to`: the stack places it.
+- A stack lays out its children in reading order. A column is as wide as
+  its widest child and a row as tall as its tallest; `spacing` (0.25
+  units, or `[between columns, between rows]`) separates cells. Each
+  child sits in its cell so that its `align` point meets the cell's
+  (`center` when left out); a vertical part `baseline` lines a row up on
+  one baseline, and the row is then tall enough for its highest ascent
+  and deepest descent together. The stack's box surrounds the cells, and
+  its baseline is its first child's. After placing, a stack is a group of
+  its children.
+- A shape's `label` is drawn as the text or formula `<id>.label`, at the
+  owner's point `at` (`center` when left out): beside it with `dir` and
+  `gap`, centered on it without. It takes the owner's color (its stroke,
+  else its fill) and opacity, the `label` size and the owner's `z`,
+  unless it says otherwise. It is drawn in the owner's group right after
+  the owner, or, outside groups, after every other object.
+
 ## Resolve
 
+- `resolve` draws the placed IR: every position is already a number.
 - An object inside a group is drawn inside that group, at the group's
   place in the list; members follow the group's `children` order, then
   are sorted by `z`.
@@ -197,6 +276,11 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - A text or formula is placed by the box `measure` gave it, so that its
   `anchor` point sits at `at`. Vertically, `center` is the middle of the
   box from descent to ascent.
+- An object in a space has its points mapped here, so its stroke width is
+  untouched. Its hint follows: under two different scales a circle's
+  becomes an ellipse's, and a regular polygon, arc or sector goes without
+  one. A line or polyline with arrows keeps a hint with its cut ends;
+  other shapes with arrows go without one.
 - An object that paints nothing (no stroke color and no fill) still gets
   its LIR group, with no primitives in it.
 
@@ -223,10 +307,12 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 
 - Every number of geometry may be written as text, an expression:
   positions, radii, widths and heights, corner radii, angles, rotations,
-  and group transforms. Every other number (the header, opacities,
-  stroke widths, dashes, `z`, type sizes) must be a JSON number; text
-  there is an `E-SCHEMA` error and is never converted. `true` and `false`
-  are the only booleans.
+  group transforms, a space's origin and unit, gaps and spacings, and the
+  `x` of a point on an outline. Every other number (the header,
+  opacities, stroke widths, dashes, `z`, type sizes, arrow sizes, a
+  direction's angle or vector, the `t` of a point on an outline) must be
+  a JSON number; text there is an `E-SCHEMA` error and is never
+  converted. `true` and `false` are the only booleans.
 - The language is what sympy prints: numbers (`12`, `0.5`, `1.5e-3`),
   `+ - * / **` and parentheses, `pi` and `E`, and `sqrt`, `sin`, `cos`,
   `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `log` (`log(x)` natural,

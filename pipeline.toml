@@ -7,7 +7,7 @@
 #   stage as ctx.options. A switched-off stage may keep its table.
 
 [pipeline]
-stages = ["validate", "normalize", "measure", "resolve", "render"]   # in run order
+stages = ["validate", "normalize", "measure", "place", "resolve", "render"]   # in run order
 # "check_header" (after validate) compares the IR's header with the locked one. It needs
 # the locked header as an input, so the orchestrator adds it (step 19), not this file.
 plugins = ["irpipe.frontend", "irpipe.metrics", "irpipe.backends"]  # packages that register plugins

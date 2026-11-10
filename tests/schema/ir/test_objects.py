@@ -85,7 +85,7 @@ def test_the_type_field_picks_the_model(model: type, data: dict[str, Any]) -> No
 
 def test_an_unknown_type_lists_the_known_ones() -> None:
     known = "'circle', 'ellipse', 'rect', 'regular_polygon', 'polygon', 'sector', 'line', "
-    known += "'polyline', 'arc', 'path', 'text', 'math', 'group'"
+    known += "'polyline', 'arc', 'path', 'text', 'math', 'group', 'stack'"
     with pytest.raises(ValidationError, match=known):
         validate({"id": "s", "type": "spring"})
 
@@ -130,9 +130,9 @@ def test_a_text_size_is_a_role_or_reference_pixels(size: Any, ok: bool) -> None:
             validate(data)
 
 
-def test_text_is_centered_on_its_point_unless_told_otherwise() -> None:
+def test_a_text_anchor_left_out_stays_unset_for_place_to_fill() -> None:
     text = validate({"id": "t", "type": "text", "text": "a", "at": [0, 0]})
-    assert text.anchor == "center"
+    assert text.anchor is None  # place reads it as "center"
     with pytest.raises(ValidationError, match="anchor"):
         validate({"id": "t", "type": "text", "text": "a", "at": [0, 0], "anchor": "middle"})
 
@@ -261,3 +261,93 @@ def test_an_arc_sweeps_somewhere_but_at_most_once_around(
 @pytest.mark.parametrize("model", [Line, Polyline, Arc])
 def test_open_shapes_have_no_fill(model: type[BaseModel]) -> None:
     assert "fill" not in model.model_fields
+
+
+# Points, boxes, stacks, labels and arrows (placement)
+
+
+@pytest.mark.parametrize(
+    "point",
+    [[1, "2*1"], "v.tip", "safe.center_top", "v.label.left_top", {"on": "f", "t": 0.5},
+     {"on": "f", "x": "1/2"}],
+)  # fmt: skip
+def test_a_point_is_numbers_or_a_reference(point: Any) -> None:
+    validate({"id": "c", "type": "circle", "center": point, "radius": 1})
+
+
+@pytest.mark.parametrize(
+    ("point", "message"),
+    [
+        ("vtip", "valid"),
+        ({"on": "f"}, "either t or x"),
+        ({"on": "f", "t": 0.5, "x": 1}, "either t or x"),
+        ({"on": "f", "t": 2}, "less than or equal to 1"),
+    ],
+)
+def test_a_point_of_no_known_form_is_refused(point: Any, message: str) -> None:
+    with pytest.raises(ValidationError, match=message):
+        validate({"id": "c", "type": "circle", "center": point, "radius": 1})
+
+
+@pytest.mark.parametrize(
+    ("fields", "message"),
+    [
+        ({"at": [0, 0], "next_to": "c"}, "at or next_to, not both"),
+        ({"at": [0, 0], "anchor": "center", "dir": "up"}, "give one"),
+        ({"next_to": "c", "anchor": "center"}, "not with anchor"),
+        ({"at": [0, 0], "gap": 0.2}, "it needs dir"),
+        ({"at": [0, 0], "dir": [0, 0]}, "points nowhere"),
+    ],
+)
+def test_a_box_is_placed_one_way(fields: dict[str, Any], message: str) -> None:
+    with pytest.raises(ValidationError, match=message):
+        validate({"id": "t", "type": "text", "text": "x", **fields})
+
+
+def test_a_box_may_sit_beside_a_point_or_next_to_an_object() -> None:
+    beside = validate({"id": "t", "type": "text", "text": "x", "at": "v.tip", "dir": 135.0})
+    assert beside.dir == 135
+    nearby = validate({"id": "t", "type": "math", "tex": "x", "next_to": "c", "gap": 0})
+    assert (nearby.next_to, nearby.dir) == ("c", None)
+
+
+def test_a_grid_stack_needs_columns_and_only_a_grid_takes_them() -> None:
+    stack = {"id": "s", "type": "stack", "children": ["a", "b"]}
+    assert validate(stack).arrange == "column"
+    with pytest.raises(ValidationError, match="a grid needs columns"):
+        validate({**stack, "arrange": "grid"})
+    with pytest.raises(ValidationError, match="a grid needs columns"):
+        validate({**stack, "columns": 2})
+    assert validate({**stack, "arrange": "grid", "columns": 2}).columns == 2
+
+
+@pytest.mark.parametrize(
+    ("label", "message"),
+    [
+        ({}, "either text or tex"),
+        ({"text": "a", "tex": "a"}, "either text or tex"),
+        ({"text": "a", "gap": 0.1}, "it needs dir"),
+        ({"tex": "a", "weight": "bold"}, "TeX sets its own"),
+        ({"text": "a", "at": "Tip"}, "pattern"),
+    ],
+)
+def test_a_label_is_a_text_or_a_formula(label: dict[str, Any], message: str) -> None:
+    with pytest.raises(ValidationError, match=message):
+        validate({"id": "l", "type": "line", "start": [0, 0], "end": [1, 0], "label": label})
+
+
+def test_arrows_go_on_open_shapes_once_each() -> None:
+    line = {"id": "l", "type": "line", "start": [0, 0], "end": [1, 0]}
+    assert validate({**line, "arrows": ["start", "end"]}).arrows == ("start", "end")
+    with pytest.raises(ValidationError, match="listed once"):
+        validate({**line, "arrows": ["end", "end"]})
+    with pytest.raises(ValidationError, match="arrows"):
+        validate({"id": "c", "type": "circle", "center": [0, 0], "radius": 1, "arrows": ["end"]})
+
+
+def test_in_names_a_space_and_is_written_back_as_in() -> None:
+    circle = validate({"id": "c", "type": "circle", "center": [0, 0], "radius": 1, "in": "P"})
+    assert circle.space == "P"
+    assert circle.model_dump(exclude_defaults=True)["in"] == "P"
+    with pytest.raises(ValidationError, match="space"):
+        validate({"id": "c", "type": "circle", "center": [0, 0], "radius": 1, "space": "P"})

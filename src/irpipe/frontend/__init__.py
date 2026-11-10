@@ -9,9 +9,16 @@ Module map:
     references.py     E-ID, E-REF, E-GROUP: every name points at something
     expressions.py    E-EXPR, E-CYCLE: the IR's named values and expressions
     header_lock.py    stage "check_header": E-HEADER when the locked header was changed
-    normalize.py      stage "normalize": every object's paint written out; W-UNDECLARED-COLOR
+    normalize.py      stage "normalize": labels as objects, every object's paint written out;
+                      W-UNDECLARED-COLOR
     paint.py          the paint cascade: theme, then style classes, then the object
+    labels.py         a shape's label as an object of its own; JSON paths of objects
     measure.py        stage "measure": every text's and formula's box; E-TEX
-    resolve.py        stage "resolve": normalized, measured IR with absolute positions -> LIR
-    shapes.py         circles, rectangles and group transforms as LIR geometry
+    place.py          stage "place": references, boxes, stacks and spaces as numbers;
+                      E-PLACE, E-CYCLE
+    anchors.py        the named points of objects, and every point an object holds
+    layout.py         box points, placing beside a point or box, grids
+    resolve.py        stage "resolve": placed, measured IR -> LIR; spaces, arrowheads
+    shapes.py         shapes, group transforms and arrowheads as LIR geometry
+    geometry/         affine maps; lengths, points, bounds and trimming of paths
 """

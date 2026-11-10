@@ -14,18 +14,23 @@ fields left out (``None``) are inherited: theme, then the style classes the
 object names, then the object itself (docs/SEMANTICS.md). ``"none"`` as a
 color means no paint at all.
 
-This is the first subset. Expressions such as ``"44/17"`` (step 8), anchor
-references such as ``"v.tip"``, coordinate spaces, labels, markers and math
-(step 11) widen these types later.
+A point may be a reference (``"v.tip"``, ``{"on": "f", "t": 0.5}``), and an
+object may name a coordinate space with ``in``; the place stage resolves both
+(docs/SEMANTICS.md, "Placement"). Texts, formulas and stacks are boxes: they
+sit at a point, beside a point, or next to another object. Shapes may carry
+a ``label`` and open ones ``arrows``.
 """
 
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, PositiveFloat, model_validator
+from pydantic import Field, PositiveFloat, PositiveInt, model_validator
 
 from irpipe.schema.base import StrictModel
 from irpipe.schema.color import ColorRef
 from irpipe.schema.ir.common import (
+    XY,
+    Anchor,
+    Direction,
     Id,
     Name,
     NonNegativeNumber,
@@ -62,12 +67,75 @@ class ObjectBase(StrictModel):
         return (self.style,) if isinstance(self.style, str) else self.style
 
 
-class Stroked(ObjectBase):
+class InSpace(ObjectBase):
+    """An object whose numbers may be read in a coordinate space (``"in": "P"``).
+
+    The space maps the object's points and lengths to the frame; stroke
+    widths and type sizes stay in reference pixels.
+    """
+
+    space: Name | None = Field(default=None, alias="in")
+
+
+class Label(StrictModel):
+    """A text or formula that belongs to a shape and is drawn beside one of its points.
+
+    ``at`` names the owner's anchor (``"tip"``, ``"center"``, ``"right_top"``).
+    With ``dir`` the label sits beside that point, ``gap`` away; without it,
+    it is centered on the point. It is drawn as the object ``<owner>.label``,
+    in the owner's color unless it says otherwise, at the ``label`` size.
+    """
+
+    text: str | None = Field(default=None, min_length=1)
+    tex: str | None = Field(default=None, min_length=1)
+    at: str = Field(default="center", pattern=r"^[a-z_]+$")
+    dir: Direction | None = None
+    gap: NonNegativeNumber | None = None
+    size: Size | None = None
+    color: ColorRef | None = None
+    weight: Literal["regular", "bold"] | None = None
+    italic: bool | None = None
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Self:
+        if (self.text is None) == (self.tex is None):
+            raise ValueError("a label has either text or tex")
+        if self.gap is not None and self.dir is None:
+            raise ValueError("gap is the distance beside the point; it needs dir")
+        if self.tex is not None and (self.weight is not None or self.italic is not None):
+            raise ValueError("weight and italic are for a text label; TeX sets its own")
+        return self
+
+
+class Stroked(InSpace):
     """An object drawn with a line: its color, width and dash pattern."""
 
     color: ColorRef | None = None
     stroke_width: PositiveFloat | None = None
     dash: tuple[PositiveFloat, ...] | None = None
+    label: Label | None = None
+
+
+ArrowPlace = Literal["start", "mid", "end"]
+
+
+class Arrows(StrictModel):
+    """Arrowheads on an open line: at its ``start``, its ``end``, or halfway along (``mid``).
+
+    A head points the way the line runs (at the start, backwards) and is
+    filled in the line's color; the line stops inside it. ``arrow_size`` is
+    the head's length in reference pixels; it grows with the stroke width
+    when left out.
+    """
+
+    arrows: tuple[ArrowPlace, ...] = ()
+    arrow_size: PositiveFloat | None = None
+
+    @model_validator(mode="after")
+    def _each_once(self) -> Self:
+        if len(set(self.arrows)) != len(self.arrows):
+            raise ValueError("each arrow place is listed once")
+        return self
 
 
 class Filled(Stroked):
@@ -123,13 +191,13 @@ class Polygon(Filled):
     points: tuple[Point, ...] = Field(min_length=3)
 
 
-class Line(Stroked):
+class Line(Stroked, Arrows):
     type: Literal["line"] = "line"
     start: Point
     end: Point
 
 
-class Polyline(Stroked):
+class Polyline(Stroked, Arrows):
     """An open line through ``points``, in order."""
 
     type: Literal["polyline"] = "polyline"
@@ -145,7 +213,7 @@ def check_sweep(start_angle: float, end_angle: float) -> None:
         raise ValueError(f"the arc sweeps {abs(sweep):g} degrees; at most 360 is allowed")
 
 
-class Arc(Stroked):
+class Arc(Stroked, Arrows):
     """Part of a circle, from ``start_angle`` to ``end_angle``.
 
     The arc runs counterclockwise when ``end_angle`` is larger, clockwise
@@ -204,7 +272,7 @@ class Subpath(StrictModel):
     closed: bool = False
 
 
-class Path(Filled):
+class Path(Filled, Arrows):
     """Straight and Bezier segments, in one or more subpaths (holes are subpaths)."""
 
     type: Literal["path"] = "path"
@@ -212,35 +280,50 @@ class Path(Filled):
     fill_rule: Literal["nonzero", "evenodd"] = "nonzero"
 
 
-Anchor = Literal[
-    "left_top",
-    "center_top",
-    "right_top",
-    "left_center",
-    "center",
-    "right_center",
-    "left_baseline",
-    "center_baseline",
-    "right_baseline",
-    "left_bottom",
-    "center_bottom",
-    "right_bottom",
-]
-"""Which point of the text sits at ``at``: horizontal part, then vertical part."""
+class Placed(ObjectBase):
+    """Where a box (a text, a formula or a stack) goes. One of three ways:
+
+    - ``at`` and ``anchor``: the ``anchor`` point of the box sits at ``at``
+      (``center`` when left out);
+    - ``at`` and ``dir``: the box sits beside the point ``at``, in direction
+      ``dir``, ``gap`` away from it;
+    - ``next_to`` and ``dir``: the box sits beside another object's box,
+      ``gap`` away (``dir`` is ``right`` when left out).
+
+    A box inside a stack gives none of them; the stack places it.
+    """
+
+    at: Point | None = None
+    anchor: Anchor | None = None
+    next_to: Id | None = None
+    dir: Direction | None = None
+    gap: NonNegativeNumber | None = None
+
+    @model_validator(mode="after")
+    def _one_way_to_place(self) -> Self:
+        if self.at is not None and self.next_to is not None:
+            raise ValueError("give at or next_to, not both")
+        if self.anchor is not None and self.dir is not None:
+            raise ValueError(
+                "anchor puts a point of the box on at; dir puts the box beside it; give one"
+            )
+        if self.anchor is not None and self.next_to is not None:
+            raise ValueError("next_to places the box with dir and gap, not with anchor")
+        if self.gap is not None and self.dir is None and self.next_to is None:
+            raise ValueError("gap is the distance beside a point or object; it needs dir")
+        return self
 
 
-class Text(ObjectBase):
+class Text(InSpace, Placed):
     type: Literal["text"] = "text"
     text: str = Field(min_length=1)
-    at: Point
-    anchor: Anchor = "center"
     size: Size | None = None
     color: ColorRef | None = None
     weight: Literal["regular", "bold"] | None = None
     italic: bool | None = None
 
 
-class Math(ObjectBase):
+class Math(InSpace, Placed):
     """A formula in TeX, set in display style and placed like a text.
 
     ``tex`` is what goes between the dollars: ``"\\frac{a}{b}"``. The
@@ -250,8 +333,6 @@ class Math(ObjectBase):
 
     type: Literal["math"] = "math"
     tex: str = Field(min_length=1)
-    at: Point
-    anchor: Anchor = "center"
     size: Size | None = None
     color: ColorRef | None = None
 
@@ -260,20 +341,53 @@ class Group(ObjectBase):
     """Objects that move together.
 
     ``children`` are ids of other objects. The transform scales and rotates
-    them about ``pivot`` (degrees, counterclockwise), then translates them.
-    The group's opacity multiplies each child's.
+    them about ``pivot`` (degrees, counterclockwise), then translates them;
+    it turns and scales their drawings too, strokes and texts included. The
+    group's opacity multiplies each child's.
     """
 
     type: Literal["group"] = "group"
     children: tuple[Id, ...] = Field(min_length=1)
-    translate: Point = (0, 0)
+    translate: XY = (0, 0)
     rotate: Number = 0
     scale: PositiveNumber | tuple[PositiveNumber, PositiveNumber] = 1
     pivot: Point = (0, 0)
 
 
+class Stack(Placed):
+    """Objects laid out in a column, a row or a grid, as one box (analysis §2.8).
+
+    ``children`` are ids of other objects, in reading order; a grid fills
+    rows of ``columns`` children, left to right, top to bottom. Each child
+    sits in its cell so that its ``align`` point meets the cell's: ``left_center``
+    lines a column up on the left, ``center_baseline`` a row on its
+    baselines. ``spacing`` is the room between cells: one number, or
+    ``[between columns, between rows]``. The stack itself is placed like a
+    text; its baseline is its first row's.
+    """
+
+    type: Literal["stack"] = "stack"
+    children: tuple[Id, ...] = Field(min_length=1)
+    arrange: Literal["column", "row", "grid"] = "column"
+    columns: PositiveInt | None = None
+    spacing: NonNegativeNumber | tuple[NonNegativeNumber, NonNegativeNumber] = 0.25
+    align: Anchor = "center"
+
+    @model_validator(mode="after")
+    def _columns_for_grid(self) -> Self:
+        if (self.arrange == "grid") != (self.columns is not None):
+            raise ValueError('a grid needs columns, and only "arrange": "grid" takes them')
+        return self
+
+
+Container = Group | Stack
+"""An object whose ``children`` are other objects."""
+
 Shape = Circle | Ellipse | Rect | RegularPolygon | Polygon | Sector | Line | Polyline | Arc | Path
 """Every object that is drawn as a path."""
 
-IRObject = Annotated[Shape | Text | Math | Group, Field(discriminator="type")]
+Open = Line | Polyline | Arc | Path
+"""Shapes with a start and an end, which may carry arrowheads."""
+
+IRObject = Annotated[Shape | Text | Math | Group | Stack, Field(discriminator="type")]
 """Any core object; ``type`` picks the model."""

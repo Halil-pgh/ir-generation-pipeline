@@ -27,8 +27,11 @@ def test_the_example_renders_and_the_command_says_ready(
 def test_a_broken_ir_prints_its_issues_and_fails(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    data = json.loads(EXAMPLE.read_text())
+    circle = next(obj for obj in data["objects"] if obj["type"] == "circle")
+    circle["raduis"] = circle.pop("radius")
     broken = tmp_path / "broken.json"
-    broken.write_text(EXAMPLE.read_text().replace('"radius": 0.08', '"raduis": 0.08'))
+    broken.write_text(json.dumps(data))
     out = tmp_path / "out"
     status = main(["render", str(broken), "-o", str(out), "--config", str(CONFIG)])
     assert status == 1

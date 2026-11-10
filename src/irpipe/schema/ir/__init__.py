@@ -6,11 +6,23 @@
 Module map:
     document.py  IRDocument (the whole ir.json), IRBody (what the agent writes)
     header.py    IRHeader (what the orchestrator writes and locks)
-    objects.py   the core objects: basic shapes, path, text, group
-    common.py    ids, points, boxes, sizes
+    objects.py   the core objects: basic shapes, path, text, math, group, stack
+    common.py    ids, points and references, boxes, sizes, directions, anchors
 """
 
-from irpipe.schema.ir.common import Box, Id, Number, Point, Role, Size
+from irpipe.schema.ir.common import (
+    XY,
+    Anchor,
+    AnchorRef,
+    Box,
+    Direction,
+    Id,
+    Number,
+    OnRef,
+    Point,
+    Role,
+    Size,
+)
 from irpipe.schema.ir.document import BODY_FIELDS, HEADER_FIELDS, IRBody, IRDocument, Space
 from irpipe.schema.ir.header import (
     IR_VERSION,
@@ -23,17 +35,22 @@ from irpipe.schema.ir.header import (
     header_hash,
 )
 from irpipe.schema.ir.objects import (
-    Anchor,
     Arc,
+    Arrows,
     Circle,
+    Container,
     CubicTo,
     Ellipse,
     Group,
+    InSpace,
     IRObject,
+    Label,
     Line,
     LineTo,
     Math,
+    Open,
     Path,
+    Placed,
     Polygon,
     Polyline,
     QuadTo,
@@ -42,6 +59,7 @@ from irpipe.schema.ir.objects import (
     Sector,
     Segment,
     Shape,
+    Stack,
     Subpath,
     Text,
 )
@@ -50,11 +68,16 @@ __all__ = [
     "BODY_FIELDS",
     "HEADER_FIELDS",
     "IR_VERSION",
+    "XY",
     "Anchor",
+    "AnchorRef",
     "Arc",
+    "Arrows",
     "Box",
     "Circle",
+    "Container",
     "CubicTo",
+    "Direction",
     "Ellipse",
     "FrameHeader",
     "Group",
@@ -63,11 +86,16 @@ __all__ = [
     "IRHeader",
     "IRObject",
     "Id",
+    "InSpace",
+    "Label",
     "Line",
     "LineTo",
     "Math",
     "Number",
+    "OnRef",
+    "Open",
     "Path",
+    "Placed",
     "Point",
     "Polygon",
     "Polyline",
@@ -80,6 +108,7 @@ __all__ = [
     "Shape",
     "Size",
     "Space",
+    "Stack",
     "Style",
     "Subpath",
     "SubtitleHeader",

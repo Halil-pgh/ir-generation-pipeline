@@ -29,6 +29,10 @@ E_SCHEMA = ISSUE_CODES.register(
 )
 
 COLOR_FORMS = 'a color is "#RRGGBB", [r, g, b], the name of a color, or "none"'
+POINT_FORMS = (
+    'a point is [x, y], a reference "id.anchor" (such as "v.tip" or "safe.center_top"), '
+    'or {"on": id, "t": 0..1} or {"on": id, "x": x}'
+)
 FORM_HINTS = {
     "color": COLOR_FORMS,
     "fill": COLOR_FORMS,
@@ -37,6 +41,11 @@ FORM_HINTS = {
     "style": "a style class name, or a list of them",
     "scale": "one factor, or [sx, sy]",
     "segments": 'a segment is {"line": p}, {"quad": [c, p]} or {"cubic": [c1, c2, p]}',
+    "dir": "a direction is up, down, left, right, up_left, up_right, down_left, down_right, "
+    "an angle in degrees, or [dx, dy]",
+    "spacing": "one number, or [between columns, between rows]",
+    "unit": "one number, or [ux, uy]",
+    **dict.fromkeys(("center", "at", "start", "end", "points", "pivot", "origin"), POINT_FORMS),
 }
 """What to tell the agent when a value fits none of a field's forms, by field name."""
 
@@ -74,7 +83,8 @@ def schema_issues(raw: Any, error: ValidationError, field_names: Collection[str]
         if expression is not None:
             context = expression.get("ctx") or {}
             hint = str(context.get("hint", "")) or None
-            issues.append(E_EXPR(str(context.get("message")), path=where or None, hint=hint))
+            exact = format_path(locate(raw, expression["loc"], through_unions=True))
+            issues.append(E_EXPR(str(context.get("message")), path=exact or None, hint=hint))
             continue
         if len(details) == 1:
             message, hint = describe(details[0], field_names)
@@ -86,12 +96,15 @@ def schema_issues(raw: Any, error: ValidationError, field_names: Collection[str]
     return issues
 
 
-def locate(raw: Any, loc: Sequence[str | int]) -> Path:
+def locate(raw: Any, loc: Sequence[str | int], *, through_unions: bool = False) -> Path:
     """The part of a pydantic location that is a path in the file.
 
     Pydantic locations also name the union member they tried (``circle``,
     ``tuple[...]``). The tag of a typed object is skipped; at the first other
     union member the path stops, so every member's error lands in one place.
+    ``through_unions`` skips the member's name instead and follows the path
+    to the end: an expression's error belongs to the number it is in
+    (``center[1]``), whatever other forms the point could have taken.
     """
     path: Path = []
     node = raw
@@ -107,6 +120,8 @@ def locate(raw: Any, loc: Sequence[str | int]) -> Path:
             tag_skipped = False
         elif isinstance(part, str) and isinstance(node, dict) and i == len(loc) - 1:
             path.append(part)  # a field that is missing from the file
+        elif through_unions and isinstance(part, str):
+            continue  # the name of the form that was tried
         else:
             break  # one of several forms the value could have taken
     return path
