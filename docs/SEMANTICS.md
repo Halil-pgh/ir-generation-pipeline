@@ -456,6 +456,14 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   (origin `internal`, a fault in the compiler) or `E-ENVIRONMENT` (Manim or
   a tool is missing). Then nothing is drawn, but `scene.py` is still
   written. The run folder gets nothing else.
+- Every backend draws the same LIR the same way, and the SVG backend is
+  the reference (`tests/conformance`). Outside texts, at most 0.1% of the
+  ink pixels may differ by more than 128 (of 255), and the mean difference
+  over the frame is at most 0.1. Texts are set by each backend's own
+  engine, so only where their ink lies is compared: each edge within
+  1.5 px plus 3% of the text's extent along that axis.
+- The LIR has no miter limit yet: the SVG backend uses SVG's 4 and Manim
+  cairo's 10, so a join sharper than about 29 degrees differs.
 
 ## Expressions
 

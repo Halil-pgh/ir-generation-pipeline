@@ -60,6 +60,11 @@ make format      # apply formatting
 make spec        # regenerate docs/spec/ after changing a contract model
 ```
 
+The tests marked `manim` draw with Manim, among them the conformance
+tests (`tests/conformance`), which draw small pictures with both backends
+and compare them pixel by pixel. They take most of the run; to skip them,
+`env -u PYTHONPATH .venv/bin/pytest -m "not manim"`.
+
 The Makefile clears `PYTHONPATH`. If a ROS environment is sourced in your
 shell, its packages and pytest plugins otherwise load ahead of `.venv` and
 `pytest` fails. Running the tools directly? Use `env -u PYTHONPATH .venv/bin/pytest`.

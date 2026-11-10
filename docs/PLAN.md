@@ -175,7 +175,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 13 | F2 | Kontroller (lint) | checks/: offscreen, safe area, subtitle, text overlap, contrast, min text size… | Her kontrol ayrı dosya; config'den kapatılabilir; report.json yazılır | Tamam |
 | 14 | F3 | Yetenek listesi + lowering | frontend/lower.py | Desteklenmeyen özellik basit primitive'lere iner ya da IR terimleriyle hata döner | Tamam |
 | 15 | F3 | Manim kod üretici | backends/manim/: scene.py üretimi, render, harness | `manim -s scene.py Frame` çalışır; değişken adları IR id'leri | Tamam |
-| 16 | F3 | Backend uygunluk testleri | tests/conformance/ | SVG ve Manim çıktıları tolerans içinde piksel farkıyla eşleşir | Bekliyor |
+| 16 | F3 | Backend uygunluk testleri | tests/conformance/ | SVG ve Manim çıktıları tolerans içinde piksel farkıyla eşleşir | Tamam |
 | 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Bekliyor |
 | 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Bekliyor |
 | 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Bekliyor |
@@ -329,6 +329,11 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K111 | Varsayılan backend `manim`; SVG referansı `backend = "svg"` ile seçilir. Bir koşuda tek backend çalışır, iki backend'in aynı run klasörüne yazması 19. adımda | Ekibin kararı (10 Kasım). `make venv` artık Manim'i de kurar; 6. ve 7. adımın uçtan uca testleri iki backend'i de çizer | Onaylandı |
 | K112 | Manim'in formül ve metin önbelleği `~/.cache/irpipe/manim`'de, çalışma klasörü geçici. Ayarlar `[options.render.manim]`: `png`, `timeout`, `cache_dir`. manim extra'sı pangocffi'yi de kurar | Run klasörüne yalnızca scene.py ve frame.png düşer; mürekkep ölçümü Pango ister | Onaylandı |
 | K113 | ruff format Markdown dosyalarını biçimlendirmez (`[tool.ruff.format] exclude = ["*.md"]`) | ruff 0.17 Markdown içindeki Python bloklarını da biçimlendiriyor ve PLAN.md yüzünden `make check` kalıyordu; belgeler yazıldıkları gibi kalsın | Onaylandı |
+| K114 | Uygunluk ölçütü: SVG backend'i referans; Manim aynı LIR'den aynı resmi çizmeli. Metin dışında, mürekkep piksellerinin en fazla %0.1'i 128'den (255 üzerinden) fazla farklı olabilir ve tüm karedeki ortalama fark en fazla 0.1 | Ölçüldü: temiz durumların hepsi 0'da ya da birkaç gri tonunda; bilinen ayrışmalar %0.7'nin üstünde. Sınır ikisini net ayırıyor | Onaylandı |
+| K115 | Düz metin piksel piksel değil, mürekkebinin yeriyle karşılaştırılır: kutusu karşılaştırmadan çıkarılır, her kenarı 1.5 px artı o eksendeki boyunun %3'ü içinde olmalı | Analiz §3: metin bölgelerinde tolerans gerekir; her backend metni kendi motoruyla çiziyor (SVG cairosvg, Manim Pango) | Onaylandı |
+| K116 | Durumlar üç kaynaktan: boya (çizgi, uç, köşe, kesik, dolgu, opaklık, z sırası) doğrudan LIR'den; şekiller, dönüşümler ve metin IR'den, front-end'den geçerek; altı oran ve çözünürlükte aynı sahne ve mutlak çizgi kalınlığı | LIR iki backend'e tam aynı sayıları verir; ipuçları ve metin kutuları ise ancak front-end'den gelince gerçekle tutarlı | Onaylandı |
+| K117 | Bilinen her ayrışma, nedenini (bir S satırı ya da kabul edilmiş bir varsayım) söyleyen katı bir xfail; yalnızca resim farkıyla düşebilir (`raises`). Düzeltildiği gün test kırmızıya döner | Önceki adımlar bu adımda değiştirilemez; fark görünür ve izlenir kalsın | Onaylandı |
+| K118 | Uygunluk testleri `manim` işaretli; Manim ya da cairosvg yoksa atlanır; formüller oturum boyunca tek önbellekte dizilir. `pytest -m "not manim"` hızlı yol | `make check` ~50 s; Manim'siz koşu 9 s | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -342,6 +347,9 @@ Tamamlanmış adımlarda bulunan, ama ekip kararıyla dokunulmayan sorunlar: ön
 | S2 | 12 | `frontend/geometry/areas.py`, `area()` (40–41. satırlar) ve `_valid()` | Tek alt yollu ve kendini kesen bir şekilde dolgu kuralı yok sayılıyor: alan hep even-odd gibi çıkıyor. K89 sarım sayısına uyulduğunu söylüyor | Tek alt yollu pentagram (R = 1): `area(nonzero)` = `area(evenodd)` = 0.7757. Nonzero'nun alanı, ortadaki beşgenle (0.3469) birlikte 1.1226 olmalı. Bu alanı kullanan bölgeler ve kontroller (`fill_overlap`, `contrast`) etkilenir | Değiştirilmedi |
 | S3 | 14 | `frontend/lower.py`, `_nonzero()` (382. satır) | Even-odd → nonzero indirgemesi yalnızca farklı alt yolların kesişmesine bakıyor. Kendini kesen tek alt yol olduğu gibi kalıyor ve resim değişiyor | Tek alt yollu, even-odd dolgulu pentagram even-odd çizemeyen bir backend için indirildi: orta nokta önce boş (0), sonra dolu (255); hiçbir uyarı yok. Manim backend'i even-odd çizemediği için bu ona ulaşır | Değiştirilmedi |
 | S4 | — (ortam) | `pyproject.toml`, `docs/PLAN.md` | Bu cihazdaki ruff 0.17.4 Markdown içindeki Python bloklarını da biçimlendiriyor; PLAN.md'nin `Stage` örneği yüzünden `make check` 15. adımdan önce de kalıyordu (`ruff>=0.6` sürüm sabitlemiyor) | `make check` → `docs/PLAN.md:74: File would be reformatted` | 15. adımda K113 ile giderildi; kod değişmedi |
+| S5 | 7 | `backends/svg/writer.py`, `Frame.matrix()` | Grup matrisinin katsayıları 3 ondalığa yuvarlanıyor, ama mutlak piksel koordinatlarıyla (~1000) çarpılıyor: dönen ya da eğik bir grup 1080p'de ~0.6 px kayık çiziliyor, 4K'da iki katı | 0.5 rad dönen bir dikdörtgen: SVG ile Manim arasında 279 güçlü fark pikseli. Aynı SVG yalnızca matris tam değerle yazılınca o bölgede Manim'le piksel piksel aynı (ortalama fark 0.884 → 0.000) | Değiştirilmedi; uygunluk testinde xfail |
+| S6 | 14 | `frontend/lower.py`, `_dashes()` | Desen tam bir alt yolun sonunda bittiğinde SVG'nin sona koyduğu sıfır uzunluklu kesiği lowering atıyor; yuvarlak ya da kare uçta SVG orada bir nokta çiziyor. SEMANTICS kesiklerin "SVG'nin dizdiği gibi" dizildiğini söylüyor | 14 birimlik çizgi, desen [20, 20], yuvarlak uç: SVG çizgi sonunda 8 px'lik nokta çiziyor, lowering'den geçen Manim çizmiyor | Değiştirilmedi; uygunluk testinde xfail |
+| S7 | 5, 7 | LIR (`StrokePaint`), `SEMANTICS.md`, SVG yazıcısı | LIR ve SEMANTICS miter sınırını belirtmiyor; SVG backend'i SVG'nin varsayılanı 4'ü, Manim cairo'nun 10'unu kullanıyor. ~29°'den dar köşeler iki backend'de farklı | 20 px çizgili dar bir köşe: SVG ucu kesiyor, Manim sivri bırakıyor (mürekkebin %1.9'u farklı) | Değiştirilmedi; uygunluk testinde xfail |
 
 ## Adım raporları
 
@@ -353,6 +361,50 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 16 — Backend uygunluk testleri · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı: SVG ve Manim aynı LIR'den tolerans içinde aynı resmi çiziyor. `tests/conformance/` küçük resimleri iki backend'le çizip piksel piksel karşılaştırıyor: çizgi kalınlığı, uçlar, köşeler, kesikler, delikli dolgu, opaklık, z sırası, adlı şekiller, dönüşümler, altı oran ve çözünürlük, metin, formül ve taban çizgisi. Üç ayrışma bulundu, üçü de önceki adımlardan; dokunulmadı, "berkerdnmz cihazında bulunan sıkıntılar"a yazıldı (S5–S7) ve testlerde katı xfail olarak izleniyor. `make check` temiz: 855 test, 4 bilinen ayrışma (22 test yeni), mypy strict, ruff. Kaynak koda (`src/`) dokunulmadı.
+
+![16. adımda bulunan üç ayrışma: SVG, Manim ve aralarındaki fark](plan/adim-16.png)
+
+Bulunan üç ayrışma, büyütülmüş: solda SVG, ortada Manim, sağda fark. Üst satırda dönen grup yarım piksel kayık (S5), ortada desenin bittiği yerdeki nokta (S6), altta dar köşenin ucu (S7).
+
+**Nasıl çalışıyor.** Her test bir LIR'i (ya da front-end'den geçen bir IR'yi) iki backend'le, render aşamasının kendisiyle çiziyor ve iki `frame.png`'yi karşılaştırıyor (`tests/conformance/conftest.py`). Metin dışında bir piksel, bir kanalı 128'den fazla farklıysa "uyuşmuyor" sayılıyor; mürekkebin %0.1'inden fazlası uyuşmazsa ya da ortalama fark 0.1'i geçerse test kalıyor ve iki resimle fark resmi testin klasöründe tutuluyor (K114). Düz metinlerin kutusu bu karşılaştırmadan çıkarılıyor; onun yerine mürekkeplerinin kenarları karşılaştırılıyor (K115).
+
+| Konu | Sonuç |
+| --- | --- |
+| Çizgi kalınlıkları ve uçlar (2–30 px; butt, round, square), dolgular, delikli dolgu, opaklık, z sırası | Piksel piksel aynı ya da en fazla birkaç gri tonu |
+| Adlı şekiller (Manim kendi sınıflarıyla, SVG yollarla) | Eşleşiyor |
+| Kesikler: düz, tek sayılı desen, yuvarlak uç, eğri, dolgulu kapalı yol | Eşleşiyor; desen tam çizginin sonunda biterse S6 |
+| Köşeler: miter, round, bevel | Eşleşiyor; ~29°'den dar köşede S7 |
+| Dönüşümler: 90°, 180°, 2 kat, iç içe | Eşleşiyor; tam olmayan açıda S5 (SVG ~0.6 px kayık); eşit olmayan ölçekte Adım 14'ün kabul edilmiş yaklaşımı |
+| 16:9, 9:16, 1:1, 4:5, 21:9 ve 16:9 4K | Eşleşiyor; 4 px çizgi iki backend'de de 1080'de 4 px, 2160'ta 8 px |
+| Örnekler, metin dışında | projection 0, regions 1 uyuşmayan piksel |
+| Düz metin | Dikeyde ≤ 1 px; yatayda ≤ 4 px (~%3); SVG metni %10–25 daha kalın |
+| Metin ve formül tek taban çizgisinde | İki backend'de de ≤ 1 px |
+
+**Üretilen dosyalar.** `tests/conformance/` altında 5 dosya ve `docs/plan/adim-16.png` (Dosya kaydı'nda). Değişenler: `SEMANTICS.md` (Backends bölümüne uygunluk ölçütü ve miter sınırı), README (Manim testleri ve onları atlamak).
+
+**Plandan sapmalar.**
+
+- Kabul kriteri dört durum dışında karşılanıyor. Üçü önceki adımlardaki hatalardan (S5–S7), biri Adım 14'te kabul edilmiş yaklaşımdan (eşit olmayan ölçekte çizgi kalınlığı). Önceki adımlar değiştirilmediği için bunlar düzeltilmedi; katı xfail olarak duruyorlar (K117).
+- Düz metin piksel piksel değil, mürekkebinin yeriyle karşılaştırılıyor (K115); analiz metin bölgelerinde tolerans öngörüyordu.
+- Plan yalnızca `tests/conformance/` diyordu; kaynak kodda değişiklik yok.
+
+**Bulunan sorunlar.** S5 (Adım 7: SVG grup matrisinin yuvarlanması), S6 (Adım 14: sondaki sıfır uzunluklu kesik), S7 (Adım 5 ve 7: miter sınırı). Üçü de çalıştırılarak doğrulandı; ayrıntılar "berkerdnmz cihazında bulunan sıkıntılar" başlığında.
+
+**Varsayımlar.**
+
+- Eşikler ölçümden seçildi: temiz durumların hepsi 0'da ya da birkaç gri tonunda kalıyor, bilinen ayrışmalar mürekkebin %0.7'sini aşıyor.
+- Metin ölçütü SVG'nin metni Pango'dan biraz geniş ve kalın çizdiği bilinerek seçildi (cairosvg metni kendi yoluyla diziyor). Front-end'in ölçümüne uyan Manim.
+- Görsel (image) sınanmıyor: IR'de görsel nesnesi yok, Manim de onu çizmiyor (K104).
+
+**Kararlar.** K114–K118 (Karar günlüğü).
+
+**Nasıl denenir.** `make check` (Manim testleri dahil ~50 s) ya da yalnızca bu adım için `env -u PYTHONPATH .venv/bin/pytest tests/conformance -rxX`. Bir test kalırsa mesajı, iki resmin ve fark resminin durduğu klasörü söylüyor. Hızlı yol: `env -u PYTHONPATH .venv/bin/pytest -m "not manim"`.
+
+**Açık kalanlar.** S5–S7'nin düzeltilmesi ekibin kararı; düzeltilen her biri bir xfail'i kırmızıya çevirir, o zaman işareti kaldırılır. Commit edildi.
 
 ### Adım 15 — Manim kod üretici · 10 Kasım 2026
 
@@ -1130,3 +1182,8 @@ make check    # lint + mypy + testler
 | `src/irpipe/backends/manim/harness.py` | 15 | scene.py'yi ayrı süreçte Manim'le çizer; her nesneyi tek başına kurup hatayı nesneye bağlar | `python -m irpipe.backends.manim.harness SCENE MANIFEST RESULT [--png] [--media] [--cache]`, `draw()` |
 | `tests/backends/test_manim_scene.py` | 15 | scene.py: adlar, şekil sınıfları, ipucunun ne zaman kullanıldığı, birimler, metin ve formül boyutları, dönüşümler, satır uzunluğu, ayarlar, zaman aşımı, mutlak yollar (Manim gerekmez) | pytest testi (35) |
 | `tests/backends/test_manim_render.py` | 15 | Manim'le gerçekten çizmek: `manim -s`, hatanın nesneye bağlanması, göreli run klasörü, piksel düzeyinde metin ve formül konumu, dönüşümde çizgi kalınlığı (`manim` işaretli) | pytest testi (6) |
+| `tests/conformance/conftest.py` | 16 | Uygunluk düzeneği: bir LIR'i (ya da IR'yi front-end'den geçirip) iki backend'le çizer; metin dışını piksel piksel, metni mürekkebinin yeriyle karşılaştırır; ölçütler burada | fixture: `bench` (`.lir`, `.ir`, `.lir_document`), `group`, `manim_cache`; `Drawn.assert_alike()`, `.assert_texts_alike()` |
+| `tests/conformance/test_paint.py` | 16 | Çizgi kalınlıkları ve uçlar, köşeler, kesikler, dolgular ve delik, opaklık, çizim sırası (LIR'den) | pytest testi (8; 2'si bilinen ayrışma: S6, S7) |
+| `tests/conformance/test_geometry.py` | 16 | Adlı şekiller ve grup dönüşümleri (IR'den) | pytest testi (4; 2'si bilinen ayrışma: S5, eşit olmayan ölçek) |
+| `tests/conformance/test_frames.py` | 16 | Altı oran ve çözünürlükte aynı sahne; çizgi kalınlığının referans pikselden çıkışa doğru çevrildiği | pytest testi (6) |
+| `tests/conformance/test_text.py` | 16 | Örnekler, tek taban çizgisinde metin ve formül, grubuyla dönen metin | pytest testi (4) |
