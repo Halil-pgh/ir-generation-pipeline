@@ -9,4 +9,5 @@ Module map:
     base.py    Backend, Capability, BACKENDS; E-CAPABILITY and E-ENVIRONMENT
     render.py  stage "render": LIR -> the chosen backend's files
     svg/       the SVG reference backend: frame.svg, and frame.png through cairosvg
+    manim/     the Manim backend: scene.py, and frame.png drawn by Manim
 """

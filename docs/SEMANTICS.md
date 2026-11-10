@@ -423,6 +423,39 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - SVG text sits at `at` horizontally, aligned by its anchor (start,
   middle, end), and on the measured baseline vertically. Its font is the
   LIR's font, falling back to the system's sans-serif.
+- The Manim backend draws `cubic`, `transform`, `text` and `math`.
+  Quadratic curves, dashes and even-odd fills reach it lowered (Manim fills
+  nonzero); images are not drawn yet.
+- It writes `scene.py`, code for Manim Community 0.22.1 that stands on its
+  own: `manim -s scene.py Frame` draws the picture. Its frame is the LIR's
+  canvas: the units, the output pixels and the background. Every LIR group
+  is built by a function `make_<id>()`, with a `# ir: <path> id=<id>`
+  comment above it; `construct` keeps what it returns in a variable named
+  after the id, and an object holding others receives them as arguments.
+  An id that cannot be a Python name, or is one scene.py uses itself,
+  changes as little as it can: `a.label` becomes `a_label`, `class`
+  becomes `class_`, a clash takes `_2`.
+- A path is drawn with the Manim class of its hint (`Circle`, `Line`,
+  `Arc`...) with the hint's numbers, but only while the hint describes the
+  whole path: one closed subpath for a closed shape, one open subpath with
+  the shape's own ends for a line, polyline or arc. Otherwise it is built
+  from its subpaths, point by point.
+- A stroke width of 1 in Manim is 0.01 units, so a width of `w` reference
+  px is written as `w / 1.2`. A group's transform is applied to its
+  children, and stroke widths scale by the square root of its area factor,
+  as lowering does.
+- A text is Manim's `Text` at `font_size` = 0.6 x its size in reference px
+  (an em of `font_size / 72` units). Manim keeps no baseline, so the text is
+  moved onto its ink box: where Pango, with the front-end's settings, puts
+  its glyphs inside the measured box. A text of spaces only draws nothing.
+- A formula is `MathTex` set with the front-end's own template, at
+  `font_size` = 0.803 x its size (one TeX big point is `font_size / 960`
+  units), and moved onto its box, which is already the ink box.
+- `frame.png` is drawn by a harness in a process of its own. It builds
+  every object on its own first, so a failure names the object: `E-DRAW`
+  (origin `internal`, a fault in the compiler) or `E-ENVIRONMENT` (Manim or
+  a tool is missing). Then nothing is drawn, but `scene.py` is still
+  written. The run folder gets nothing else.
 
 ## Expressions
 

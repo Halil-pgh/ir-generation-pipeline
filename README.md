@@ -18,13 +18,13 @@ Stages, checks and backends are plugins; `pipeline.toml` decides which ones run.
 Requires Python 3.12 or newer.
 
 ```bash
-make venv        # python3 -m venv .venv && pip install -e ".[dev]"
+make venv        # python3 -m venv .venv && pip install -e ".[dev,svg,pango,manim]"
 ```
 
 The front-end needs pydantic and shapely (its geometry core). Optional
 extras, installed when their layer is built: `svg` (cairosvg), `pango`
 (pangocffi: text measured as Manim draws it), `manim` (Manim CE 0.22.1).
-`make venv` installs `svg` and `pango`.
+`make venv` installs all three.
 
 Formulas need TeX Live (`latex`, the `standalone`, `lmodern` and `amsmath`
 packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
@@ -32,18 +32,24 @@ packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
 ## Try it
 
 ```bash
-make venv                               # once: .venv with dev tools and the svg backend
+make venv                               # once: .venv with dev tools and both backends
 make render                             # draws examples/projection/ir.json
 make render IR=examples/regions/ir.json # regions, a flood fill and clips
 make render IR=path/to/ir.json          # any other IR; OUT=folder to choose where
 ```
 
-This runs the stages `pipeline.toml` lists and writes `frame.svg`,
+This runs the stages `pipeline.toml` lists and writes `scene.py`,
 `frame.png`, `lir.json` and `report.json` into `runs/<name>/`, then prints
 the report. It fails when the picture is not READY. Among the stages, the
 checks `pipeline.toml` lists (offscreen, safe area, subtitle band, text
 overlap, contrast, text size, ...) look at what was drawn; their findings
 are in the report.
+
+Manim draws the picture: `scene.py` is readable Manim code that stands on
+its own (`manim -s scene.py Frame`), and `frame.png` is what Manim drew
+from it. For the fast SVG reference instead (`frame.svg` and its
+`frame.png`), set `backend = "svg"` under `[options.render]` in
+`pipeline.toml`.
 
 ## Code checks
 

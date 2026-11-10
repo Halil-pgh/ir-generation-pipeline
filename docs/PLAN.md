@@ -174,7 +174,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 12 | F2 | Geometri çekirdeği | frontend/geometry/: region, flood\_fill, clip / clip\_out | Analizin Şekil 2'sindeki dört örnek doğru çözülür | Tamam |
 | 13 | F2 | Kontroller (lint) | checks/: offscreen, safe area, subtitle, text overlap, contrast, min text size… | Her kontrol ayrı dosya; config'den kapatılabilir; report.json yazılır | Tamam |
 | 14 | F3 | Yetenek listesi + lowering | frontend/lower.py | Desteklenmeyen özellik basit primitive'lere iner ya da IR terimleriyle hata döner | Tamam |
-| 15 | F3 | Manim kod üretici | backends/manim/: scene.py üretimi, render, harness | `manim -s scene.py Frame` çalışır; değişken adları IR id'leri | Bekliyor |
+| 15 | F3 | Manim kod üretici | backends/manim/: scene.py üretimi, render, harness | `manim -s scene.py Frame` çalışır; değişken adları IR id'leri | Tamam |
 | 16 | F3 | Backend uygunluk testleri | tests/conformance/ | SVG ve Manim çıktıları tolerans içinde piksel farkıyla eşleşir | Bekliyor |
 | 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Bekliyor |
 | 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Bekliyor |
@@ -319,8 +319,29 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K101 | math yeteneği: formül öğesini çizmek, TeX'i kendisi dizmek. Her formül bunu ister; dizemeyen backend'e formül glif çizimi olarak iner. SVG writer formül çizmez | Analiz §3: formül → glif path'leri bir indirme; tek yol olsun diye writer'daki kopya kalktı | Onaylandı |
 | K102 | İndirme kuralları: kübik → kuadratik, olmazsa doğru (0.001 birim içinde); kuadratik → kübik (birebir), olmazsa doğru; kesik çizgi → her kesik bir path, SVG'nin dizdiği gibi; even-odd → alt yolları çevrilmiş nonzero, kesişenler çokgen olarak yeniden; grup dönüşümü çocuklara uygulanır, çizgi kalınlığı alan çarpanının kareköküyle ölçeklenir | Analiz §3 örnekleri; resim değişmesin diye her kural geometriyi korur ya da görünmez bir tolerans içinde kalır | Onaylandı |
 | K103 | İndirilemeyen IR terimleriyle bildirilir (nesnenin id'si ve JSON yolu, backend adı asla) ve hiçbir şey çizilmez: metin çizemeyen yerde metin, dönüşüm çizemeyen yerde dönen metin, çizimsiz formül ya da görsel, görsel çizemeyen yerde görsel E-CAPABILITY. TeX dizemeyen yerde glif çizimi olmayan formül E-ENVIRONMENT (ölçücü dizmeden ölçmüş) | Analiz §1 ve §3: yetenek sorunları ajana backend adı geçmeden döner; ortam sorunları insana gider | Onaylandı |
+| K104 | Manim backend'inin yetenekleri: cubic, transform, text, math. Kuadratik eğri, kesikli çizgi ve even-odd dolgu ona lowering ile basitleşmiş gelir; görsel (image) şimdilik yok | Manim'in cairo kamerası yalnızca nonzero dolduruyor ve kesikleri SVG'nin desenine göre dizmiyor; IR'de henüz görsel nesnesi yok | Onaylandı |
+| K105 | scene.py'de her IR nesnesi bir `make_<id>()` fonksiyonu, üstünde `# ir: <yol> id=<id>` yorumu. `construct` döneni id'siyle aynı adlı değişkende tutar; başka nesneleri tutan nesne onları argüman olarak alır. Python adı olamayan id en az değişiklikle çevrilir: `a.label` → `a_label`, `class` → `class_`, çakışmada `_2` | Analiz §3: değişken adları IR id'leri olsun; harness her nesneyi tek başına çağırabilsin | Onaylandı |
+| K106 | Şekil ipucu (`Circle`, `Line`, `Arc`…) yalnızca yolun tamamını anlatırken kullanılır: kapalı şekilde tek kapalı alt yol, açık şekilde şeklin kendi uçlarıyla tek açık alt yol. Değilse yol nokta nokta çizilir | Manim yolun noktalarını değil ipucunun şeklini çizer; ikisi ayrışırsa resim değişir (bkz. berkerdnmz cihazında bulunan sıkıntılar, 1. madde) | Onaylandı |
+| K107 | Metin Manim'in `Text`'iyle, `font_size` = 0.6 × px olarak yazılır ve mürekkep kutusunun merkezine taşınır. Kutu, front-end'in Pango ayarlarıyla backend'de ölçülür (`backends/manim/ink.py`) | Manim metnin taban çizgisini tutmuyor; Manim'in çizdiği glifler Pango'nun mürekkep kutusunu %0.1 içinde dolduruyor. Ölçümün asıl yeri front-end olurdu, ama o 5. ve 10. adımları değiştirmek demekti | Onaylandı |
+| K108 | Formül `MathTex` ile, front-end'in kendi TeX şablonuyla (`TexTemplate.body`, `tex_environment=None`) yazılır; `font_size` = 0.803 × px, sonra LIR kutusuna taşınır | K71: formül ölçüldüğü gibi dizilsin. Genişlik ve yükseklik ölçümle 5 haneye kadar tutuyor | Onaylandı |
+| K109 | Çizgi kalınlığı px / 1.2 yazılır (Manim'de 1 kalınlık 0.01 birim). Grup dönüşümü `apply_matrix` ile uygulanır; çizgi kalınlıkları alan çarpanının kareköküyle ölçeklenir | Katsayı 120 px/birim ve Manim'in 0.01'inden türer; ölçekleme lowering'in kuralıyla aynı | Onaylandı |
+| K110 | frame.png'yi ayrı süreçte bir harness çizer: önce her nesneyi tek başına kurar, sonra `Frame`'i `manim -s` gibi çizer. Yeni kod E-DRAW (köken internal); eksik araç E-ENVIRONMENT. Hata olsa da scene.py yazılır; harness'e giden yollar hep mutlak | Analiz §3'teki harness; Manim'in global config'i pipeline'a karışmasın; run klasörü göreli olabilir (runs/<ad>) | Onaylandı |
+| K111 | Varsayılan backend `manim`; SVG referansı `backend = "svg"` ile seçilir. Bir koşuda tek backend çalışır, iki backend'in aynı run klasörüne yazması 19. adımda | Ekibin kararı (10 Kasım). `make venv` artık Manim'i de kurar; 6. ve 7. adımın uçtan uca testleri iki backend'i de çizer | Onaylandı |
+| K112 | Manim'in formül ve metin önbelleği `~/.cache/irpipe/manim`'de, çalışma klasörü geçici. Ayarlar `[options.render.manim]`: `png`, `timeout`, `cache_dir`. manim extra'sı pangocffi'yi de kurar | Run klasörüne yalnızca scene.py ve frame.png düşer; mürekkep ölçümü Pango ister | Onaylandı |
+| K113 | ruff format Markdown dosyalarını biçimlendirmez (`[tool.ruff.format] exclude = ["*.md"]`) | ruff 0.17 Markdown içindeki Python bloklarını da biçimlendiriyor ve PLAN.md yüzünden `make check` kalıyordu; belgeler yazıldıkları gibi kalsın | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
+
+## berkerdnmz cihazında bulunan sıkıntılar
+
+Tamamlanmış adımlarda bulunan, ama ekip kararıyla dokunulmayan sorunlar: önceki bir adım değiştirilmez, sorun burada not edilir. Yalnızca çalıştırılarak doğrulanmış hatalar yazılır; düzeltme kararı ekibindir. Yenileri en alta eklenir.
+
+| # | Adım | Yer | Sorun | Nasıl doğrulandı | Durum |
+| --- | --- | --- | --- | --- | --- |
+| S1 | 14 | `frontend/lower.py`, `path()` (104–109. satırlar) | Yalnızca çizgisi olan kesikli bir yol kesiklere bölünürken şekil ipucu yolun üstünde kalıyor. SEMANTICS (LIR) ipucunun alt yollarla aynı geometriyi anlatmasını istiyor | 4 birimlik kesikli bir `line` lowering'den sonra 20 alt yol, ipucu hâlâ `line (0, 0)–(4, 0)`. İpucunu kullanan Manim backend'i ilk denemede örnekteki kesikli `drop` çizgisini düz çizdi | Değiştirilmedi. Manim backend'i ipucunu yalnızca yolun tamamını anlatırken kullanıyor (K106) |
+| S2 | 12 | `frontend/geometry/areas.py`, `area()` (40–41. satırlar) ve `_valid()` | Tek alt yollu ve kendini kesen bir şekilde dolgu kuralı yok sayılıyor: alan hep even-odd gibi çıkıyor. K89 sarım sayısına uyulduğunu söylüyor | Tek alt yollu pentagram (R = 1): `area(nonzero)` = `area(evenodd)` = 0.7757. Nonzero'nun alanı, ortadaki beşgenle (0.3469) birlikte 1.1226 olmalı. Bu alanı kullanan bölgeler ve kontroller (`fill_overlap`, `contrast`) etkilenir | Değiştirilmedi |
+| S3 | 14 | `frontend/lower.py`, `_nonzero()` (382. satır) | Even-odd → nonzero indirgemesi yalnızca farklı alt yolların kesişmesine bakıyor. Kendini kesen tek alt yol olduğu gibi kalıyor ve resim değişiyor | Tek alt yollu, even-odd dolgulu pentagram even-odd çizemeyen bir backend için indirildi: orta nokta önce boş (0), sonra dolu (255); hiçbir uyarı yok. Manim backend'i even-odd çizemediği için bu ona ulaşır | Değiştirilmedi |
+| S4 | — (ortam) | `pyproject.toml`, `docs/PLAN.md` | Bu cihazdaki ruff 0.17.4 Markdown içindeki Python bloklarını da biçimlendiriyor; PLAN.md'nin `Stage` örneği yüzünden `make check` 15. adımdan önce de kalıyordu (`ruff>=0.6` sürüm sabitlemiyor) | `make check` → `docs/PLAN.md:74: File would be reformatted` | 15. adımda K113 ile giderildi; kod değişmedi |
 
 ## Adım raporları
 
@@ -332,6 +353,60 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 15 — Manim kod üretici · 10 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı. Manim backend'i her IR için okunur ve kendi başına çalışan bir `scene.py` yazıyor; `manim -s scene.py Frame` onu çiziyor ve çıkan resim backend'in `frame.png`'siyle piksel piksel aynı. Fonksiyon ve değişken adları IR id'leri. Ekibin kararıyla varsayılan backend artık Manim (K111). `make check` temiz: 837 test (44'ü yeni), mypy strict, ruff.
+
+![15. adımın örneği: bölge örneği Manim backend'iyle çizildi](plan/adim-15.png)
+
+`examples/regions/ir.json`, Manim backend'i, 1920×1080. Şekiller Manim'in kendi sınıflarıyla (`Circle`, `Line`…) ya da noktalarıyla, metinler `Text`, formüller `MathTex` ile çizildi; sayıların hepsi front-end'in.
+
+**Nasıl çalışıyor.** Render aşaması LIR'i Manim'in yeteneklerine indiriyor: kuadratik eğriler kübiğe, kesikler tek tek yollara, even-odd dolgular nonzero'ya. Sonra `backends/manim/` LIR'den `scene.py`'yi yazıyor. Her IR nesnesi bir `make_<id>()` fonksiyonu; üstündeki yorum nesnenin ir.json'daki yerini söylüyor. `construct` her nesneyi id'siyle aynı adlı bir değişkende tutuyor; başka nesneleri tutan nesne onları argüman olarak alıyor.
+
+```python
+# ir: objects[6] id=origin
+def make_origin():
+    origin = Circle(radius=0.077).shift([-2.2, -1, 0])
+    origin.set_fill("#FFFFFF", opacity=1).set_stroke(width=0)
+    return origin
+```
+
+Yolun ipucu Manim'in sınıfıyla çiziliyor, ama yalnızca ipucu yolun tamamını anlatırken (K106); öbür yollar `_path` ile nokta nokta kuruluyor. Metin `Text` ile ölçülen boyutta yazılıp Pango'nun söylediği mürekkep kutusuna, formül front-end'in TeX şablonuyla `MathTex` olarak yazılıp kendi kutusuna taşınıyor. `frame.png`'yi ayrı bir süreçte çalışan harness çiziyor: önce her nesneyi tek başına kuruyor, böylece bir hata nesnesinin adıyla dönüyor.
+
+| Durum | Sonuç |
+| --- | --- |
+| İki örnek, Manim ile | READY; render 0.9 s (projection) ve 3.3 s (regions) |
+| `manim -s scene.py Frame` | Backend'in `frame.png`'siyle piksel piksel aynı |
+| Metin ve formül konumu (piksel testi) | Front-end'in ölçtüğü kutuya 1.5 px içinde |
+| `Text` ve `MathTex` boyutu | Pango'nun mürekkep kutusuna %0.1 içinde; formül genişliği ve yüksekliği 5 haneye kadar |
+| 4 px çizgi; 2 kat ölçekli grupta | 4 px; 8 px (SVG ile aynı) |
+| SVG çıktısıyla fark | Ortalama 0.33 / 0.70 (255 üzerinden); farklı pikseller %0.2 / %0.4, hepsi düz metinde |
+| LIR'e doğrudan yazılmış hatalı formül | `E-DRAW objects[3]: 'f' could not be drawn: ValueError: …`; `scene.py` yine yazılıyor, `frame.png` yok |
+| Göreli run klasörü (`make render`) | İlk sürümde harness yolu ikiliyordu (`runs/regions/runs/regions/scene.py`); düzeltildi, yollar artık mutlak, testli |
+
+**Üretilen dosyalar.** `backends/manim/` altında 7 dosya (`__init__`, `writer`, `primitives`, `code`, `names`, `ink`, `harness`), 2 test dosyası ve `docs/plan/adim-15.png` (Dosya kaydı'nda). Değişenler: `pipeline.toml` (varsayılan backend `manim`, `[options.render.manim]`), `pyproject.toml` (manim extra'sına pangocffi; ruff Markdown'u biçimlendirmiyor), `Makefile` (`make venv` Manim'i de kuruyor), README, `SEMANTICS.md` (Backends bölümüne Manim), `backends/__init__.py` (modül haritası), `tests/test_cli.py` ve `tests/test_end_to_end.py` (varsayılan backend kararı yüzünden).
+
+**Plandan sapmalar.**
+
+- Plan `backends/manim/` diyordu; dosya başına ~300 satır kuralı için yedi dosyaya bölündü.
+- Metnin mürekkep kutusu front-end'de değil backend'de ölçülüyor (K107): tamamlanmış adımlara dokunmamak için.
+- Ekibin kararıyla varsayılan backend Manim. Bu yüzden 7. adımın CLI testi ve 6./12. adımların uçtan uca testi güncellendi: örnekler artık hem Manim hem SVG ile çiziliyor, böylece SVG referansı da uçtan uca sınanmaya devam ediyor.
+- Görsel (image) çizilmiyor: IR'de henüz görsel nesnesi yok (K104).
+
+**Bulunan sorunlar.** Önceki adımlarda üç hata ve bir ortam sorunu bulundu; hiçbirine dokunulmadı, hepsi "berkerdnmz cihazında bulunan sıkıntılar" başlığında (S1–S4).
+
+**Varsayımlar.**
+
+- LIR matematik fontunu taşımıyor; şimdilik tek font latin-modern olduğu için Manim onu kullanıyor. İkinci bir font eklenince (19. adım) LIR'e bir alan gerekecek.
+- SVG ile Manim arasındaki tek görünür fark düz metinde: cairosvg metni Pango'dan biraz kalın ve geniş çiziyor, Manim ise ölçümle birebir. Cairo'nun varsayılan miter sınırı 10, SVG'ninki 4. İkisi 16. adımdaki uygunluk testlerinde tolerans olarak ele alınmalı.
+- Manim bir alt yolu, bir öncekinin bittiği noktadan başlıyorsa onunla birleştiriyor. Front-end'in yollarında böyle bir durum görülmedi; görülürse dolgu değişebilir.
+
+**Kararlar.** K104–K113 (Karar günlüğü).
+
+**Nasıl denenir.** `make venv` (artık Manim'i de kuruyor), sonra `make render`; `runs/projection/` altında `scene.py` ve `frame.png` çıkıyor. `cd runs/projection && ../../.venv/bin/manim -s scene.py Frame` aynı resmi Manim'in kendi komutuyla çiziyor. SVG referansı için `pipeline.toml`'da `backend = "svg"`.
+
+**Açık kalanlar.** 16. adımdaki uygunluk testleri: metin bölgeleri için tolerans ve miter sınırı farkı. Commit edildi.
 
 ### Adım 14 — Yetenek listesi ve lowering · 10 Kasım 2026
 
@@ -968,8 +1043,8 @@ make check    # lint + mypy + testler
 | `tests/frontend/test_paint.py` | 6 | Kademenin sırası, tema rengi, renk adları ve karışım | pytest testi (12) |
 | `tests/frontend/test_shapes.py` | 6, 11 | Her şeklin geometrisi ve ipucu, yay parçaları, düzgün çokgenin yönü, dönüşüm matrisi | pytest testi (30) |
 | `tests/metrics/test_fixed.py` | 6, 10 | Sabit ölçücünün sayıları ve sağlayıcı kaydı | pytest testi (5) |
-| `tests/test_end_to_end.py` | 6, 7, 9, 10, 11, 12, 13 | Repodaki `pipeline.toml` ile örnek IR'nin READY olması, LIR'in yayımlanan şemadan geçmesi ve resim dosyalarının yazılması | pytest testi (4); `examples/` altındaki her örnek |
-| `src/irpipe/backends/__init__.py` | 7 | Backend paketi; plugins'e yazılınca render aşaması ve tüm backend'ler kaydolur; docstring'i modül haritasını verir | `plugins = ["irpipe.backends"]` |
+| `tests/test_end_to_end.py` | 6, 7, 9, 10, 11, 12, 13, 15 | Repodaki `pipeline.toml` ile örnek IR'nin READY olması, LIR'in yayımlanan şemadan geçmesi ve resim dosyalarının yazılması; her örnek hem Manim hem SVG ile | pytest testi (7); `examples/` altındaki her örnek |
+| `src/irpipe/backends/__init__.py` | 7, 15 | Backend paketi; plugins'e yazılınca render aşaması ve tüm backend'ler kaydolur; docstring'i modül haritasını verir | `plugins = ["irpipe.backends"]` |
 | `src/irpipe/backends/base.py` | 7, 14 | Backend arayüzü, yetenek listesi ve kaydı; bir LIR'in hangi özellikleri kullandığını bulur; E-CAPABILITY ve E-ENVIRONMENT burada | `Backend (name, capabilities, render), Capability, BACKENDS, features_used(), unsupported()` |
 | `src/irpipe/backends/render.py` | 7, 14 | "render" aşaması: backend'i seçer, LIR'i yeteneklerine karşı denetler, dosyalarını toplar | `Render: lir, out_dir -> rendered` (önce `lower`, sonra backend) |
 | `src/irpipe/backends/svg/__init__.py` | 7 | SVG referans backend'i: frame.svg ve frame.png yazar; ayarı png | `SvgBackend ("svg"), SvgOptions` |
@@ -980,7 +1055,7 @@ make check    # lint + mypy + testler
 | `tests/backends/test_base.py` | 7, 14 | Özellik tespiti, backend adı geçmeyen E-CAPABILITY, ayar doğrulaması, kayıt | pytest testi (6) |
 | `tests/backends/test_svg.py` | 7, 14 | Piksel dönüşümü, gruplar, boya, 4K ölçeği, metin, formül, matrisler, PNG ve cairosvg yokken davranış | pytest testi (17) |
 | `tests/backends/test_render.py` | 7, 14 | render aşaması: dosyalar, yetenek dışı özellikte durma, bilinmeyen backend | pytest testi (4) |
-| `tests/test_cli.py` | 7, 11 | irpipe render: örneğin çizilmesi, bozuk IR'nin mesajları, çıkış kodları, varsayılan klasör | pytest testi (4) |
+| `tests/test_cli.py` | 7, 11, 15 | irpipe render: örneğin (Manim ile) çizilmesi, bozuk IR'nin mesajları, çıkış kodları, varsayılan klasör | pytest testi (4) |
 | `src/irpipe/expr/__init__.py` | 8 | İfade dilinin dışa açık yüzü; docstring'i dilin tamamını ve modül haritasını veriyor | `evaluate(), evaluate_table(), parse(), ExprError` |
 | `src/irpipe/expr/syntax.py` | 8 | Metni parçalara ve küçük bir sözdizimi ağacına çevirir; aritmetik dışında hiçbir şey okumaz, hata yerini karakter numarasıyla söyler | `parse(text), tokenize(text)` |
 | `src/irpipe/expr/evaluate.py` | 8 | Ağacı hesaplar: kesirlerle tam, gerekince float; sabitler ve fonksiyonlar burada, tanım dışı durumlar açık bir hatayla | `evaluate(text, values), CONSTANTS, FUNCTIONS` |
@@ -1046,3 +1121,12 @@ make check    # lint + mypy + testler
 | `tests/metrics/test_fonts.py` | 13 | Kurulu olmayan aile, eksik karakter, fontconfig yokken | pytest testi (3) |
 | `src/irpipe/frontend/lower.py` | 14 | LIR'i seçilen backend'in yeteneklerine indirir; indirilemeyeni IR terimleriyle bildirir | `lower(lir, capabilities) -> (lir, issues), TOLERANCE` |
 | `tests/frontend/test_lower.py` | 14 | Her indirme kuralı, geometrinin korunması, indirilemeyenler, her eksik yetenek çiftinde yalnız listelenenlerin kalması | pytest testi (38) |
+| `src/irpipe/backends/manim/__init__.py` | 15 | Manim backend'i: scene.py'yi yazar, harness'i çalıştırır, hataları IR terimleriyle bildirir; E-DRAW burada | `ManimBackend ("manim")`, `ManimOptions` (`png`, `timeout`, `cache_dir`), `E_DRAW` |
+| `src/irpipe/backends/manim/writer.py` | 15 | LIR'i scene.py'nin yapısına çevirir: nesne başına bir `make_<id>()`, `construct`, çerçeve ayarları, TeX şablonu ve yardımcılar | `to_scene(lir, ink) -> Scene (code, objects)`, `SceneObject`, `MANIM_VERSION` |
+| `src/irpipe/backends/manim/primitives.py` | 15 | Bir LIR öğesini Manim'in sınıflarıyla kuran satırlar: ipucundan şekil, nokta nokta yol, metin, formül; Manim'in ölçek katsayıları burada | `Primitives(ink).lines(node, name)`, `fits(hint, subpaths)`, `shape_call(hint)`, `kind(node)` |
+| `src/irpipe/backends/manim/code.py` | 15 | Okunur Python parçaları: kısa sayılar, noktalar, dizgiler, uzun çağrıları ve dizgileri satırlara bölme | `num`, `xy`, `xyz`, `degrees`, `text_literal`, `tex_literal`, `split_literal`, `pack`, `Call` |
+| `src/irpipe/backends/manim/names.py` | 15 | IR id'lerinden geçerli ve çakışmayan Python adları | `Names(ids, reserved).variable(id)`, `.function(id)` |
+| `src/irpipe/backends/manim/ink.py` | 15 | Metnin mürekkep kutusu, front-end'in Pango ayarlarıyla; Manim'in `Text`'i buraya taşınır | `InkMetrics().box(text_item)` |
+| `src/irpipe/backends/manim/harness.py` | 15 | scene.py'yi ayrı süreçte Manim'le çizer; her nesneyi tek başına kurup hatayı nesneye bağlar | `python -m irpipe.backends.manim.harness SCENE MANIFEST RESULT [--png] [--media] [--cache]`, `draw()` |
+| `tests/backends/test_manim_scene.py` | 15 | scene.py: adlar, şekil sınıfları, ipucunun ne zaman kullanıldığı, birimler, metin ve formül boyutları, dönüşümler, satır uzunluğu, ayarlar, zaman aşımı, mutlak yollar (Manim gerekmez) | pytest testi (35) |
+| `tests/backends/test_manim_render.py` | 15 | Manim'le gerçekten çizmek: `manim -s`, hatanın nesneye bağlanması, göreli run klasörü, piksel düzeyinde metin ve formül konumu, dönüşümde çizgi kalınlığı (`manim` işaretli) | pytest testi (6) |

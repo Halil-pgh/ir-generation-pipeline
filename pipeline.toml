@@ -45,7 +45,12 @@ min_size = 28       # reference px (a caption is 34)
 min_delta_e = 10    # CIEDE2000; about 1 is just noticeable side by side
 
 [options.render]
-backend = "svg"     # which backend draws the LIR
+backend = "manim"   # which backend draws the LIR: "manim", or "svg" (the fast reference)
 
 [options.render.svg]
 png = true          # also rasterize frame.svg to frame.png (needs the svg extra)
+
+[options.render.manim]
+png = true          # draw frame.png with Manim; false writes only scene.py (needs the manim extra)
+timeout = 300       # seconds Manim may take to draw the picture
+# cache_dir = ""    # where Manim keeps typeset formulas and texts; default ~/.cache/irpipe/manim

@@ -1,5 +1,6 @@
 """The irpipe command: one ir.json in, a picture and its report out."""
 
+import importlib.util
 import json
 from pathlib import Path
 
@@ -15,11 +16,12 @@ CONFIG = ROOT / "pipeline.toml"
 def test_the_example_renders_and_the_command_says_ready(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    pytest.importorskip("cairosvg")
+    if importlib.util.find_spec("manim") is None:
+        pytest.skip("pipeline.toml draws with Manim, which is not installed")
     status = main(["render", str(EXAMPLE), "-o", str(tmp_path), "--config", str(CONFIG)])
     assert status == 0
     written = sorted(p.name for p in tmp_path.iterdir())
-    assert written == ["frame.png", "frame.svg", "lir.json", "report.json"]
+    assert written == ["frame.png", "lir.json", "report.json", "scene.py"]
     assert capsys.readouterr().out.startswith("READY")
     assert json.loads((tmp_path / "report.json").read_text())["status"] == "READY"
 
