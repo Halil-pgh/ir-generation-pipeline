@@ -3,7 +3,7 @@
 import pytest
 
 from irpipe.core import PluginDefinitionError
-from irpipe.metrics import METRICS, TextBox, TextMetrics
+from irpipe.metrics import METRICS, MathBox, TextBox, TextMetrics
 from irpipe.metrics.fixed import FixedMetrics
 
 
@@ -32,6 +32,9 @@ def test_a_provider_needs_a_name() -> None:
     class Nameless(TextMetrics):
         def text(self, *args: object, **kwargs: object) -> TextBox:
             return TextBox(0, 0, 0)
+
+        def math(self, *args: object, **kwargs: object) -> MathBox:
+            return MathBox(0, 0, 0)
 
     with pytest.raises(PluginDefinitionError, match="needs a `name`"):
         METRICS.register(Nameless)

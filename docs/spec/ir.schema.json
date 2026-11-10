@@ -1401,6 +1401,202 @@
       "title": "LineTo",
       "type": "object"
     },
+    "Math": {
+      "additionalProperties": false,
+      "description": "A formula in TeX, set in display style and placed like a text.\n\n``tex`` is what goes between the dollars: ``\"\\frac{a}{b}\"``. The\nfront-end typesets it before anything is drawn, so a TeX mistake is\nreported (E-TEX) with this object's path.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "math",
+          "default": "math",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "tex": {
+          "minLength": 1,
+          "title": "Tex",
+          "type": "string"
+        },
+        "at": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "title": "At",
+          "type": "array"
+        },
+        "anchor": {
+          "default": "center",
+          "enum": [
+            "left_top",
+            "center_top",
+            "right_top",
+            "left_center",
+            "center",
+            "right_center",
+            "left_baseline",
+            "center_baseline",
+            "right_baseline",
+            "left_bottom",
+            "center_bottom",
+            "right_bottom"
+          ],
+          "title": "Anchor",
+          "type": "string"
+        },
+        "size": {
+          "anyOf": [
+            {
+              "enum": [
+                "title",
+                "heading",
+                "body",
+                "label",
+                "caption"
+              ],
+              "type": "string"
+            },
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        }
+      },
+      "required": [
+        "id",
+        "tex",
+        "at"
+      ],
+      "title": "Math",
+      "type": "object"
+    },
     "Mix": {
       "additionalProperties": false,
       "description": "An extra color mixed from two others, for example the overlap of two concepts.",
@@ -3840,6 +4036,7 @@
             "ellipse": "#/$defs/Ellipse",
             "group": "#/$defs/Group",
             "line": "#/$defs/Line",
+            "math": "#/$defs/Math",
             "path": "#/$defs/Path",
             "polygon": "#/$defs/Polygon",
             "polyline": "#/$defs/Polyline",
@@ -3883,6 +4080,9 @@
           },
           {
             "$ref": "#/$defs/Text"
+          },
+          {
+            "$ref": "#/$defs/Math"
           },
           {
             "$ref": "#/$defs/Group"
@@ -3902,6 +4102,7 @@
             "ellipse": "#/$defs/Ellipse",
             "group": "#/$defs/Group",
             "line": "#/$defs/Line",
+            "math": "#/$defs/Math",
             "path": "#/$defs/Path",
             "polygon": "#/$defs/Polygon",
             "polyline": "#/$defs/Polyline",
@@ -3945,6 +4146,9 @@
           },
           {
             "$ref": "#/$defs/Text"
+          },
+          {
+            "$ref": "#/$defs/Math"
           },
           {
             "$ref": "#/$defs/Group"

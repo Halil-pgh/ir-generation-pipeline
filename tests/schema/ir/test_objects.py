@@ -85,7 +85,7 @@ def test_the_type_field_picks_the_model(model: type, data: dict[str, Any]) -> No
 
 def test_an_unknown_type_lists_the_known_ones() -> None:
     known = "'circle', 'ellipse', 'rect', 'regular_polygon', 'polygon', 'sector', 'line', "
-    known += "'polyline', 'arc', 'path', 'text', 'group'"
+    known += "'polyline', 'arc', 'path', 'text', 'math', 'group'"
     with pytest.raises(ValidationError, match=known):
         validate({"id": "s", "type": "spring"})
 

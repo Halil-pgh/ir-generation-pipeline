@@ -21,8 +21,12 @@ Requires Python 3.12 or newer.
 make venv        # python3 -m venv .venv && pip install -e ".[dev]"
 ```
 
-Optional extras, installed when their layer is built: `geometry` (shapely),
-`svg` (cairosvg), `manim` (Manim CE 0.22.1; needs LaTeX, Cairo and Pango).
+Optional extras, installed when their layer is built: `svg` (cairosvg),
+`pango` (pangocffi: text measured as Manim draws it), `geometry` (shapely),
+`manim` (Manim CE 0.22.1). `make venv` installs `svg` and `pango`.
+
+Formulas need TeX Live (`latex`, the `standalone`, `lmodern` and `amsmath`
+packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
 
 ## Try it
 

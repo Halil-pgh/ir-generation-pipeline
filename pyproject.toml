@@ -20,6 +20,7 @@ irpipe = "irpipe.cli:main"
 # installed when that layer is used.
 geometry = ["shapely>=2.0"]       # region algebra, flood_fill, clip (step 12)
 svg = ["cairosvg>=2.7"]           # SVG reference backend: frame.svg -> frame.png (step 7)
+pango = ["pangocffi>=0.14", "pangocairocffi>=0.7"]   # text measured as Manim draws it (step 10)
 manim = ["manim==0.22.1"]         # Manim backend, pinned as the analysis asks (step 15)
 dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11", "jsonschema>=4.23", "types-jsonschema"]
 

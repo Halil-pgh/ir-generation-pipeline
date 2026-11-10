@@ -11,6 +11,7 @@ Module map:
     header_lock.py    stage "check_header": E-HEADER when the locked header was changed
     normalize.py      stage "normalize": every object's paint written out; W-UNDECLARED-COLOR
     paint.py          the paint cascade: theme, then style classes, then the object
-    resolve.py        stage "resolve": normalized IR with absolute positions -> LIR
+    measure.py        stage "measure": every text's and formula's box; E-TEX
+    resolve.py        stage "resolve": normalized, measured IR with absolute positions -> LIR
     shapes.py         circles, rectangles and group transforms as LIR geometry
 """

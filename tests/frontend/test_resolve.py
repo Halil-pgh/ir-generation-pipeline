@@ -9,12 +9,14 @@ from typing import Any
 
 import pytest
 
-from irpipe.artifacts import IR_NORMAL, LIR
-from irpipe.core import Pipeline, UnknownPluginError
+from irpipe.artifacts import IR_NORMAL, LIR, MEASURED
+from irpipe.core import Pipeline
+from irpipe.frontend.measure import measure
 from irpipe.frontend.normalize import normalize
 from irpipe.frontend.resolve import Resolve, Resolver, place_text
-from irpipe.metrics import TextBox
+from irpipe.metrics import MathBox, TextBox
 from irpipe.metrics.fixed import FixedMetrics
+from irpipe.metrics.svgpath import Subpath
 from irpipe.schema import lir
 from irpipe.schema.ir import IRDocument
 
@@ -25,7 +27,10 @@ type Make = Callable[..., IRDocument]
 
 
 def resolve(document: IRDocument) -> lir.LIRDocument:
-    return Resolver(normalize(document), FixedMetrics()).resolve()
+    normal = normalize(document)
+    measured, _ = measure(normal, FixedMetrics())
+    assert measured is not None
+    return Resolver(normal, measured).resolve()
 
 
 def first_item(group: lir.Group) -> Any:
@@ -217,15 +222,25 @@ def test_a_text_without_color_or_size_takes_the_theme_and_body(document: Make) -
 
 def test_the_stage_reads_ir_and_writes_lir(document: Make) -> None:
     normal = normalize(document([CIRCLE]))
-    result = Pipeline([Resolve()], inputs=[IR_NORMAL]).run({IR_NORMAL: normal})
+    pipeline = Pipeline([Resolve()], inputs=[IR_NORMAL, MEASURED])
+    result = pipeline.run({IR_NORMAL: normal, MEASURED: {}})
     assert isinstance(result.get(LIR), lir.LIRDocument)
 
 
-def test_an_unknown_text_measurer_is_named(document: Make) -> None:
-    options = {"resolve": {"metrics": "pang"}}
-    pipeline = Pipeline([Resolve()], inputs=[IR_NORMAL], options=options)
-    with pytest.raises(UnknownPluginError, match="unknown text metrics provider 'pang'"):
-        pipeline.run({IR_NORMAL: normalize(document([CIRCLE]))})
+def test_a_formula_carries_its_glyphs_placed_on_its_box(document: Make) -> None:
+    formula = {"id": "f", "type": "math", "tex": "x", "at": [1, 2], "anchor": "left_baseline"}
+    normal = normalize(document([formula]))
+    square = Subpath((0, 0), [("line", ((120, 0),)), ("line", ((120, 120),))], closed=True)
+    measured: dict[str, TextBox] = {
+        "f": MathBox(width=120, ascent=120, descent=0, outlines=(square,))
+    }
+    (group,) = Resolver(normal, measured).resolve().items
+    item = first_item(group)
+    assert isinstance(item, lir.MathItem)
+    assert item.box == pytest.approx((1, 2, 2, 3))  # 120 reference px is one unit
+    (glyph,) = item.glyphs
+    assert glyph.start == pytest.approx((1, 2))
+    assert glyph.segments[1] == lir.LineTo(line=(2, 3))
 
 
 def test_the_light_theme_draws_in_black(ir: Callable[..., dict[str, Any]]) -> None:

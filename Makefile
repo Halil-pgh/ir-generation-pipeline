@@ -12,9 +12,9 @@ IR   ?= examples/projection/ir.json
 
 .PHONY: venv test lint format typecheck spec check render
 
-venv:            ## create .venv and install the package with dev tools and the svg backend
+venv:            ## create .venv and install the package with dev tools, svg backend and pango
 	python3 -m venv $(VENV)
-	$(BIN)/pip install -e ".[dev,svg]"
+	$(BIN)/pip install -e ".[dev,svg,pango]"
 
 test:            ## run the test suite
 	$(BIN)/pytest

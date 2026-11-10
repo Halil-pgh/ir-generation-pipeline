@@ -1,4 +1,4 @@
-"""The drawable objects of IR 1.0's core: basic shapes, path, text and group.
+"""The drawable objects of IR 1.0's core: basic shapes, path, text, math and group.
 
 Basic shapes: circle, ellipse, rect, regular_polygon, polygon, sector (closed,
 so they can be filled) and line, polyline, arc (open, drawn as lines only).
@@ -240,6 +240,22 @@ class Text(ObjectBase):
     italic: bool | None = None
 
 
+class Math(ObjectBase):
+    """A formula in TeX, set in display style and placed like a text.
+
+    ``tex`` is what goes between the dollars: ``"\\frac{a}{b}"``. The
+    front-end typesets it before anything is drawn, so a TeX mistake is
+    reported (E-TEX) with this object's path.
+    """
+
+    type: Literal["math"] = "math"
+    tex: str = Field(min_length=1)
+    at: Point
+    anchor: Anchor = "center"
+    size: Size | None = None
+    color: ColorRef | None = None
+
+
 class Group(ObjectBase):
     """Objects that move together.
 
@@ -259,5 +275,5 @@ class Group(ObjectBase):
 Shape = Circle | Ellipse | Rect | RegularPolygon | Polygon | Sector | Line | Polyline | Arc | Path
 """Every object that is drawn as a path."""
 
-IRObject = Annotated[Shape | Text | Group, Field(discriminator="type")]
+IRObject = Annotated[Shape | Text | Math | Group, Field(discriminator="type")]
 """Any core object; ``type`` picks the model."""

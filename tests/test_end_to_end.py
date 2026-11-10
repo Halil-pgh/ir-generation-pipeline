@@ -22,7 +22,7 @@ def run(text: str, out_dir: Path) -> RunResult:
 def test_the_configured_pipeline_runs_the_front_end_then_renders() -> None:
     config = load_config(ROOT / "pipeline.toml")
     pipeline = Pipeline.from_config(config, inputs=[IR_SOURCE, OUT_DIR])
-    assert pipeline.stage_names == ("validate", "normalize", "resolve", "render")
+    assert pipeline.stage_names == ("validate", "normalize", "measure", "resolve", "render")
 
 
 def test_the_example_ir_is_ready_and_its_lir_passes_the_published_schema(

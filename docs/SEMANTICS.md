@@ -194,9 +194,9 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   classes. `resolve` reads paint only from the object itself.
 - A mix is the average of its two colors' channels, rounded to the
   nearest integer (halves to even).
-- A text is measured by the configured text measurer, and its box is
-  placed so that its `anchor` point sits at `at`. Vertically, `center`
-  is the middle of the box from descent to ascent.
+- A text or formula is placed by the box `measure` gave it, so that its
+  `anchor` point sits at `at`. Vertically, `center` is the middle of the
+  box from descent to ascent.
 - An object that paints nothing (no stroke color and no fill) still gets
   its LIR group, with no primitives in it.
 
@@ -252,3 +252,25 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - `check_header` compares the IR's header with the one the orchestrator
   locked. A difference is an `E-HEADER` error that lists the changed
   fields (the first five).
+
+## Measurement
+
+- `measure` sizes every text and formula before `resolve`, with the
+  measurer `pipeline.toml` names. `pango` measures text with Pango, as
+  Manim draws it, and formulas with LaTeX; `fixed` needs neither and
+  gives every glyph the same width.
+- A text's box is the font's: its advance width, and the font's ascent
+  and descent, which are the same for every string in that font and
+  size. Metrics are not hinted and glyph positions are not rounded, so a
+  text twice the size is exactly twice as large.
+- A formula is set as `$\displaystyle …$` with the header's math font
+  at 10 pt, and its 10 pt em becomes `size` reference pixels. Its box is
+  the ink box of its glyphs, on TeX's baseline. Its glyph outlines go
+  into the LIR, so a backend without LaTeX can draw it.
+- A TeX mistake is `E-TEX`, with LaTeX's own message and the part of the
+  formula where it stopped; the run stops at `measure`. A missing
+  measurer, LaTeX or dvisvgm is `E-ENVIRONMENT` and also stops it. A
+  missing text font is `E-ENVIRONMENT` too, but texts are measured in the
+  substitute font and the run goes on.
+- Measurements are kept in memory; formulas also in a folder
+  (`cache_dir`), written atomically, so it can be shared between runs.
