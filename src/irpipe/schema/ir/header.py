@@ -2,7 +2,8 @@
 
 The orchestrator writes the header from the brief and its render profile:
 the intent sentence, the frame (aspect, pixels, units, safe area, subtitle
-band), the resolved typography, the concept colors and the style classes.
+band), the resolved typography, the concept colors, the style classes and
+the theme's defaults.
 The agent only writes the body (document.py); a later step checks
 with a hash that the header it returns is the one it was given.
 """
@@ -67,6 +68,18 @@ class Style(StrictModel):
     italic: bool | None = None
 
 
+class ThemeHeader(StrictModel):
+    """What an object gets when neither it nor its style classes say (analysis §2.8).
+
+    A color left out here is white or black, whichever contrasts more with
+    the background.
+    """
+
+    text: Color | None = None
+    line: Color | None = None
+    stroke_width: PositiveFloat = 4
+
+
 class IRHeader(StrictModel):
     version: Literal["frame-ir/1.0"] = IR_VERSION
     intent: str = Field(min_length=1)
@@ -74,6 +87,7 @@ class IRHeader(StrictModel):
     typography: TypographyHeader
     colors: dict[ColorName, Color] = Field(default_factory=dict)
     styles: dict[Name, Style] = Field(default_factory=dict)
+    theme: ThemeHeader = Field(default_factory=ThemeHeader)
 
 
 def header_hash(header: IRHeader) -> str:

@@ -53,7 +53,7 @@ def test_no_field_belongs_to_both_halves() -> None:
 
 
 def test_the_header_model_refuses_body_fields() -> None:
-    header_only = {name: ANALYSIS_DRAFT[name] for name in HEADER_FIELDS}
+    header_only = {name: ANALYSIS_DRAFT[name] for name in HEADER_FIELDS if name in ANALYSIS_DRAFT}
     IRHeader.model_validate(header_only)
     with pytest.raises(ValidationError, match="objects"):
         IRHeader.model_validate({**header_only, "objects": []})

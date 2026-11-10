@@ -9,7 +9,8 @@ Module map:
     references.py     E-ID, E-REF, E-GROUP: every name points at something
     expressions.py    E-EXPR, E-CYCLE: the IR's named values and expressions
     header_lock.py    stage "check_header": E-HEADER when the locked header was changed
-    resolve.py        stage "resolve": IR with absolute positions -> LIR
+    normalize.py      stage "normalize": every object's paint written out; W-UNDECLARED-COLOR
     paint.py          the paint cascade: theme, then style classes, then the object
+    resolve.py        stage "resolve": normalized IR with absolute positions -> LIR
     shapes.py         circles, rectangles and group transforms as LIR geometry
 """

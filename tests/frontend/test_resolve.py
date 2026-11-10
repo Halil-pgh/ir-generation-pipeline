@@ -1,12 +1,17 @@
-"""resolve: an IR with absolute positions becomes LIR, one group per object."""
+"""resolve: a normalized IR with absolute positions becomes LIR, one group per object.
+
+The tests write IRs the way an agent would and normalize them first, as the
+pipeline does; the cascade itself is tested in test_paint and test_normalize.
+"""
 
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 
-from irpipe.artifacts import IR, LIR
+from irpipe.artifacts import IR_NORMAL, LIR
 from irpipe.core import Pipeline, UnknownPluginError
+from irpipe.frontend.normalize import normalize
 from irpipe.frontend.resolve import Resolve, Resolver, place_text
 from irpipe.metrics import TextBox
 from irpipe.metrics.fixed import FixedMetrics
@@ -20,7 +25,7 @@ type Make = Callable[..., IRDocument]
 
 
 def resolve(document: IRDocument) -> lir.LIRDocument:
-    return Resolver(document, FixedMetrics()).resolve()
+    return Resolver(normalize(document), FixedMetrics()).resolve()
 
 
 def first_item(group: lir.Group) -> Any:
@@ -211,14 +216,16 @@ def test_a_text_without_color_or_size_takes_the_theme_and_body(document: Make) -
 
 
 def test_the_stage_reads_ir_and_writes_lir(document: Make) -> None:
-    result = Pipeline([Resolve()], inputs=[IR]).run({IR: document([CIRCLE])})
+    normal = normalize(document([CIRCLE]))
+    result = Pipeline([Resolve()], inputs=[IR_NORMAL]).run({IR_NORMAL: normal})
     assert isinstance(result.get(LIR), lir.LIRDocument)
 
 
 def test_an_unknown_text_measurer_is_named(document: Make) -> None:
-    pipeline = Pipeline([Resolve()], inputs=[IR], options={"resolve": {"metrics": "pang"}})
+    options = {"resolve": {"metrics": "pang"}}
+    pipeline = Pipeline([Resolve()], inputs=[IR_NORMAL], options=options)
     with pytest.raises(UnknownPluginError, match="unknown text metrics provider 'pang'"):
-        pipeline.run({IR: document([CIRCLE])})
+        pipeline.run({IR_NORMAL: normalize(document([CIRCLE]))})
 
 
 def test_the_light_theme_draws_in_black(ir: Callable[..., dict[str, Any]]) -> None:

@@ -3,8 +3,8 @@
 Stages never import each other; they import these keys. A stage's
 ``requires`` and ``provides`` then read as the data flow:
 
-    ir_source --validate--> ir --resolve--> lir --render--> frame.svg, frame.png
-                                               out_dir --^
+    ir_source --validate--> ir --normalize--> ir_normal --resolve--> lir
+    lir, out_dir --render--> frame.svg, frame.png
 """
 
 from pathlib import Path
@@ -15,6 +15,9 @@ from irpipe.schema.lir import LIRDocument
 
 IR_SOURCE = ArtifactKey("ir_source", str, "ir.json as text, exactly as it was written")
 IR = ArtifactKey("ir", IRDocument, "the IR, parsed and checked by validate")
+IR_NORMAL = ArtifactKey(
+    "ir_normal", IRDocument, "the IR with each object's paint written out in full by normalize"
+)
 LIR = ArtifactKey("lir", LIRDocument, "the resolved draw list that backends draw")
 OUT_DIR = ArtifactKey("out_dir", Path, "the run folder the backend writes its files into")
 RENDERED = ArtifactKey("rendered", tuple, "the files the backend wrote, as Paths")

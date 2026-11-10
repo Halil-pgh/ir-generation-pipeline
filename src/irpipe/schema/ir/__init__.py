@@ -18,6 +18,7 @@ from irpipe.schema.ir.header import (
     IRHeader,
     Style,
     SubtitleHeader,
+    ThemeHeader,
     TypographyHeader,
     header_hash,
 )
@@ -81,6 +82,7 @@ __all__ = [
     "Subpath",
     "SubtitleHeader",
     "Text",
+    "ThemeHeader",
     "TypographyHeader",
     "header_hash",
 ]

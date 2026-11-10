@@ -3551,6 +3551,90 @@
       "title": "Text",
       "type": "object"
     },
+    "ThemeHeader": {
+      "additionalProperties": false,
+      "description": "What an object gets when neither it nor its style classes say (analysis §2.8).\n\nA color left out here is white or black, whichever contrasts more with\nthe background.",
+      "properties": {
+        "text": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "stroke_width": {
+          "default": 4,
+          "exclusiveMinimum": 0,
+          "title": "Stroke Width",
+          "type": "number"
+        }
+      },
+      "title": "ThemeHeader",
+      "type": "object"
+    },
     "TypographyHeader": {
       "additionalProperties": false,
       "properties": {
@@ -3645,6 +3729,9 @@
       },
       "title": "Styles",
       "type": "object"
+    },
+    "theme": {
+      "$ref": "#/$defs/ThemeHeader"
     },
     "values": {
       "patternProperties": {

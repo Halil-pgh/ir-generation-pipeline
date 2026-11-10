@@ -1,25 +1,26 @@
 """The paint cascade: what an object is drawn with once nothing is left to inherit.
 
 A paint field the object leaves out comes from its style classes (a later
-class wins), and what no class sets comes from the theme (analysis §2.8):
+class wins), and what no class sets comes from the header's theme
+(analysis §2.8):
 
     theme defaults -> style classes, in the order listed -> the object
 
-The theme's line and text color is whichever of white or black contrasts
-more with the background. Color names become hex: a header color, an
-extra color, or a mix of two (the average of their channels). ``"none"``
-becomes ``None``: nothing is painted.
+The theme gives texts its text color and everything else its line color;
+a theme color left out is white or black, whichever contrasts more with the
+background. Color names become hex: a header color, an extra color, or a mix
+of two (the average of their channels). ``"none"`` means nothing is painted.
+
+``PaintResolver.normalized`` writes the result back into the object's own
+fields (the normalize stage); ``painted`` reads it from there (resolve).
 """
 
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 from irpipe.schema.color import NO_PAINT, Color, ColorRef, Mix, to_rgb
-from irpipe.schema.ir import IRDocument, Style
+from irpipe.schema.ir import IRDocument, Style, Text
 from irpipe.schema.ir.objects import ObjectBase
-
-DEFAULT_STROKE_WIDTH = 4.0
-"""Reference px of a line no style or object gives a width."""
 
 PAINT_FIELDS = tuple(Style.model_fields)
 
@@ -64,12 +65,15 @@ class PaintResolver:
 
     def __init__(self, document: IRDocument) -> None:
         self._document = document
+        theme = document.theme
+        contrast = foreground_for(document.frame.background)
+        self._text_color: ColorRef = theme.text if theme.text is not None else contrast
+        self._line_color: ColorRef = theme.line if theme.line is not None else contrast
         self._defaults: dict[str, Any] = {
-            "color": foreground_for(document.frame.background),
             "fill": NO_PAINT,
             "fill_opacity": 1.0,
             "opacity": 1.0,
-            "stroke_width": DEFAULT_STROKE_WIDTH,
+            "stroke_width": theme.stroke_width,
             "dash": None,
             "size": "body",
             "weight": "regular",
@@ -77,7 +81,9 @@ class PaintResolver:
         }
 
     def paint(self, obj: ObjectBase) -> Paint:
+        """The cascade for ``obj``: theme, then its style classes, then its own fields."""
         values = dict(self._defaults)
+        values["color"] = self._text_color if isinstance(obj, Text) else self._line_color
         for name in obj.style_names:
             values.update(_set_fields(self._document.styles[name]))
         values.update(_set_fields(obj))
@@ -92,6 +98,21 @@ class PaintResolver:
             weight=cast(Literal["regular", "bold"], values["weight"]),
             italic=bool(values["italic"]),
         )
+
+    def normalized[T: ObjectBase](self, obj: T) -> T:
+        """``obj`` with every paint field it has written out and its style classes gone."""
+        paint = self.paint(obj)
+        fields = type(obj).model_fields
+        update: dict[str, Any] = {"style": None, "opacity": paint.opacity}
+        if "color" in fields:
+            update["color"] = paint.color or NO_PAINT
+        if "fill" in fields:
+            update |= {"fill": paint.fill or NO_PAINT, "fill_opacity": paint.fill_opacity}
+        if "stroke_width" in fields:
+            update |= {"stroke_width": paint.stroke_width, "dash": paint.dash}
+        if "size" in fields:
+            update |= {"size": paint.size, "weight": paint.weight, "italic": paint.italic}
+        return obj.model_copy(update=update)
 
     def color(self, ref: ColorRef) -> str | None:
         """Hex for a literal or a name; None for ``"none"``."""
@@ -118,6 +139,30 @@ class PaintResolver:
         if isinstance(ref, str) and not ref.startswith("#"):
             return self._document.colors[ref]
         return ref
+
+
+def painted(obj: ObjectBase) -> Paint:
+    """The paint of an object normalize has written out; no cascade is needed any more."""
+
+    def field(name: str, default: Any) -> Any:
+        value = getattr(obj, name, None)
+        return default if value is None else value
+
+    def hex_or_none(name: str) -> str | None:
+        value = field(name, NO_PAINT)
+        return None if value == NO_PAINT else str(value)
+
+    return Paint(
+        color=hex_or_none("color"),
+        fill=hex_or_none("fill"),
+        fill_opacity=float(field("fill_opacity", 1.0)),
+        opacity=float(field("opacity", 1.0)),
+        stroke_width=float(field("stroke_width", 0.0)),
+        dash=field("dash", None),
+        size=float(field("size", 0.0)),
+        weight=field("weight", "regular"),
+        italic=bool(field("italic", False)),
+    )
 
 
 def _set_fields(source: object) -> dict[str, Any]:

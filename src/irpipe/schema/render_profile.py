@@ -189,7 +189,12 @@ class Typography(StrictModel):
 
 
 class Theme(StrictModel):
+    """Background and defaults; a text or line color left out contrasts with the background."""
+
     background: Color = "#0E1117"
+    text: Color | None = None
+    line: Color | None = None
+    stroke_width: float = Field(4, gt=0)
 
 
 class RenderProfile(StrictModel):

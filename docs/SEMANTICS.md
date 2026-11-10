@@ -95,6 +95,17 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - Paint fields left out are inherited, in this order: theme defaults,
   then the object's style classes in the order listed (a later class
   wins), then the object's own fields.
+- The theme defaults are the header's `theme`: texts take its `text`
+  color, every other object its `line` color, every stroke its
+  `stroke_width` (4 reference px when left out). A theme color left out
+  is white or black, whichever has the higher WCAG contrast with the
+  background. Nothing is filled; a text is `body` size, regular and
+  upright.
+- A color written directly on an object (`"#FFFFFF"`, `[255, 255, 255]`)
+  is allowed, but reported as `W-UNDECLARED-COLOR`, since "one concept,
+  one color" only holds while colors have names. Header colors, extra
+  colors and `"none"` are names; colors in the header's style classes
+  are the orchestrator's and are not reported.
 - `"none"` as a color means no paint. It is reserved and cannot name a
   header color.
 - `opacity` multiplies everything about the object. `fill_opacity`
@@ -177,9 +188,10 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - An object inside a group is drawn inside that group, at the group's
   place in the list; members follow the group's `children` order, then
   are sorted by `z`.
-- Theme defaults: lines and text are white or black, whichever has the
-  higher WCAG contrast with the background; strokes are 4 reference px;
-  nothing is filled; text is `body` size, regular and upright.
+- `normalize` runs the cascade before `resolve`: every object leaves it
+  with its colors in hex (or `"none"`), its opacity, stroke width, dash
+  and, for a text, its size in reference pixels, and with no style
+  classes. `resolve` reads paint only from the object itself.
 - A mix is the average of its two colors' channels, rounded to the
   nearest integer (halves to even).
 - A text is measured by the configured text measurer, and its box is
