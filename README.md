@@ -24,6 +24,18 @@ make venv        # python3 -m venv .venv && pip install -e ".[dev]"
 Optional extras, installed when their layer is built: `geometry` (shapely),
 `svg` (cairosvg), `manim` (Manim CE 0.22.1; needs LaTeX, Cairo and Pango).
 
+## Try it
+
+```bash
+make venv                               # once: .venv with dev tools and the svg backend
+make render                             # draws examples/projection/ir.json
+make render IR=path/to/ir.json          # any other IR; OUT=folder to choose where
+```
+
+This runs the stages `pipeline.toml` lists and writes `frame.svg`,
+`frame.png`, `lir.json` and `report.json` into `runs/<name>/`, then prints
+the report. It fails when the picture is not READY.
+
 ## Checks
 
 ```bash

@@ -23,9 +23,9 @@
   },
   "focus": ["proj_ab"],
   "objects": [
-    {"id": "title", "type": "text", "text": "Projection of a onto b", "at": [0, 3.4],
+    {"id": "title", "type": "text", "text": "Projection of a onto b", "at": [0, 3.75],
      "anchor": "center_baseline", "size": "heading", "weight": "bold"},
-    {"id": "grid_hint", "type": "rect", "center": [1, 0.6], "width": 9, "height": 5.6,
+    {"id": "grid_hint", "type": "rect", "center": [1.3, 1.15], "width": 6.4, "height": 4.5,
      "corner_radius": 0.2, "fill": "#FFFFFF", "fill_opacity": 0.04, "color": "none"},
     {"id": "drop", "type": "line", "start": [2, 3], "end": [2, 0], "style": "construction"},
     {"id": "b", "type": "line", "start": [0, 0], "end": [4, 0], "color": "b", "stroke_width": 6},

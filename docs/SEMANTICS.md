@@ -187,3 +187,22 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   is the middle of the box from descent to ascent.
 - An object that paints nothing (no stroke color and no fill) still gets
   its LIR group, with no primitives in it.
+
+## Backends
+
+- A backend lists the LIR features it can draw (`quadratic`, `cubic`,
+  `dash`, `evenodd`, `transform`, `text`, `math`, `image`). Straight
+  lines, fills and opacity every backend must draw. `math` means
+  typesetting TeX itself; a formula that carries glyph outlines needs no
+  capability.
+- The `render` stage checks the LIR first. A feature the chosen backend
+  cannot draw is an `E-CAPABILITY` issue naming the feature and the
+  objects that use it, never the backend; nothing is drawn.
+- The SVG backend writes `frame.svg` in output pixels (origin top left,
+  y down), every IR object as a `<g id>` with its IR path in
+  `data-source`, and rasterizes it to `frame.png` at the same size. A
+  missing rasterizer is an `E-ENVIRONMENT` issue; `frame.svg` is still
+  written.
+- SVG text sits at `at` horizontally, aligned by its anchor (start,
+  middle, end), and on the measured baseline vertically. Its font is the
+  LIR's font, falling back to the system's sans-serif.

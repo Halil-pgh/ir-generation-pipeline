@@ -7,8 +7,14 @@
 #   stage as ctx.options. A switched-off stage may keep its table.
 
 [pipeline]
-stages = ["validate", "resolve"]          # in run order
-plugins = ["irpipe.frontend", "irpipe.metrics"]   # packages whose modules register plugins
+stages = ["validate", "resolve", "render"]                    # in run order
+plugins = ["irpipe.frontend", "irpipe.metrics", "irpipe.backends"]  # packages that register plugins
 
 [options.resolve]
 metrics = "fixed"   # text measurer; "fixed" needs no fonts. Pango arrives in step 10.
+
+[options.render]
+backend = "svg"     # which backend draws the LIR
+
+[options.render.svg]
+png = true          # also rasterize frame.svg to frame.png (needs the svg extra)

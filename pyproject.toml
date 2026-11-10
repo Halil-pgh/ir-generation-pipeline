@@ -12,6 +12,9 @@ dependencies = [
     "pydantic>=2.12,<3",
 ]
 
+[project.scripts]
+irpipe = "irpipe.cli:main"
+
 [project.optional-dependencies]
 # Each extra belongs to one layer, so a layer's heavy dependency is only
 # installed when that layer is used.
@@ -57,5 +60,6 @@ select = [
 python_version = "3.12"
 strict = true
 mypy_path = "src"
+explicit_package_bases = true   # tests/a/conftest.py and tests/b/conftest.py are different modules
 files = ["src", "tests"]
 plugins = ["pydantic.mypy"]
