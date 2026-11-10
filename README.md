@@ -21,9 +21,10 @@ Requires Python 3.12 or newer.
 make venv        # python3 -m venv .venv && pip install -e ".[dev]"
 ```
 
-Optional extras, installed when their layer is built: `svg` (cairosvg),
-`pango` (pangocffi: text measured as Manim draws it), `geometry` (shapely),
-`manim` (Manim CE 0.22.1). `make venv` installs `svg` and `pango`.
+The front-end needs pydantic and shapely (its geometry core). Optional
+extras, installed when their layer is built: `svg` (cairosvg), `pango`
+(pangocffi: text measured as Manim draws it), `manim` (Manim CE 0.22.1).
+`make venv` installs `svg` and `pango`.
 
 Formulas need TeX Live (`latex`, the `standalone`, `lmodern` and `amsmath`
 packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
@@ -33,6 +34,7 @@ packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
 ```bash
 make venv                               # once: .venv with dev tools and the svg backend
 make render                             # draws examples/projection/ir.json
+make render IR=examples/regions/ir.json # regions, a flood fill and clips
 make render IR=path/to/ir.json          # any other IR; OUT=folder to choose where
 ```
 

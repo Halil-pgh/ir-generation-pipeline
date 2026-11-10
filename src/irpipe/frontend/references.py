@@ -12,6 +12,8 @@ what the names mean:
   outline.
 - E-GROUP: groups and stacks are put together wrongly: an object in two of
   them, one that contains itself, or a def (which is never drawn) inside.
+- E-REGION (regions.py): a region, clip or flood fill names something of
+  the wrong kind: a line as an area, a text as a graph or a boundary.
 """
 
 import difflib
@@ -27,8 +29,9 @@ from irpipe.frontend.anchors import (
     split_ref,
 )
 from irpipe.frontend.labels import label_id
+from irpipe.frontend.regions import E_REGION, can_bound, has_inside, operands
 from irpipe.schema.color import NO_PAINT
-from irpipe.schema.ir import Container, IRDocument, OnRef, Shape
+from irpipe.schema.ir import Area, Container, FloodFill, IRDocument, OnRef, Region, Shape
 from irpipe.schema.ir.objects import ObjectBase
 
 E_ID = ISSUE_CODES.register(IssueCode("E-ID", Origin.IR, "two things in the IR share an id"))
@@ -57,6 +60,7 @@ def reference_issues(document: IRDocument) -> list[Issue]:
     issues.extend(_styles_and_colors(document))
     issues.extend(_groups(document))
     issues.extend(_places(document))
+    issues.extend(_regions(document))
     return issues
 
 
@@ -226,7 +230,7 @@ def _places(document: IRDocument) -> Iterator[Issue]:
     outlined: set[str] = set()
     for _, obj in body_objects(document):
         points[obj.id] = anchor_names(obj)
-        if isinstance(obj, Shape):
+        if isinstance(obj, Shape | Area):
             outlined.add(obj.id)
         if getattr(obj, "label", None) is not None:
             points[label_id(obj.id)] = BOX_ANCHORS + BASELINE_ANCHORS
@@ -268,6 +272,45 @@ def _places(document: IRDocument) -> Iterator[Issue]:
                 hint=_did_you_mean(label.at, points[obj.id])
                 or f"its points: {', '.join(points[obj.id])}",
             )
+
+
+def _regions(document: IRDocument) -> Iterator[Issue]:
+    """Region operands, graphs and flood-fill boundaries exist and are of a kind that fits."""
+    known = {obj.id: obj for _, obj in body_objects(document)}
+    for path, obj in body_objects(document):
+        expressions = [(f"{path}.shape", obj.shape)] if isinstance(obj, Region) else []
+        for name in ("clip", "clip_out"):
+            shape = getattr(obj, name)
+            if shape is not None:
+                expressions.append((f"{path}.{name}", shape))
+        named = [part for where, shape in expressions for part in operands(shape, where)]
+        if isinstance(obj, FloodFill):
+            named += [(f"{path}.bounded_by[{k}]", b, "line") for k, b in enumerate(obj.bounded_by)]
+        for where, oid, role in named:
+            target = known.get(oid)
+            if target is None:
+                yield E_REF(
+                    f"'{oid}' is not an object or def",
+                    path=where,
+                    objects=[obj.id],
+                    hint=_did_you_mean(oid, known),
+                )
+            elif role == "area" and not has_inside(target):
+                yield E_REGION(
+                    f"'{oid}' is a {target.type} and has no inside",
+                    path=where,
+                    objects=[obj.id, oid],
+                    hint="areas are closed shapes, regions and flood fills; a line can be a "
+                    "graph (under, between) or the boundary of a flood fill",
+                )
+            elif role != "area" and not can_bound(target):
+                what = "a graph" if role == "graph" else "a boundary"
+                yield E_REGION(
+                    f"'{oid}' is a {target.type}, which has no line to use as {what}",
+                    path=where,
+                    objects=[obj.id, oid],
+                    hint="graphs and boundaries are shapes: lines, polylines, arcs, paths…",
+                )
 
 
 def _reference(

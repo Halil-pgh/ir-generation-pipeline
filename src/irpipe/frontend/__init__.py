@@ -14,11 +14,13 @@ Module map:
     paint.py          the paint cascade: theme, then style classes, then the object
     labels.py         a shape's label as an object of its own; JSON paths of objects
     measure.py        stage "measure": every text's and formula's box; E-TEX
-    place.py          stage "place": references, boxes, stacks and spaces as numbers;
-                      E-PLACE, E-CYCLE
+    place.py          stage "place": references, boxes, stacks, spaces and areas as
+                      numbers and paths; E-PLACE, E-CYCLE
+    regions.py        region expressions and clips in IR terms; E-REGION, W-EMPTY-REGION,
+                      W-CLIP-TEXT
     anchors.py        the named points of objects, and every point an object holds
     layout.py         box points, placing beside a point or box, grids
-    resolve.py        stage "resolve": placed, measured IR -> LIR; spaces, arrowheads
+    resolve.py        stage "resolve": placed, measured IR -> LIR; spaces, arrowheads, clips
     shapes.py         shapes, group transforms and arrowheads as LIR geometry
-    geometry/         affine maps; lengths, points, bounds and trimming of paths
+    geometry/         affine maps; paths measured and cut; areas, flood fill and clipping
 """

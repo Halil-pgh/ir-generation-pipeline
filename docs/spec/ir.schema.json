@@ -132,6 +132,74 @@
           "title": "Covers",
           "type": "array"
         },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
         "in": {
           "anyOf": [
             {
@@ -304,6 +372,62 @@
       "title": "Arc",
       "type": "object"
     },
+    "Between": {
+      "additionalProperties": false,
+      "description": "Between two graphs, from ``x[0]`` to ``x[1]`` (in the first graph's coordinates).",
+      "properties": {
+        "between": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            }
+          ],
+          "title": "Between",
+          "type": "array"
+        },
+        "x": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "title": "X",
+          "type": "array"
+        }
+      },
+      "required": [
+        "between",
+        "x"
+      ],
+      "title": "Between",
+      "type": "object"
+    },
     "Circle": {
       "additionalProperties": false,
       "properties": {
@@ -379,6 +503,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -709,6 +901,51 @@
       "title": "CubicTo",
       "type": "object"
     },
+    "DifferenceOf": {
+      "additionalProperties": false,
+      "description": "The first area without the others.",
+      "properties": {
+        "difference": {
+          "items": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/UnionOf"
+              },
+              {
+                "$ref": "#/$defs/IntersectionOf"
+              },
+              {
+                "$ref": "#/$defs/DifferenceOf"
+              },
+              {
+                "$ref": "#/$defs/XorOf"
+              },
+              {
+                "$ref": "#/$defs/HalfPlane"
+              },
+              {
+                "$ref": "#/$defs/Under"
+              },
+              {
+                "$ref": "#/$defs/Between"
+              }
+            ]
+          },
+          "minItems": 2,
+          "title": "Difference",
+          "type": "array"
+        }
+      },
+      "required": [
+        "difference"
+      ],
+      "title": "DifferenceOf",
+      "type": "object"
+    },
     "Ellipse": {
       "additionalProperties": false,
       "description": "An axis-aligned ellipse with radii ``rx`` and ``ry``; turn it with a group.",
@@ -785,6 +1022,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -996,6 +1301,345 @@
       "title": "Ellipse",
       "type": "object"
     },
+    "FloodFill": {
+      "additionalProperties": false,
+      "description": "The part of the plane around ``seed`` that the lines of ``bounded_by`` enclose.\n\nLike a paint bucket: the boundaries may be open lines (a parabola, a\nline and an axis); together they must close the part the seed is in.\nIt is not outlined unless it gives a ``color``.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "flood_fill",
+          "default": "flood_fill",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill"
+        },
+        "fill_opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Opacity"
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/OnRef"
+            }
+          ],
+          "title": "Seed"
+        },
+        "bounded_by": {
+          "items": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Bounded By",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "seed",
+        "bounded_by"
+      ],
+      "title": "FloodFill",
+      "type": "object"
+    },
     "FrameHeader": {
       "additionalProperties": false,
       "properties": {
@@ -1183,6 +1827,74 @@
           "title": "Covers",
           "type": "array"
         },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
         "children": {
           "items": {
             "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
@@ -1331,6 +2043,145 @@
         "children"
       ],
       "title": "Group",
+      "type": "object"
+    },
+    "HalfPlane": {
+      "additionalProperties": false,
+      "description": "Everything to the left of the line through two points, going from the first to the second.",
+      "properties": {
+        "half_plane": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "array"
+                },
+                {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ]
+                    }
+                  ],
+                  "type": "array"
+                },
+                {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/OnRef"
+                }
+              ]
+            }
+          ],
+          "title": "Half Plane",
+          "type": "array"
+        }
+      },
+      "required": [
+        "half_plane"
+      ],
+      "title": "HalfPlane",
+      "type": "object"
+    },
+    "IntersectionOf": {
+      "additionalProperties": false,
+      "properties": {
+        "intersection": {
+          "items": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/UnionOf"
+              },
+              {
+                "$ref": "#/$defs/IntersectionOf"
+              },
+              {
+                "$ref": "#/$defs/DifferenceOf"
+              },
+              {
+                "$ref": "#/$defs/XorOf"
+              },
+              {
+                "$ref": "#/$defs/HalfPlane"
+              },
+              {
+                "$ref": "#/$defs/Under"
+              },
+              {
+                "$ref": "#/$defs/Between"
+              }
+            ]
+          },
+          "minItems": 2,
+          "title": "Intersection",
+          "type": "array"
+        }
+      },
+      "required": [
+        "intersection"
+      ],
+      "title": "IntersectionOf",
       "type": "object"
     },
     "Label": {
@@ -1618,6 +2469,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -1919,6 +2838,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "at": {
           "anyOf": [
@@ -2371,6 +3358,74 @@
           "title": "Covers",
           "type": "array"
         },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
         "in": {
           "anyOf": [
             {
@@ -2609,6 +3664,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -2900,6 +4023,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -3211,6 +4402,74 @@
           "title": "Covers",
           "type": "array"
         },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
         "in": {
           "anyOf": [
             {
@@ -3434,6 +4693,326 @@
       "title": "Rect",
       "type": "object"
     },
+    "Region": {
+      "additionalProperties": false,
+      "description": "An area built from other shapes: ``{\"difference\": [\"A\", \"B\"]}`` (regions.py).\n\nIts operands are often defs, which are not drawn themselves. A region is\nnot outlined unless it gives a ``color``.",
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "type": {
+          "const": "region",
+          "default": "region",
+          "title": "Type",
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Style"
+        },
+        "opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Opacity"
+        },
+        "z": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Z"
+        },
+        "tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "covers": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Covers",
+          "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
+        "in": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "In"
+        },
+        "color": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color"
+        },
+        "stroke_width": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stroke Width"
+        },
+        "dash": {
+          "anyOf": [
+            {
+              "items": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dash"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Label"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fill": {
+          "anyOf": [
+            {
+              "pattern": "^(#[0-9A-Fa-f]{6}|[A-Za-z][A-Za-z0-9_]*)$",
+              "type": "string"
+            },
+            {
+              "maxItems": 3,
+              "minItems": 3,
+              "prefixItems": [
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill"
+        },
+        "fill_opacity": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fill Opacity"
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            }
+          ],
+          "title": "Shape"
+        }
+      },
+      "required": [
+        "id",
+        "shape"
+      ],
+      "title": "Region",
+      "type": "object"
+    },
     "RegularPolygon": {
       "additionalProperties": false,
       "description": "``sides`` corners on a circle of ``radius`` around ``center``.\n\nWith ``rotation`` 0 it stands on a flat bottom edge (a triangle points up,\na square is axis-aligned); ``rotation`` turns it counterclockwise.",
@@ -3510,6 +5089,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -3838,6 +5485,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "in": {
           "anyOf": [
@@ -4247,6 +5962,74 @@
           },
           "title": "Covers",
           "type": "array"
+        },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
         },
         "at": {
           "anyOf": [
@@ -4887,6 +6670,74 @@
           "title": "Covers",
           "type": "array"
         },
+        "clip": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip"
+        },
+        "clip_out": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/UnionOf"
+            },
+            {
+              "$ref": "#/$defs/IntersectionOf"
+            },
+            {
+              "$ref": "#/$defs/DifferenceOf"
+            },
+            {
+              "$ref": "#/$defs/XorOf"
+            },
+            {
+              "$ref": "#/$defs/HalfPlane"
+            },
+            {
+              "$ref": "#/$defs/Under"
+            },
+            {
+              "$ref": "#/$defs/Between"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Clip Out"
+        },
         "at": {
           "anyOf": [
             {
@@ -5251,6 +7102,172 @@
       ],
       "title": "TypographyHeader",
       "type": "object"
+    },
+    "Under": {
+      "additionalProperties": false,
+      "description": "Between a graph and the line y = 0 of its own coordinates, from ``x[0]`` to ``x[1]``.",
+      "properties": {
+        "under": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+          "title": "Under",
+          "type": "string"
+        },
+        "x": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "title": "X",
+          "type": "array"
+        }
+      },
+      "required": [
+        "under",
+        "x"
+      ],
+      "title": "Under",
+      "type": "object"
+    },
+    "UnionOf": {
+      "additionalProperties": false,
+      "properties": {
+        "union": {
+          "items": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/UnionOf"
+              },
+              {
+                "$ref": "#/$defs/IntersectionOf"
+              },
+              {
+                "$ref": "#/$defs/DifferenceOf"
+              },
+              {
+                "$ref": "#/$defs/XorOf"
+              },
+              {
+                "$ref": "#/$defs/HalfPlane"
+              },
+              {
+                "$ref": "#/$defs/Under"
+              },
+              {
+                "$ref": "#/$defs/Between"
+              }
+            ]
+          },
+          "minItems": 2,
+          "title": "Union",
+          "type": "array"
+        }
+      },
+      "required": [
+        "union"
+      ],
+      "title": "UnionOf",
+      "type": "object"
+    },
+    "XorOf": {
+      "additionalProperties": false,
+      "description": "Where exactly one of the two areas is.",
+      "properties": {
+        "xor": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/UnionOf"
+                },
+                {
+                  "$ref": "#/$defs/IntersectionOf"
+                },
+                {
+                  "$ref": "#/$defs/DifferenceOf"
+                },
+                {
+                  "$ref": "#/$defs/XorOf"
+                },
+                {
+                  "$ref": "#/$defs/HalfPlane"
+                },
+                {
+                  "$ref": "#/$defs/Under"
+                },
+                {
+                  "$ref": "#/$defs/Between"
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/UnionOf"
+                },
+                {
+                  "$ref": "#/$defs/IntersectionOf"
+                },
+                {
+                  "$ref": "#/$defs/DifferenceOf"
+                },
+                {
+                  "$ref": "#/$defs/XorOf"
+                },
+                {
+                  "$ref": "#/$defs/HalfPlane"
+                },
+                {
+                  "$ref": "#/$defs/Under"
+                },
+                {
+                  "$ref": "#/$defs/Between"
+                }
+              ]
+            }
+          ],
+          "title": "Xor",
+          "type": "array"
+        }
+      },
+      "required": [
+        "xor"
+      ],
+      "title": "XorOf",
+      "type": "object"
     }
   },
   "additionalProperties": false,
@@ -5426,6 +7443,7 @@
             "arc": "#/$defs/Arc",
             "circle": "#/$defs/Circle",
             "ellipse": "#/$defs/Ellipse",
+            "flood_fill": "#/$defs/FloodFill",
             "group": "#/$defs/Group",
             "line": "#/$defs/Line",
             "math": "#/$defs/Math",
@@ -5433,6 +7451,7 @@
             "polygon": "#/$defs/Polygon",
             "polyline": "#/$defs/Polyline",
             "rect": "#/$defs/Rect",
+            "region": "#/$defs/Region",
             "regular_polygon": "#/$defs/RegularPolygon",
             "sector": "#/$defs/Sector",
             "stack": "#/$defs/Stack",
@@ -5470,6 +7489,12 @@
           },
           {
             "$ref": "#/$defs/Path"
+          },
+          {
+            "$ref": "#/$defs/Region"
+          },
+          {
+            "$ref": "#/$defs/FloodFill"
           },
           {
             "$ref": "#/$defs/Text"
@@ -5496,6 +7521,7 @@
             "arc": "#/$defs/Arc",
             "circle": "#/$defs/Circle",
             "ellipse": "#/$defs/Ellipse",
+            "flood_fill": "#/$defs/FloodFill",
             "group": "#/$defs/Group",
             "line": "#/$defs/Line",
             "math": "#/$defs/Math",
@@ -5503,6 +7529,7 @@
             "polygon": "#/$defs/Polygon",
             "polyline": "#/$defs/Polyline",
             "rect": "#/$defs/Rect",
+            "region": "#/$defs/Region",
             "regular_polygon": "#/$defs/RegularPolygon",
             "sector": "#/$defs/Sector",
             "stack": "#/$defs/Stack",
@@ -5540,6 +7567,12 @@
           },
           {
             "$ref": "#/$defs/Path"
+          },
+          {
+            "$ref": "#/$defs/Region"
+          },
+          {
+            "$ref": "#/$defs/FloodFill"
           },
           {
             "$ref": "#/$defs/Text"

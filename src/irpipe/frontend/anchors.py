@@ -26,6 +26,7 @@ from irpipe.schema.ir import (
     Circle,
     CubicTo,
     Ellipse,
+    HalfPlane,
     Line,
     LineTo,
     Math,
@@ -36,6 +37,7 @@ from irpipe.schema.ir import (
     Polyline,
     QuadTo,
     Rect,
+    RegionShape,
     RegularPolygon,
     Sector,
     Stack,
@@ -64,8 +66,11 @@ RESERVED: Final = ("frame", "safe")
 Centered = Circle | Ellipse | Rect | RegularPolygon | Arc | Sector
 """Objects whose ``center`` anchor is their ``center`` field."""
 
-POINT_FIELDS: Final = ("center", "start", "end", "at", "pivot")
+POINT_FIELDS: Final = ("center", "start", "end", "at", "pivot", "seed")
 """Fields that hold one point (a group's ``translate`` is a shift, not a point)."""
+
+REGION_FIELDS: Final = ("shape", "clip", "clip_out")
+"""Fields that hold a region expression, whose half planes hold points."""
 
 
 def anchor_names(obj: ObjectBase) -> tuple[str, ...]:
@@ -116,10 +121,27 @@ def points_of(obj: ObjectBase) -> Iterator[tuple[str, Point]]:
 
 
 def references(obj: ObjectBase) -> Iterator[tuple[str, str | OnRef]]:
-    """Every reference among ``obj``'s points, with its path."""
-    for path, point in points_of(obj):
+    """Every reference among ``obj``'s points, its region expressions' included, with its path."""
+    found = list(points_of(obj))
+    for name in REGION_FIELDS:
+        shape = getattr(obj, name, None)
+        if shape is not None:
+            found += region_points(shape, name)
+    for path, point in found:
         if isinstance(point, str | OnRef):
             yield path, point
+
+
+def region_points(shape: RegionShape, path: str) -> list[tuple[str, Point]]:
+    """The points of every half plane in a region expression."""
+    if isinstance(shape, HalfPlane):
+        first, second = shape.half_plane
+        return [(f"{path}.half_plane[0]", first), (f"{path}.half_plane[1]", second)]
+    found: list[tuple[str, Point]] = []
+    for key in ("union", "intersection", "difference", "xor"):
+        for k, part in enumerate(getattr(shape, key, ())):
+            found += region_points(part, f"{path}.{key}[{k}]")
+    return found
 
 
 def xy(point: Point) -> tuple[float, float]:

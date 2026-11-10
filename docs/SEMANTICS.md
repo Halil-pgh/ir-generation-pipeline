@@ -99,7 +99,8 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   then the object's style classes in the order listed (a later class
   wins), then the object's own fields.
 - The theme defaults are the header's `theme`: texts take its `text`
-  color, every other object its `line` color, every stroke its
+  color, regions and flood fills no color (they are not outlined unless
+  they give one), every other object its `line` color, every stroke its
   `stroke_width` (4 reference px when left out). A theme color left out
   is white or black, whichever has the higher WCAG contrast with the
   background. Nothing is filled; a text is `body` size, regular and
@@ -149,6 +150,10 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   when left out) and 0.8 of that wide; the line stops 0.6 of a head's
   length short of the tip. A line that paints nothing has no heads.
 - Every shape may carry a `label` (see Placement).
+- A `region` is an area built from other objects, and a `flood_fill` the
+  part of the plane lines enclose around a seed; any object may be drawn
+  only inside an area (`clip`) or only outside one (`clip_out`). See
+  Regions.
 
 ## LIR
 
@@ -194,6 +199,10 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   label (`v.label`), a zone, `frame` or `safe` for `"id.anchor"`, a shape
   for `{"on": ...}`. `in` names a space, `next_to` another object or a
   zone, and a label's `at` a point its owner has.
+- A region's operands (and a clip's) are objects or defs with an inside:
+  closed shapes, regions and flood fills. A graph (`under`, `between`) and
+  a flood fill's boundary may be any shape, open or closed. Anything else
+  is `E-REGION`; a name that points at nothing is `E-REF`.
 - A header style may only name header colors. A mix in `extra_colors`
   mixes two header colors or literal colors, never `"none"` and never
   another extra color.
@@ -260,6 +269,41 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   else its fill) and opacity, the `label` size and the owner's `z`,
   unless it says otherwise. It is drawn in the owner's group right after
   the owner, or, outside groups, after every other object.
+
+## Regions
+
+- A region's `shape` is an area: an object's id (its inside), or
+  `{"union": [...]}`, `{"intersection": [...]}`, `{"difference": [first,
+  ...]}` (the first without the others), `{"xor": [a, b]}` (in exactly
+  one), `{"half_plane": [p, q]}` (left of the line from p to q),
+  `{"under": f, "x": [x0, x1]}` (between graph f and its y = 0) or
+  `{"between": [f, g], "x": [x0, x1]}`. Expressions nest. A graph's x and
+  y = 0 are in its own coordinates; it is read from the first point that
+  reaches x0 to the first that reaches x1 (a graph meets each x once). A
+  graph that does not reach an x is `E-REGION`.
+- A flood fill's `bounded_by` lines cut the plane where they cross; the
+  face that holds `seed` is painted. Lines may be open and may run on past
+  a crossing. A seed on a line, or in a part the lines leave open, is
+  `E-REGION`. A closed line inside the face leaves a hole.
+- The place stage computes every area in the frame and writes it as a
+  path in the object's own coordinates, holes and all, drawn even-odd. So
+  a region has anchors, a label and a place in groups like any shape, and
+  may be another region's operand. A region or flood fill that comes out
+  empty is `W-EMPTY-REGION` and draws nothing.
+- Areas are computed on straight pieces: curves are cut into 64 per
+  quarter circle, closer than a hundredth of a pixel at the usual sizes,
+  and a computed area's outline is straight pieces. A shape's inside
+  follows its fill rule as SVG does: of the faces its subpaths cut the
+  plane into, even-odd keeps those an odd number of subpaths go round,
+  nonzero those the subpaths' turns do not cancel out on.
+- `clip` (or `clip_out`) on an object or a group draws it only inside
+  (only outside) the area. Place writes each clip as a def
+  `<id>.clip` (`<id>.clip_out`), a path in the frame, and the field names
+  it. A group's clip reaches everything inside it, and clips inside clips
+  meet. Fills and strokes are cut geometrically, each on its own; a cut
+  line ends flat at the area's edge. A shape wholly inside keeps its
+  curves and hint; one wholly outside draws nothing. Texts and formulas
+  are drawn whole, with `W-CLIP-TEXT`.
 
 ## Resolve
 

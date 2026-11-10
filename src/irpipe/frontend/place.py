@@ -14,7 +14,10 @@ What it works out:
 - stacks: each child is moved into its cell, and the stack becomes a plain
   group of its children;
 - spaces: an ``origin`` given by reference becomes numbers. Objects keep
-  their ``in``; resolve maps their points.
+  their ``in``; resolve maps their points;
+- areas: a region or a flood fill becomes a path (with holes, drawn
+  even-odd) in its own coordinates; a clip becomes a def ``<id>.clip`` (or
+  ``<id>.clip_out``), a path in the frame that the object's field names.
 
 Positions are worked out when first needed, so objects may refer to ones
 written later. Positions that depend on each other in a loop are E-CYCLE.
@@ -23,6 +26,8 @@ written later. Positions that depend on each other in a loop are E-CYCLE.
               in a stack), a stack's child gives a place of its own, or an
               ``{"on": ..., "x": ...}`` point lies beyond the outline
     E-CYCLE   positions depend on each other in a loop
+    E-REGION, W-EMPTY-REGION, W-CLIP-TEXT   areas that cannot be built,
+              come out empty, or clip a text (regions.py)
 """
 
 from collections.abc import Callable, Iterator
@@ -35,19 +40,26 @@ from irpipe.core import ISSUE_CODES, STAGES, Issue, IssueCode, Origin, Stage, St
 from irpipe.frontend import layout, shapes
 from irpipe.frontend.anchors import SAME_AS, Centered, map_points, split_ref, xy
 from irpipe.frontend.expressions import E_CYCLE
-from irpipe.frontend.geometry import affine, curves
+from irpipe.frontend.geometry import affine, areas, curves
 from irpipe.frontend.geometry.affine import XY, Box, Matrix
+from irpipe.frontend.geometry.flood import FloodError, flood
 from irpipe.frontend.labels import source_paths
+from irpipe.frontend.regions import W_CLIP_TEXT, W_EMPTY_REGION, RegionError, build
 from irpipe.metrics import TextBox
 from irpipe.schema import lir
 from irpipe.schema.ir import (
+    Area,
     Container,
+    FloodFill,
     Group,
     IRDocument,
     Math,
     OnRef,
+    Path,
     Placed,
     Point,
+    Region,
+    RegionShape,
     Shape,
     Stack,
     Text,
@@ -89,14 +101,16 @@ class Place(Stage):
 def place(
     document: IRDocument, measured: dict[str, TextBox]
 ) -> tuple[IRDocument | None, list[Issue]]:
-    """The placed document, or None and the problems that stopped it."""
+    """The placed document and the warnings met, or None and the problems that stopped it."""
     problems = list(missing_places(document))
     if problems:
         return None, problems
+    placer = Placer(document, measured)
     try:
-        return Placer(document, measured).placed(), []
-    except PlaceError as error:
+        placed = placer.placed()
+    except (PlaceError, RegionError) as error:
         return None, [error.issue]
+    return placed, [*clipped_texts(document), *placer.warnings]
 
 
 def missing_places(document: IRDocument) -> Iterator[Issue]:
@@ -127,6 +141,32 @@ def missing_places(document: IRDocument) -> Iterator[Issue]:
                 objects=[obj.id],
                 hint='give "at" (a point or a reference such as "v.tip"), or "next_to", '
                 "or put it in a stack",
+            )
+
+
+def clipped_texts(document: IRDocument) -> Iterator[Issue]:
+    """A W-CLIP-TEXT for every text or formula a clip reaches, which is drawn whole."""
+    objects = {obj.id: obj for obj in document.objects}
+    paths = source_paths(document)
+
+    def texts_in(oid: str) -> Iterator[str]:
+        obj = objects.get(oid)
+        if isinstance(obj, Text | Math):
+            yield oid
+        elif isinstance(obj, Container):
+            for child in obj.children:
+                yield from texts_in(child)
+
+    for obj in document.objects:
+        if obj.clip is None and obj.clip_out is None:
+            continue
+        for oid in texts_in(obj.id):
+            whose = "its clip" if oid == obj.id else f"the clip of '{obj.id}'"
+            yield W_CLIP_TEXT(
+                f"'{oid}' is under {whose}; a text or formula is drawn whole, not cut",
+                path=paths[oid],
+                objects=[oid, obj.id] if oid != obj.id else [oid],
+                hint="move the text out of the clipped group, or allow this if it is meant",
             )
 
 
@@ -172,20 +212,38 @@ class Placer:
         }
         self._done: dict[tuple[str, str], Any] = {}
         self._active: list[tuple[str, str]] = []
+        self.warnings: list[Issue] = []
 
     def placed(self) -> IRDocument:
-        """The document with every position as numbers and every stack a group."""
+        """The document with every position as numbers, every stack a group, every area a path."""
         spaces = tuple(
             space.model_copy(update={"origin": self._origin(space.id)})
             for space in self._document.spaces
         )
+        clips: list[ObjectBase] = []
+        objects = [self._final(obj.id) for obj in self._document.objects]
+        defs = [self._final(obj.id) for obj in self._document.defs]
+        for listing in (objects, defs):
+            for k, obj in enumerate(listing):
+                listing[k], made = self._with_clips(obj)
+                clips.extend(made)
         return self._document.model_copy(
-            update={
-                "objects": tuple(self._final(obj.id) for obj in self._document.objects),
-                "defs": tuple(self._final(obj.id) for obj in self._document.defs),
-                "spaces": spaces,
-            }
+            update={"objects": tuple(objects), "defs": (*defs, *clips), "spaces": spaces}
         )
+
+    def _with_clips(self, obj: ObjectBase) -> tuple[ObjectBase, list[ObjectBase]]:
+        """``obj`` naming its clips' defs, and those defs: paths in the frame."""
+        made: list[ObjectBase] = []
+        update: dict[str, str] = {}
+        for name in ("clip", "clip_out"):
+            shape = getattr(obj, name)
+            if shape is None:
+                continue
+            where = f"{self._paths[obj.id]}.{name}"
+            geometry = self._once(name, obj.id, _builder(shape, self, obj.id, where))
+            made.append(_path_from(obj, f"{obj.id}.{name}", areas.subpaths(geometry), keep=False))
+            update[name] = f"{obj.id}.{name}"
+        return (obj.model_copy(update=update) if update else obj), made
 
     # -- what is written out ------------------------------------------------
 
@@ -201,6 +259,8 @@ class Placer:
                 z=local.z,
                 tags=local.tags,
                 covers=local.covers,
+                clip=local.clip,
+                clip_out=local.clip_out,
                 translate=(dx, dy),
             )
         if (dx, dy) == (0, 0):
@@ -221,6 +281,8 @@ class Placer:
         obj = self._objects[oid]
         to_draw = self._space(obj)
         path = self._paths[oid]
+        if isinstance(obj, Area):
+            return self._area_path(obj)
 
         def numbers(point: Point, where: str) -> XY:
             if isinstance(point, tuple):
@@ -273,6 +335,46 @@ class Placer:
             gap = GAP if box.gap is None else box.gap
             return layout.beside((*at, *at), u, gap, width, ascent + descent), "center"
         return at, box.anchor or "center"
+
+    def _area_path(self, obj: Region | FloodFill) -> Path:
+        """A region or flood fill as a path in its own coordinates."""
+        where = self._paths[obj.id]
+        if isinstance(obj, Region):
+            geometry = build(obj.shape, self, obj.id, f"{where}.shape")
+        else:
+            geometry = self._flood(obj, where)
+        if areas.is_empty(geometry):
+            self.warnings.append(
+                W_EMPTY_REGION(
+                    f"{obj.type} '{obj.id}' is empty, so nothing is drawn",
+                    path=where,
+                    objects=[obj.id],
+                    hint="check that its operands overlap where you expect",
+                )
+            )
+        own = areas.transform(geometry, affine.invert(self._own_to_frame_before(obj)))
+        return _path_from(obj, obj.id, areas.subpaths(own), keep=True)
+
+    def _flood(self, fill: FloodFill, where: str) -> Any:
+        seed = self.point(fill.id, fill.seed, f"{where}.seed")
+        boundaries = [self._lines(oid) for oid in fill.bounded_by]
+        try:
+            return flood(boundaries, seed)
+        except FloodError as error:
+            if error.on is not None:
+                line = fill.bounded_by[error.on]
+                raise RegionError(
+                    f"the seed of '{fill.id}' lies on the line of '{line}'",
+                    f"{where}.seed",
+                    [fill.id, line],
+                    "move the seed into the part of the plane you want painted",
+                ) from None
+            raise RegionError(
+                f"the lines around the seed of '{fill.id}' leave its part of the plane open",
+                f"{where}.seed",
+                [fill.id, *fill.bounded_by],
+                "add a boundary that closes it, or extend the lines until they cross",
+            ) from None
 
     def _size(self, oid: str) -> tuple[float, float, float]:
         box = self._measured[oid]
@@ -393,6 +495,51 @@ class Placer:
         drawn = affine.apply(self._space(local), found)
         return affine.apply(self._to_frame(oid, within), drawn)
 
+    # -- what region building reads (regions.Source) ------------------------
+
+    @property
+    def frame(self) -> Box:
+        return self._boxes["frame"]
+
+    def area(self, oid: str) -> Any:
+        """The inside of an object, in the frame."""
+
+        def compute() -> Any:
+            local = self._local(oid)
+            assert isinstance(local, Shape)
+            subpaths, _, rule = shapes.outline(local)
+            return areas.transform(areas.area(subpaths, rule), self.own_to_frame(oid))
+
+        return self._once("area", oid, compute)
+
+    def point(self, owner: str, point: Point, where: str) -> XY:
+        """A point an object holds, in the frame."""
+        if isinstance(point, tuple):
+            return affine.apply(self._own_to_frame_before(self._objects[owner]), xy(point))
+        return self._frame_point(point, where)
+
+    def graph(self, oid: str, x0: float, x1: float) -> list[XY] | None:
+        """The part of a line between two x of its own coordinates, in those coordinates."""
+        local = self._local(oid)
+        assert isinstance(local, Shape)
+        subpaths, _, _ = shapes.outline(local)
+        return curves.stretch(subpaths, x0, x1)
+
+    def own_to_frame(self, oid: str) -> Matrix:
+        """An object's own coordinates -> the frame."""
+        return affine.compose(self._to_frame(oid), self._space(self._objects[oid]))
+
+    def _own_to_frame_before(self, obj: ObjectBase) -> Matrix:
+        """Own coordinates -> the frame, without the move a stack gives the object."""
+        return affine.compose(self._parent_to_frame(obj.id), self._space(obj))
+
+    def _lines(self, oid: str) -> Any:
+        """An object's outline as lines, in the frame."""
+        local = self._local(oid)
+        assert isinstance(local, Shape)
+        subpaths, _, _ = shapes.outline(local)
+        return areas.transform(areas.lines(subpaths), self.own_to_frame(oid))
+
     # -- shapes and boxes in drawing coordinates ----------------------------
 
     def _outline(self, oid: str) -> tuple[lir.Subpath, ...]:
@@ -498,3 +645,16 @@ class Placer:
                 hint="place one of them with numbers, or by something outside the loop",
             )
         )
+
+
+def _path_from(obj: ObjectBase, oid: str, subpaths: tuple[lir.Subpath, ...], *, keep: bool) -> Path:
+    """A path with these subpaths, drawn even-odd; ``keep`` keeps ``obj``'s paint and place."""
+    fields: dict[str, Any] = {"id": oid, "subpaths": subpaths, "fill_rule": "evenodd"}
+    if keep:
+        shared = set(Path.model_fields) & set(type(obj).model_fields) - {"id", "type"}
+        fields |= {name: getattr(obj, name) for name in shared}
+    return Path.model_construct(**fields)
+
+
+def _builder(shape: RegionShape, source: "Placer", owner: str, where: str) -> Callable[[], Any]:
+    return lambda: build(shape, source, owner, where)

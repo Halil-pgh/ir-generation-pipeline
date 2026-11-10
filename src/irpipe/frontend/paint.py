@@ -7,10 +7,11 @@ class wins), and what no class sets comes from the header's theme
     theme defaults -> style classes, in the order listed -> the object
 
 The theme gives texts and formulas its text color and everything else its
-line color;
-a theme color left out is white or black, whichever contrasts more with the
-background. Color names become hex: a header color, an extra color, or a mix
-of two (the average of their channels). ``"none"`` means nothing is painted.
+line color, except regions and flood fills, which are areas and are not
+outlined unless they say so; a theme color left out is white or black,
+whichever contrasts more with the background. Color names become hex: a
+header color, an extra color, or a mix of two (the average of their
+channels). ``"none"`` means nothing is painted.
 
 ``PaintResolver.normalized`` writes the result back into the object's own
 fields (the normalize stage); ``painted`` reads it from there (resolve).
@@ -21,7 +22,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 from irpipe.schema.color import NO_PAINT, Color, ColorRef, Mix, to_rgb
-from irpipe.schema.ir import IRDocument, Math, Style, Text
+from irpipe.schema.ir import Area, IRDocument, Math, Style, Text
 from irpipe.schema.ir.objects import ObjectBase
 
 PAINT_FIELDS = tuple(Style.model_fields)
@@ -85,7 +86,10 @@ class PaintResolver:
     def paint(self, obj: ObjectBase) -> Paint:
         """The cascade for ``obj``: theme, then its style classes, then its own fields."""
         values = dict(self._defaults)
-        values["color"] = self._text_color if isinstance(obj, Text | Math) else self._line_color
+        if isinstance(obj, Text | Math):
+            values["color"] = self._text_color
+        else:
+            values["color"] = NO_PAINT if isinstance(obj, Area) else self._line_color
         for name in obj.style_names:
             values.update(_set_fields(self._document.styles[name]))
         values.update(_set_fields(obj))

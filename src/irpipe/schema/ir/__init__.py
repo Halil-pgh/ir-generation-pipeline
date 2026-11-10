@@ -6,7 +6,9 @@
 Module map:
     document.py  IRDocument (the whole ir.json), IRBody (what the agent writes)
     header.py    IRHeader (what the orchestrator writes and locks)
-    objects.py   the core objects: basic shapes, path, text, math, group, stack
+    objects.py   the core objects: basic shapes, path, region, flood_fill, text,
+                 math, group, stack
+    regions.py   region expressions: union, intersection, difference, xor, ...
     common.py    ids, points and references, boxes, sizes, directions, anchors
 """
 
@@ -36,11 +38,13 @@ from irpipe.schema.ir.header import (
 )
 from irpipe.schema.ir.objects import (
     Arc,
+    Area,
     Arrows,
     Circle,
     Container,
     CubicTo,
     Ellipse,
+    FloodFill,
     Group,
     InSpace,
     IRObject,
@@ -55,6 +59,7 @@ from irpipe.schema.ir.objects import (
     Polyline,
     QuadTo,
     Rect,
+    Region,
     RegularPolygon,
     Sector,
     Segment,
@@ -62,6 +67,16 @@ from irpipe.schema.ir.objects import (
     Stack,
     Subpath,
     Text,
+)
+from irpipe.schema.ir.regions import (
+    Between,
+    DifferenceOf,
+    HalfPlane,
+    IntersectionOf,
+    RegionShape,
+    Under,
+    UnionOf,
+    XorOf,
 )
 
 __all__ = [
@@ -72,21 +87,27 @@ __all__ = [
     "Anchor",
     "AnchorRef",
     "Arc",
+    "Area",
     "Arrows",
+    "Between",
     "Box",
     "Circle",
     "Container",
     "CubicTo",
+    "DifferenceOf",
     "Direction",
     "Ellipse",
+    "FloodFill",
     "FrameHeader",
     "Group",
+    "HalfPlane",
     "IRBody",
     "IRDocument",
     "IRHeader",
     "IRObject",
     "Id",
     "InSpace",
+    "IntersectionOf",
     "Label",
     "Line",
     "LineTo",
@@ -101,6 +122,8 @@ __all__ = [
     "Polyline",
     "QuadTo",
     "Rect",
+    "Region",
+    "RegionShape",
     "RegularPolygon",
     "Role",
     "Sector",
@@ -115,5 +138,8 @@ __all__ = [
     "Text",
     "ThemeHeader",
     "TypographyHeader",
+    "Under",
+    "UnionOf",
+    "XorOf",
     "header_hash",
 ]

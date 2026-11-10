@@ -55,6 +55,47 @@ def subpath_of(parts: Sequence[Piece], *, closed: bool = False) -> lir.Subpath:
     return lir.Subpath(start=parts[0][0], segments=tuple(segments), closed=closed)
 
 
+def flatten(subpath: lir.Subpath, samples: int = SAMPLES) -> list[XY]:
+    """The subpath as a polyline: straight pieces as they are, curves cut into ``samples`` bits.
+
+    A closed subpath's polyline ends where it started.
+    """
+    points = [subpath.start]
+    for piece in pieces(subpath):
+        if len(piece) == 2:
+            points.append(piece[1])
+        else:
+            points.extend(point(piece, k / samples) for k in range(1, samples + 1))
+    if subpath.closed and points[-1] != points[0]:
+        points.append(points[0])
+    return points
+
+
+def stretch(subpaths: Sequence[lir.Subpath], x0: float, x1: float) -> list[XY] | None:
+    """The part of a graph between ``x0`` and ``x1``, from left to right; None if it misses one.
+
+    The subpaths are read as one line in drawing order, from the first
+    point at ``x0`` to the first point at ``x1`` (a graph meets each x once).
+    """
+    line = [p for s in subpaths for p in flatten(s)]
+    start, end = _first_at(line, x0), _first_at(line, x1)
+    if start is None or end is None:
+        return None
+    (k0, p0), (k1, p1) = start, end
+    if k0 <= k1:
+        return [p0, *line[k0 + 1 : k1 + 1], p1]
+    return [p0, *reversed(line[k1 + 1 : k0 + 1]), p1]
+
+
+def _first_at(line: list[XY], x: float) -> tuple[int, XY] | None:
+    """The first segment (by its start index) that reaches ``x``, and the point there."""
+    for k, (p, q) in enumerate(pairwise(line)):
+        if min(p[0], q[0]) <= x <= max(p[0], q[0]):
+            share = 0.0 if p[0] == q[0] else (x - p[0]) / (q[0] - p[0])
+            return k, (x, p[1] + share * (q[1] - p[1]))
+    return None
+
+
 def point(piece: Piece, t: float) -> XY:
     """The point at parameter ``t`` (de Casteljau)."""
     level = list(piece)

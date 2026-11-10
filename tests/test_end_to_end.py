@@ -11,6 +11,7 @@ from irpipe.core import Pipeline, Report, RunResult, Status, load_config
 
 ROOT = Path(__file__).parent.parent
 EXAMPLE = ROOT / "examples" / "projection" / "ir.json"
+EXAMPLES = sorted((ROOT / "examples").glob("*/ir.json"))
 
 
 def run(text: str, out_dir: Path) -> RunResult:
@@ -32,11 +33,12 @@ def test_the_configured_pipeline_runs_the_front_end_then_renders() -> None:
     )
 
 
-def test_the_example_ir_is_ready_and_its_lir_passes_the_published_schema(
-    tmp_path: Path,
+@pytest.mark.parametrize("example", EXAMPLES, ids=lambda path: path.parent.name)
+def test_every_example_ir_is_ready_and_its_lir_passes_the_published_schema(
+    tmp_path: Path, example: Path
 ) -> None:
     pytest.importorskip("cairosvg")
-    result = run(EXAMPLE.read_text(encoding="utf-8"), tmp_path)
+    result = run(example.read_text(encoding="utf-8"), tmp_path)
     report = Report.build(result.issues, stopped_at=result.stopped_at)
     assert report.status is Status.READY, report.issues
     lir = json.loads(result.get(LIR).model_dump_json())

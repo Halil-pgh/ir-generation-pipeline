@@ -19,6 +19,11 @@ object may name a coordinate space with ``in``; the place stage resolves both
 (docs/SEMANTICS.md, "Placement"). Texts, formulas and stacks are boxes: they
 sit at a point, beside a point, or next to another object. Shapes may carry
 a ``label`` and open ones ``arrows``.
+
+A ``region`` is an area built from other shapes with set operations, and a
+``flood_fill`` the part of the plane that lines enclose around a seed
+(regions.py, analysis §2.6). Any object may be drawn only inside an area
+(``clip``) or only outside one (``clip_out``).
 """
 
 from typing import Annotated, Literal, Self
@@ -39,6 +44,7 @@ from irpipe.schema.ir.common import (
     PositiveNumber,
     Size,
 )
+from irpipe.schema.ir.regions import RegionShape
 
 Opacity = Annotated[float, Field(ge=0, le=1)]
 
@@ -49,7 +55,9 @@ class ObjectBase(StrictModel):
     ``style`` names one or more style classes from the header. ``z`` reorders
     drawing (higher is drawn later; ties keep list order). ``tags`` record what
     a generated shape means (``"spring"``); ``covers`` names the brief's
-    ``must_show`` items the object shows.
+    ``must_show`` items the object shows. ``clip`` draws the object only
+    inside an area, ``clip_out`` only outside one; lines and fills are cut,
+    texts and formulas are drawn whole.
     """
 
     id: Id
@@ -59,6 +67,8 @@ class ObjectBase(StrictModel):
     z: float | None = None
     tags: tuple[str, ...] = ()
     covers: tuple[str, ...] = ()
+    clip: RegionShape | None = None
+    clip_out: RegionShape | None = None
 
     @property
     def style_names(self) -> tuple[str, ...]:
@@ -383,11 +393,41 @@ class Stack(Placed):
 Container = Group | Stack
 """An object whose ``children`` are other objects."""
 
+
+class Region(Filled):
+    """An area built from other shapes: ``{"difference": ["A", "B"]}`` (regions.py).
+
+    Its operands are often defs, which are not drawn themselves. A region is
+    not outlined unless it gives a ``color``.
+    """
+
+    type: Literal["region"] = "region"
+    shape: RegionShape
+
+
+class FloodFill(Filled):
+    """The part of the plane around ``seed`` that the lines of ``bounded_by`` enclose.
+
+    Like a paint bucket: the boundaries may be open lines (a parabola, a
+    line and an axis); together they must close the part the seed is in.
+    It is not outlined unless it gives a ``color``.
+    """
+
+    type: Literal["flood_fill"] = "flood_fill"
+    seed: Point
+    bounded_by: tuple[Id, ...] = Field(min_length=1)
+
+
+Area = Region | FloodFill
+"""Objects whose outline the front-end computes from other objects."""
+
 Shape = Circle | Ellipse | Rect | RegularPolygon | Polygon | Sector | Line | Polyline | Arc | Path
 """Every object that is drawn as a path."""
 
 Open = Line | Polyline | Arc | Path
 """Shapes with a start and an end, which may carry arrowheads."""
 
-IRObject = Annotated[Shape | Text | Math | Group | Stack, Field(discriminator="type")]
+IRObject = Annotated[
+    Shape | Region | FloodFill | Text | Math | Group | Stack, Field(discriminator="type")
+]
 """Any core object; ``type`` picks the model."""
