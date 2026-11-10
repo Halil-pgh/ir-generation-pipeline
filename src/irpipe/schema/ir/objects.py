@@ -1,4 +1,11 @@
-"""The drawable objects of IR 1.0's core: circle, rect, line, path, text, group.
+"""The drawable objects of IR 1.0's core: basic shapes, path, text and group.
+
+Basic shapes: circle, ellipse, rect, regular_polygon, polygon, sector (closed,
+so they can be filled) and line, polyline, arc (open, drawn as lines only).
+The front-end turns every shape into a LIR path, so a backend never has to
+know any of them; it gets the shape's name as a hint and may use its own
+class for it (docs/SEMANTICS.md). Angles are degrees, counterclockwise from
+the positive x axis.
 
     {"id": "c", "type": "circle", "center": [0, 0], "radius": 1.5, "color": "a"}
 
@@ -12,9 +19,9 @@ references such as ``"v.tip"``, coordinate spaces, labels, markers and math
 (step 11) widen these types later.
 """
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import Field, NonNegativeFloat, PositiveFloat
+from pydantic import Field, NonNegativeFloat, PositiveFloat, model_validator
 
 from irpipe.schema.base import StrictModel
 from irpipe.schema.color import ColorRef
@@ -68,6 +75,15 @@ class Circle(Filled):
     radius: PositiveFloat
 
 
+class Ellipse(Filled):
+    """An axis-aligned ellipse with radii ``rx`` and ``ry``; turn it with a group."""
+
+    type: Literal["ellipse"] = "ellipse"
+    center: Point
+    rx: PositiveFloat
+    ry: PositiveFloat
+
+
 class Rect(Filled):
     """An axis-aligned rectangle; turn it with a group."""
 
@@ -78,10 +94,81 @@ class Rect(Filled):
     corner_radius: NonNegativeFloat = 0
 
 
+class RegularPolygon(Filled):
+    """``sides`` corners on a circle of ``radius`` around ``center``.
+
+    With ``rotation`` 0 it stands on a flat bottom edge (a triangle points up,
+    a square is axis-aligned); ``rotation`` turns it counterclockwise.
+    """
+
+    type: Literal["regular_polygon"] = "regular_polygon"
+    center: Point
+    radius: PositiveFloat
+    sides: int = Field(ge=3, le=64)
+    rotation: float = 0
+
+
+class Polygon(Filled):
+    """A closed outline through ``points``, in order."""
+
+    type: Literal["polygon"] = "polygon"
+    points: tuple[Point, ...] = Field(min_length=3)
+
+
 class Line(Stroked):
     type: Literal["line"] = "line"
     start: Point
     end: Point
+
+
+class Polyline(Stroked):
+    """An open line through ``points``, in order."""
+
+    type: Literal["polyline"] = "polyline"
+    points: tuple[Point, ...] = Field(min_length=2)
+
+
+def check_sweep(start_angle: float, end_angle: float) -> None:
+    """An arc goes from ``start_angle`` to ``end_angle``: not nowhere, at most once around."""
+    sweep = end_angle - start_angle
+    if sweep == 0:
+        raise ValueError("start_angle and end_angle are equal, so the arc has no length")
+    if abs(sweep) > 360:
+        raise ValueError(f"the arc sweeps {abs(sweep):g} degrees; at most 360 is allowed")
+
+
+class Arc(Stroked):
+    """Part of a circle, from ``start_angle`` to ``end_angle``.
+
+    The arc runs counterclockwise when ``end_angle`` is larger, clockwise
+    when it is smaller.
+    """
+
+    type: Literal["arc"] = "arc"
+    center: Point
+    radius: PositiveFloat
+    start_angle: float
+    end_angle: float
+
+    @model_validator(mode="after")
+    def _sweeps(self) -> Self:
+        check_sweep(self.start_angle, self.end_angle)
+        return self
+
+
+class Sector(Filled):
+    """A slice of a disc: the arc from ``start_angle`` to ``end_angle`` and two radii."""
+
+    type: Literal["sector"] = "sector"
+    center: Point
+    radius: PositiveFloat
+    start_angle: float
+    end_angle: float
+
+    @model_validator(mode="after")
+    def _sweeps(self) -> Self:
+        check_sweep(self.start_angle, self.end_angle)
+        return self
 
 
 class LineTo(StrictModel):
@@ -161,5 +248,8 @@ class Group(ObjectBase):
     pivot: Point = (0, 0)
 
 
-IRObject = Annotated[Circle | Rect | Line | Path | Text | Group, Field(discriminator="type")]
+Shape = Circle | Ellipse | Rect | RegularPolygon | Polygon | Sector | Line | Polyline | Arc | Path
+"""Every object that is drawn as a path."""
+
+IRObject = Annotated[Shape | Text | Group, Field(discriminator="type")]
 """Any core object; ``type`` picks the model."""

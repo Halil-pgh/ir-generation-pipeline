@@ -7,16 +7,60 @@ projection of ``a`` onto ``b``, a dashed construction line and two labels.
 from typing import Any
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from irpipe.schema.ir import Circle, Group, IRBody, IRObject, Line, Path, Rect, Text
+from irpipe.schema.ir import (
+    Arc,
+    Circle,
+    Ellipse,
+    Group,
+    IRBody,
+    IRObject,
+    Line,
+    Path,
+    Polygon,
+    Polyline,
+    Rect,
+    RegularPolygon,
+    Sector,
+    Text,
+)
 
 OBJECT = TypeAdapter(IRObject)
 
 EXAMPLES: list[tuple[type, dict[str, Any]]] = [
     (Circle, {"id": "origin", "type": "circle", "center": [0, 0], "radius": 0.08, "fill": "a"}),
+    (Ellipse, {"id": "orbit", "type": "ellipse", "center": [0, 0], "rx": 3, "ry": 1.5}),
     (Rect, {"id": "panel", "type": "rect", "center": [0, 3], "width": 6, "height": 2}),
+    (
+        RegularPolygon,
+        {"id": "hex", "type": "regular_polygon", "center": [0, 0], "radius": 1, "sides": 6},
+    ),
+    (Polygon, {"id": "tri", "type": "polygon", "points": [[0, 0], [2, 0], [0, 1]]}),
+    (
+        Sector,
+        {
+            "id": "pie",
+            "type": "sector",
+            "center": [0, 0],
+            "radius": 1,
+            "start_angle": 0,
+            "end_angle": 120,
+        },
+    ),
     (Line, {"id": "a", "type": "line", "start": [0, 0], "end": [3, 2], "color": "a"}),
+    (Polyline, {"id": "zig", "type": "polyline", "points": [[0, 0], [1, 1], [2, 0]]}),
+    (
+        Arc,
+        {
+            "id": "theta",
+            "type": "arc",
+            "center": [0, 0],
+            "radius": 0.6,
+            "start_angle": 0,
+            "end_angle": 56.3,
+        },
+    ),
     (
         Path,
         {
@@ -40,7 +84,9 @@ def test_the_type_field_picks_the_model(model: type, data: dict[str, Any]) -> No
 
 
 def test_an_unknown_type_lists_the_known_ones() -> None:
-    with pytest.raises(ValidationError, match="'circle', 'rect', 'line', 'path', 'text', 'group'"):
+    known = "'circle', 'ellipse', 'rect', 'regular_polygon', 'polygon', 'sector', 'line', "
+    known += "'polyline', 'arc', 'path', 'text', 'group'"
+    with pytest.raises(ValidationError, match=known):
         validate({"id": "s", "type": "spring"})
 
 
@@ -180,3 +226,38 @@ def test_a_body_survives_json_and_has_a_schema() -> None:
     schema = str(IRBody.model_json_schema())
     for name in ("Circle", "Rect", "Line", "Path", "Text", "Group"):
         assert name in schema
+
+
+# The basic shapes' own rules
+
+
+@pytest.mark.parametrize(
+    ("data", "field"),
+    [
+        ({"type": "polygon", "points": [[0, 0], [1, 1]]}, "points"),
+        ({"type": "polyline", "points": [[0, 0]]}, "points"),
+        ({"type": "regular_polygon", "center": [0, 0], "radius": 1, "sides": 2}, "sides"),
+        ({"type": "ellipse", "center": [0, 0], "rx": 1, "ry": 0}, "ry"),
+    ],
+)
+def test_a_shape_needs_enough_to_be_a_shape(data: dict[str, Any], field: str) -> None:
+    with pytest.raises(ValidationError, match=field):
+        validate({"id": "s", **data})
+
+
+@pytest.mark.parametrize("kind", ["arc", "sector"])
+@pytest.mark.parametrize(
+    ("start", "end", "message"),
+    [(10, 10, "has no length"), (0, 400, "at most 360"), (90, -300, "at most 360")],
+)
+def test_an_arc_sweeps_somewhere_but_at_most_once_around(
+    kind: str, start: float, end: float, message: str
+) -> None:
+    data = {"id": "a", "type": kind, "center": [0, 0], "radius": 1}
+    with pytest.raises(ValidationError, match=message):
+        validate({**data, "start_angle": start, "end_angle": end})
+
+
+@pytest.mark.parametrize("model", [Line, Polyline, Arc])
+def test_open_shapes_have_no_fill(model: type[BaseModel]) -> None:
+    assert "fill" not in model.model_fields

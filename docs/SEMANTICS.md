@@ -83,9 +83,10 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   (`focus`, `extra_colors`, `zones`, `spaces`, `defs`, `objects`,
   `allow`). The orchestrator owns the header and the agent owns the body;
   no field belongs to both.
-- Every contract refuses unknown fields. Each thing has exactly one way
-  to be written: a path is a start point plus segments, never a list of
-  points; a color is `"#RRGGBB"` or `[r, g, b]`, never with alpha.
+- Every contract refuses unknown fields. A color has exactly two forms,
+  `"#RRGGBB"` and `[r, g, b]`, never with alpha. A path is a start point
+  plus segments; a named shape (`polygon`, `arc`…) is the way to say a
+  common figure, and `path` is for everything else.
 - Ids start with a letter and use letters, digits and `_`. A dot names a
   part of an object (`v.label`, `v.tip`), so ids never contain one.
 
@@ -105,6 +106,20 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 
 ## Objects
 
+- The basic shapes are `circle`, `ellipse`, `rect`, `regular_polygon`,
+  `polygon` and `sector`, which are closed and may be filled, and
+  `line`, `polyline` and `arc`, which are open and drawn as lines only
+  (they have no `fill` field, and a style class's fill does not reach
+  them). Any other figure is a `path`.
+- Angles are degrees, counterclockwise from the positive x axis. An arc
+  or sector runs from `start_angle` to `end_angle`: counterclockwise when
+  `end_angle` is larger, clockwise when smaller. The sweep may not be 0
+  and may not exceed 360.
+- A `regular_polygon` with `rotation` 0 stands on a horizontal bottom
+  edge: a triangle points up, a square is axis-aligned. `rotation` turns
+  it counterclockwise about its center. `radius` is the distance from the
+  center to each corner.
+- `ellipse` and `rect` are axis-aligned; turn them with a group.
 - Drawing order is list order; an object's `z` moves it, higher drawn
   later, and ties keep list order. `defs` are never drawn.
 - A text's `anchor` names the point of its box that sits at `at`:
@@ -132,8 +147,43 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   sizes are in reference pixels: multiply by `short side px / 1080`.
 - A group's `transform` `[a, b, c, d, e, f]` maps (x, y) to
   (a x + c y + e, b x + d y + f), in units, applied to all its children.
-- A path is drawn from its subpaths; its `hint` (circle, rect, line) only
-  lets a backend use its library's own class, and must describe the same
-  geometry. A path always has a fill, a stroke or both.
+- A path is drawn from its subpaths. Its `hint` names the IR shape it
+  came from, with that shape's own numbers, so a backend may use its
+  library's own class (Manim's `Circle`, `Arc`, `RegularPolygon`…); a
+  backend that does not know a hint ignores it. The hint must describe
+  the same geometry as the subpaths. A path always has a fill, a stroke
+  or both.
+- Curved shapes reach the LIR as cubic Bezier pieces of at most 90
+  degrees each; a closed subpath's last side is its closing edge, not a
+  segment.
 - A text or math item is placed so that its `anchor` point sits at `at`.
   Math `glyphs` are the formula's outlines for backends without LaTeX.
+
+## Validation
+
+- `validate` checks in this order: JSON, then the schema, then names
+  (ids, references, groups). The first kind that finds a problem stops
+  the run there. A malformed `allow` entry is reported, but the IR is
+  still handed on: the picture can be drawn, it just cannot be READY.
+- Spaces, defs and objects share one set of ids.
+- An object belongs to at most one group, a group never ends up inside
+  itself, and defs are never group members.
+- A header style may only name header colors. A mix in `extra_colors`
+  mixes two header colors or literal colors, never `"none"` and never
+  another extra color.
+
+## Resolve
+
+- An object inside a group is drawn inside that group, at the group's
+  place in the list; members follow the group's `children` order, then
+  are sorted by `z`.
+- Theme defaults: lines and text are white or black, whichever has the
+  higher WCAG contrast with the background; strokes are 4 reference px;
+  nothing is filled; text is `body` size, regular and upright.
+- A mix is the average of its two colors' channels, rounded to the
+  nearest integer (halves to even).
+- A text is measured by the configured text measurer, and its box is
+  placed so that its `anchor` point sits at `at`. Vertically, `center`
+  is the middle of the box from descent to ascent.
+- An object that paints nothing (no stroke color and no fill) still gets
+  its LIR group, with no primitives in it.

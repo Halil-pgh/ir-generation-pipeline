@@ -1,6 +1,52 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "ArcHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "arc",
+          "default": "arc",
+          "title": "Shape",
+          "type": "string"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "radius": {
+          "exclusiveMinimum": 0,
+          "title": "Radius",
+          "type": "number"
+        },
+        "start_angle": {
+          "title": "Start Angle",
+          "type": "number"
+        },
+        "end_angle": {
+          "title": "End Angle",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "radius",
+        "start_angle",
+        "end_angle"
+      ],
+      "title": "ArcHint",
+      "type": "object"
+    },
     "CircleHint": {
       "additionalProperties": false,
       "properties": {
@@ -92,6 +138,48 @@
         "cubic"
       ],
       "title": "CubicTo",
+      "type": "object"
+    },
+    "EllipseHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "ellipse",
+          "default": "ellipse",
+          "title": "Shape",
+          "type": "string"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "rx": {
+          "exclusiveMinimum": 0,
+          "title": "Rx",
+          "type": "number"
+        },
+        "ry": {
+          "exclusiveMinimum": 0,
+          "title": "Ry",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "rx",
+        "ry"
+      ],
+      "title": "EllipseHint",
       "type": "object"
     },
     "FillPaint": {
@@ -548,7 +636,7 @@
     },
     "PathItem": {
       "additionalProperties": false,
-      "description": "Straight and Bezier subpaths with an optional fill and stroke.\n\n``hint`` lets a backend use its library's own class (Manim's ``Circle``);\nthe geometry drawn must still be the one in ``subpaths``.",
+      "description": "Straight and Bezier subpaths with an optional fill and stroke.\n\n``hint`` names the shape the path was made from, so a backend may use its\nlibrary's own class (Manim's ``Circle``, ``Arc``); a backend that does not\nknow the hint ignores it. The geometry drawn must be the one in ``subpaths``.",
       "properties": {
         "type": {
           "const": "path",
@@ -603,9 +691,15 @@
             {
               "discriminator": {
                 "mapping": {
+                  "arc": "#/$defs/ArcHint",
                   "circle": "#/$defs/CircleHint",
+                  "ellipse": "#/$defs/EllipseHint",
                   "line": "#/$defs/LineHint",
-                  "rect": "#/$defs/RectHint"
+                  "polygon": "#/$defs/PolygonHint",
+                  "polyline": "#/$defs/PolylineHint",
+                  "rect": "#/$defs/RectHint",
+                  "regular_polygon": "#/$defs/RegularPolygonHint",
+                  "sector": "#/$defs/SectorHint"
                 },
                 "propertyName": "shape"
               },
@@ -614,10 +708,28 @@
                   "$ref": "#/$defs/CircleHint"
                 },
                 {
+                  "$ref": "#/$defs/EllipseHint"
+                },
+                {
                   "$ref": "#/$defs/RectHint"
                 },
                 {
+                  "$ref": "#/$defs/RegularPolygonHint"
+                },
+                {
+                  "$ref": "#/$defs/PolygonHint"
+                },
+                {
+                  "$ref": "#/$defs/SectorHint"
+                },
+                {
                   "$ref": "#/$defs/LineHint"
+                },
+                {
+                  "$ref": "#/$defs/PolylineHint"
+                },
+                {
+                  "$ref": "#/$defs/ArcHint"
                 }
               ]
             },
@@ -633,6 +745,74 @@
         "subpaths"
       ],
       "title": "PathItem",
+      "type": "object"
+    },
+    "PolygonHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "polygon",
+          "default": "polygon",
+          "title": "Shape",
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 3,
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "title": "PolygonHint",
+      "type": "object"
+    },
+    "PolylineHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "polyline",
+          "default": "polyline",
+          "title": "Shape",
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "minItems": 2,
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "title": "PolylineHint",
       "type": "object"
     },
     "QuadTo": {
@@ -725,6 +905,99 @@
         "height"
       ],
       "title": "RectHint",
+      "type": "object"
+    },
+    "RegularPolygonHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "regular_polygon",
+          "default": "regular_polygon",
+          "title": "Shape",
+          "type": "string"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "radius": {
+          "exclusiveMinimum": 0,
+          "title": "Radius",
+          "type": "number"
+        },
+        "sides": {
+          "minimum": 3,
+          "title": "Sides",
+          "type": "integer"
+        },
+        "rotation": {
+          "default": 0,
+          "title": "Rotation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "radius",
+        "sides"
+      ],
+      "title": "RegularPolygonHint",
+      "type": "object"
+    },
+    "SectorHint": {
+      "additionalProperties": false,
+      "properties": {
+        "shape": {
+          "const": "sector",
+          "default": "sector",
+          "title": "Shape",
+          "type": "string"
+        },
+        "center": {
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "radius": {
+          "exclusiveMinimum": 0,
+          "title": "Radius",
+          "type": "number"
+        },
+        "start_angle": {
+          "title": "Start Angle",
+          "type": "number"
+        },
+        "end_angle": {
+          "title": "End Angle",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "radius",
+        "start_angle",
+        "end_angle"
+      ],
+      "title": "SectorHint",
       "type": "object"
     },
     "StrokePaint": {

@@ -89,3 +89,18 @@ def test_lir_does_not_depend_on_the_ir_schema() -> None:
         node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module
     ]
     assert not [name for name in imported if name.startswith("irpipe.schema.ir")]
+
+
+@pytest.mark.parametrize(
+    "hint",
+    [
+        {"shape": "ellipse", "center": [0, 0], "rx": 1, "ry": 2},
+        {"shape": "regular_polygon", "center": [0, 0], "radius": 1, "sides": 5},
+        {"shape": "polygon", "points": [[0, 0], [1, 0], [0, 1]]},
+        {"shape": "sector", "center": [0, 0], "radius": 1, "start_angle": 0, "end_angle": 90},
+        {"shape": "polyline", "points": [[0, 0], [1, 0]]},
+        {"shape": "arc", "center": [0, 0], "radius": 1, "start_angle": 0, "end_angle": 90},
+    ],
+)
+def test_every_shape_of_the_ir_has_a_hint(hint: dict[str, Any]) -> None:
+    LIRDocument.model_validate(document(group("a", {**LINE, "hint": hint})))

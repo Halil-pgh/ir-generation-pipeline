@@ -1,0 +1,45 @@
+{
+  "version": "frame-ir/1.0",
+  "intent": "The projection of a onto b is the shadow a casts on b",
+  "frame": {
+    "aspect": "16:9",
+    "pixels": [1920, 1080],
+    "units": [16, 9],
+    "platform": "plain",
+    "background": "#0E1117",
+    "subtitle": {"mode": "none", "lines": 2},
+    "safe": [-7.6, -4.1, 7.6, 4.1]
+  },
+  "typography": {
+    "lang": "en",
+    "text_font": "Inter",
+    "math": "latin-modern",
+    "sizes": {"title": 64, "heading": 52, "body": 42, "label": 38, "caption": 34}
+  },
+  "colors": {"a": "#FFD43B", "b": [88, 196, 221], "proj": "#83C167"},
+  "styles": {
+    "muted": {"opacity": 0.35},
+    "construction": {"dash": [14, 10], "stroke_width": 3, "opacity": 0.6}
+  },
+  "focus": ["proj_ab"],
+  "objects": [
+    {"id": "title", "type": "text", "text": "Projection of a onto b", "at": [0, 3.4],
+     "anchor": "center_baseline", "size": "heading", "weight": "bold"},
+    {"id": "grid_hint", "type": "rect", "center": [1, 0.6], "width": 9, "height": 5.6,
+     "corner_radius": 0.2, "fill": "#FFFFFF", "fill_opacity": 0.04, "color": "none"},
+    {"id": "drop", "type": "line", "start": [2, 3], "end": [2, 0], "style": "construction"},
+    {"id": "b", "type": "line", "start": [0, 0], "end": [4, 0], "color": "b", "stroke_width": 6},
+    {"id": "a", "type": "line", "start": [0, 0], "end": [2, 3], "color": "a", "stroke_width": 6},
+    {"id": "proj_ab", "type": "line", "start": [0, 0], "end": [2, 0], "color": "proj",
+     "stroke_width": 9, "z": 1},
+    {"id": "angle", "type": "arc", "center": [0, 0], "radius": 0.6,
+     "start_angle": 0, "end_angle": 56.31, "color": "#FFFFFF", "stroke_width": 3},
+    {"id": "vectors", "type": "group", "children": ["b", "a", "proj_ab", "angle"]},
+    {"id": "a_label", "type": "text", "text": "a", "at": [2.15, 3.05],
+     "anchor": "left_baseline", "size": "label", "color": "a"},
+    {"id": "b_label", "type": "text", "text": "b", "at": [4.15, 0.1],
+     "anchor": "left_baseline", "size": "label", "color": "b"},
+    {"id": "origin", "type": "circle", "center": [0, 0], "radius": 0.08, "fill": "#FFFFFF",
+     "color": "none", "z": 2}
+  ]
+}

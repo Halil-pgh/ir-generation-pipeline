@@ -6,7 +6,7 @@
 Module map:
     document.py  IRDocument (the whole ir.json), IRBody (what the agent writes)
     header.py    IRHeader (what the orchestrator writes and locks)
-    objects.py   the core objects: circle, rect, line, path, text, group
+    objects.py   the core objects: basic shapes, path, text, group
     common.py    ids, points, boxes, sizes
 """
 
@@ -22,16 +22,23 @@ from irpipe.schema.ir.header import (
 )
 from irpipe.schema.ir.objects import (
     Anchor,
+    Arc,
     Circle,
     CubicTo,
+    Ellipse,
     Group,
     IRObject,
     Line,
     LineTo,
     Path,
+    Polygon,
+    Polyline,
     QuadTo,
     Rect,
+    RegularPolygon,
+    Sector,
     Segment,
+    Shape,
     Subpath,
     Text,
 )
@@ -41,9 +48,11 @@ __all__ = [
     "HEADER_FIELDS",
     "IR_VERSION",
     "Anchor",
+    "Arc",
     "Box",
     "Circle",
     "CubicTo",
+    "Ellipse",
     "FrameHeader",
     "Group",
     "IRBody",
@@ -55,10 +64,15 @@ __all__ = [
     "LineTo",
     "Path",
     "Point",
+    "Polygon",
+    "Polyline",
     "QuadTo",
     "Rect",
+    "RegularPolygon",
     "Role",
+    "Sector",
     "Segment",
+    "Shape",
     "Size",
     "Space",
     "Style",

@@ -89,13 +89,66 @@ class RectHint(StrictModel):
     corner_radius: NonNegativeFloat = 0
 
 
+class EllipseHint(StrictModel):
+    shape: Literal["ellipse"] = "ellipse"
+    center: Point
+    rx: PositiveFloat
+    ry: PositiveFloat
+
+
+class RegularPolygonHint(StrictModel):
+    shape: Literal["regular_polygon"] = "regular_polygon"
+    center: Point
+    radius: PositiveFloat
+    sides: int = Field(ge=3)
+    rotation: float = 0
+
+
+class PolygonHint(StrictModel):
+    shape: Literal["polygon"] = "polygon"
+    points: tuple[Point, ...] = Field(min_length=3)
+
+
+class SectorHint(StrictModel):
+    shape: Literal["sector"] = "sector"
+    center: Point
+    radius: PositiveFloat
+    start_angle: float
+    end_angle: float
+
+
 class LineHint(StrictModel):
     shape: Literal["line"] = "line"
     start: Point
     end: Point
 
 
-ShapeHint = Annotated[CircleHint | RectHint | LineHint, Field(discriminator="shape")]
+class PolylineHint(StrictModel):
+    shape: Literal["polyline"] = "polyline"
+    points: tuple[Point, ...] = Field(min_length=2)
+
+
+class ArcHint(StrictModel):
+    shape: Literal["arc"] = "arc"
+    center: Point
+    radius: PositiveFloat
+    start_angle: float
+    end_angle: float
+
+
+ShapeHint = Annotated[
+    CircleHint
+    | EllipseHint
+    | RectHint
+    | RegularPolygonHint
+    | PolygonHint
+    | SectorHint
+    | LineHint
+    | PolylineHint
+    | ArcHint,
+    Field(discriminator="shape"),
+]
+"""The shape a path was made from, with the same numbers as the IR object (angles in degrees)."""
 
 
 class Primitive(StrictModel):
@@ -108,8 +161,9 @@ class Primitive(StrictModel):
 class PathItem(Primitive):
     """Straight and Bezier subpaths with an optional fill and stroke.
 
-    ``hint`` lets a backend use its library's own class (Manim's ``Circle``);
-    the geometry drawn must still be the one in ``subpaths``.
+    ``hint`` names the shape the path was made from, so a backend may use its
+    library's own class (Manim's ``Circle``, ``Arc``); a backend that does not
+    know the hint ignores it. The geometry drawn must be the one in ``subpaths``.
     """
 
     type: Literal["path"] = "path"
