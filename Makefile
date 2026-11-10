@@ -9,8 +9,11 @@ VENV := .venv
 BIN  := $(VENV)/bin
 # The IR `make render` draws; override with: make render IR=other/ir.json
 IR   ?= examples/projection/ir.json
+# The frame `make run` draws: its brief and the agent's script
+BRIEF  ?= examples/projection/brief.json
+SCRIPT ?= examples/projection/build_ir.py
 
-.PHONY: venv test lint format typecheck spec check render
+.PHONY: venv test lint format typecheck spec check render run
 
 venv:            ## create .venv and install the package with dev tools, pango and both backends
 	python3 -m venv $(VENV)
@@ -37,3 +40,6 @@ check: lint typecheck test   ## everything a step must pass before its report
 
 render:          ## draw an IR into runs/<name>/: make render [IR=path/ir.json] [OUT=folder]
 	$(BIN)/irpipe render $(IR) $(if $(OUT),-o $(OUT))
+
+run:             ## draw a frame from its brief: make run [BRIEF=brief.json SCRIPT=build_ir.py] [OUT=folder]
+	$(BIN)/irpipe run $(BRIEF) $(SCRIPT) $(if $(OUT),-o $(OUT))

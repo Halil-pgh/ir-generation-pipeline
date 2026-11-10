@@ -52,6 +52,21 @@ from it. For the fast SVG reference instead (`frame.svg` and its
 `frame.png`), set `backend = "svg"` under `[options.render]` in
 `pipeline.toml`.
 
+## Run a frame
+
+```bash
+make run                                # the projection example, from its brief
+irpipe run path/to/brief.json path/to/build_ir.py [--lesson lesson_plan.json] [-o folder]
+```
+
+`irpipe run` is the orchestrator: from the planner's brief it locks the
+header, runs the agent's `build_ir.py` (which reads `header.json` and writes
+`ir.json`), compiles and draws the picture, and fills the run folder
+(`runs/<brief id>/`): the picture, `scene.py`, the SVG reference
+`frame.svg`, `ir.json`, `lir.json`, `report.json`, `meta.json`, `alt.txt`.
+It prints the report and who acts next: done, the agent, the planner or a
+person.
+
 ## Code checks
 
 ```bash

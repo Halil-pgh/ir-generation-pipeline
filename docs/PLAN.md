@@ -178,7 +178,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 16 | F3 | Backend uygunluk testleri | tests/conformance/ | SVG ve Manim çıktıları tolerans içinde piksel farkıyla eşleşir | Tamam |
 | 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Tamam |
 | 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Tamam |
-| 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Bekliyor |
+| 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Tamam |
 | 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Bekliyor |
 | 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Bekliyor |
 | 22 | F6 | Planner + geri dönüş yolu | planner/ | Konu promptundan brief üretilir; sığmayan brief planner'a döner | Bekliyor |
@@ -347,6 +347,18 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K129 | Kare dersin stilini miras alır, kendi değişiklikleri kazanır: kavram renkleri ve notasyon girdi girdi; render profile alan alan (`ProfileChanges`, yalnızca yazılan alanlar), iç içe parçalar da alan alan; başka türde bir parça bütünü değiştirir; boş alan alttakini bırakır. Dersi olmayan brief profilin tamamını verir, en az `aspect` | Analiz: "her frame miras alsın; frame düzeyinde override serbest olsun". Alan alan birleştirme bir karenin tek bir şeyi (altyazı modu gibi) değiştirmesine izin veriyor | Onaylandı |
 | K130 | Aynı katmanlama sonraki kararlar için de: `overlay(planner, proje, kullanıcı)`, sonraki katman kazanır | Analiz §1'in öncelik sırası: kullanıcının açık isteği > proje ayarı > planner'ın seçimi. Orchestrator 19. adımda kullanacak | Onaylandı |
 | K131 | `purpose` kapalı bir liste: `introduce`, `define`, `example`, `counterexample`, `summary`. Metinler `title`, `labels`, `subtitle`; kısıtlar `must` ve `should` | Analizin brief tablosu (tanıtma, tanım, örnek, karşı örnek, özet; birebir metinler; must / should ayrımı) | Onaylandı |
+| K132 | Orchestrator `src/irpipe/orchestrator/` paketi, her dosya tek iş (run, inputs, header, environment, script, coverage, routing, records). Komut `irpipe run brief.json build_ir.py [--lesson] [-o] [--config]`, kısayolu `make run` | Analiz §1: LLM değil deterministik kod; plan K60'ta tam run klasörünü 19'a bırakmıştı | Onaylandı |
+| K133 | Header brief'ten yazılır: intent brief'ten, renkler karenin stilinden, frame, typography (rollerin puntosuyla) ve theme render profile'dan (Canvas). Stil sınıfları projenin standart seti: ekibin örneğindeki `muted` ve `construction`. Sayılar milyonda bire yuvarlanır | Analiz §1 ve header taslağı. Projeksiyon brief'inden çıkan header ekibin elle yazdığı örnek header'la birebir aynı (testli) | Onaylandı |
+| K134 | `build_ir.py` run klasöründe, pipeline'ın kendi Python'ıyla (izole: kullanıcı site'ı ve PYTHONPATH yok) en fazla 120 s çalışır; `header.json`'u okur, `ir.json`'u (header ve gövde) yazar. Hata, zaman aşımı ya da ir.json'un olmaması E-SCRIPT (köken ir), betiğin kendi traceback'inin sonuyla | Analiz §4: ajan IR'yi script ile yazar. Kum havuzu 21. adımda ajanla gelecek; şimdilik script'i insan yazıyor | Onaylandı |
+| K135 | Orchestrator `check_header`'ı `validate`'in hemen arkasına ekler; değişmiş bir header E-HEADER, resim yine çizilir ve ajana döner | Adım 8'in kararı (K66): aşama varsayılan pipeline'da yok, orchestrator ekler | Onaylandı |
+| K136 | Açılışta ortam kontrolü: metin fontu (fontconfig), `latex`, `dvisvgm`, formül şablonunun TeX dosyaları (standalone, lmodern, amsmath, amssymb), pipeline.toml'un seçimlerinin istediği paketler (pangocffi, manim, cairosvg). Eksik olan E-ENVIRONMENT; script çalışmaz | Analiz §1: "açılışta font ve LaTeX kurulumunu kontrol etmek"; Adım 7: eksik fontu yakalayan kontrol 19'da | Onaylandı |
+| K137 | Font çifti beyaz listesi projenin: şimdilik Inter ile latin-modern; brief başka bir çift seçerse E-BRIEF | Analiz §2.5: planner kurulu ve lisanslı çiftlerden seçsin; Adım 10: beyaz liste 19'da | Onaylandı |
+| K138 | Brief ve ders planındaki her sorun E-BRIEF (köken infeasible: planner'a döner): JSON ya da şema hatası (IR'nin çeviricisiyle, JSON yolu ve "did you mean" ile, başında dosyanın adı), dersine ait olmayan brief, beyaz listede olmayan font çifti, kare çıkarmayan render profile | Hatalar kaynağına göre yönlenir (analiz §1); planner da ajan gibi okunur geri bildirim alır | Onaylandı |
+| K139 | Kapsam: brief'in her `must_show` maddesini çizilen en az bir nesne `covers` ile karşılamalı; karşılanmayan madde W-UNCOVERED (köken ir, allow edilebilir), hiçbir maddeyi adlamayan `covers` E-REF ("did you mean" ile). Kontrol orchestrator'da, çünkü brief'i bilen o | Analiz §2.7: statik kapsam kontrolü; Adım 6'daki açık soru | Onaylandı |
+| K140 | Yönlendirme: açık sorunların kökeni bir sonraki adımı seçer: yoksa bitti; varsa önce insan (internal, environment), sonra planner (infeasible), sonra ajan (ir, capability) | Adım 2'nin açık sorusu (kökenlerin önceliği): ajan eksik bir aracı düzeltemez, planner kareyi değiştirirse ajanın düzeltmeleri boşa gider | Onaylandı |
+| K141 | Çöken bir aşama E-INTERNAL (köken internal), aşamanın adı ve istisnasıyla; koşu orada durur | Adım 2: beklenmeyen istisnayı orchestrator internal bir sorun olarak raporlayacaktı | Onaylandı |
+| K142 | Run klasörü: brief.json, build_ir.py, header.json, ir.json, lir.json, backend'in dosyaları, frame.svg (resmi başka bir backend çizdiyse SVG referansı, PNG'siz), report.json, meta.json, alt.txt. Erken duran koşu ulaştığı kadarını yazar. Önceki koşudan kalan bu dosyalar önce silinir; klasördeki başka hiçbir şeye dokunulmaz | Analiz §1'in çıktı klasörü; Adım 7 ve K111'deki ad sorusu: `frame.png` seçilen backend'in, `frame.svg` referansın | Onaylandı |
+| K143 | `meta.json` resmin bağlı olduğu her şeyi tutar: sürümler (IR, LIR, irpipe, Python, backend'in kütüphanesi, Pango, LaTeX, dvisvgm), font dosyası, çalışan aşamalar ve süreleri, header'ın hash'i. `alt.txt` IR'nin intent'i, brief'in `must_show` maddeleri, resimdeki metinler ve formüllerden yazılır, cümleleri İngilizce | Analiz §1: aynı resmi tekrar üretmek için meta.json; erişilebilirlik metni otomatik | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -395,6 +407,73 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 19 — Orchestrator · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı: `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazıyor. Örnek: `make run`, `examples/projection/brief.json` ile ajanın yerine yazılmış `examples/projection/build_ir.py`'den READY bir resim ve 11 dosyalık run klasörü üretiyor. Önceki adımların 19'a bıraktığı işler de burada: kilitli header, ortam kontrolü, font beyaz listesi, iki backend'in aynı klasöre yazması, kökenlerin önceliği, çöken aşamanın raporlanması, kapsam kontrolü. `make check` temiz: 949 test, 4 bilinen ayrışma (33 test yeni), mypy strict, ruff.
+
+**Nasıl çalışıyor.** Orchestrator ilk duramayan adıma kadar şunları sırayla yapıyor:
+
+1. brief'i (ve yanındaki `lesson_plan.json`'u) okuyup karenin stilini ve kilitli header'ı çıkarıyor;
+2. araçları kontrol ediyor;
+3. ajanın `build_ir.py`'sini run klasöründe çalıştırıyor: betik `header.json`'u okuyup `ir.json`'u yazıyor;
+4. pipeline.toml'un aşamalarını `validate`'in arkasına `check_header` ekleyerek çalıştırıyor;
+5. resmi Manim çizdiyse SVG referansını da çiziyor;
+6. kapsamı kontrol ediyor;
+7. kayıtları yazıp bir sonraki adımı söylüyor.
+
+```
+$ make run
+READY
+  -> runs/projection/brief.json … build_ir.py, header.json, ir.json, lir.json, scene.py,
+     frame.png, frame.svg, report.json, meta.json, alt.txt
+next: done: the picture is ready
+```
+
+| Durum | Sonuç |
+| --- | --- |
+| Projeksiyon brief'i | Header ekibin elle yazdığı örnek header'la birebir aynı |
+| Betik header'ın intent'ini değiştirir | `E-HEADER`; resim yine çizilir; `next: agent` |
+| Betik hata verir | `E-SCRIPT: build_ir.py stopped with an error: … RuntimeError: oops`; koşu durur; `next: agent` |
+| `"focus": ["nothing"]` | `E-BRIEF: brief.json: focus names 'nothing', …`; `next: planner` |
+| `latex` yok | `E-ENVIRONMENT: latex is not installed; formulas cannot be set`; betik çalışmaz; `next: human` |
+| Bir aşama çöker | `E-INTERNAL: stage 'place' failed: ZeroDivisionError: …`; `next: human` |
+| Bir `must_show` maddesini hiçbir nesne karşılamaz | `W-UNCOVERED: must_show 'angle' (…) is covered by no object`; `allow` ile kabul edilince READY |
+| Font çifti Comic Sans ile latin-modern | `E-BRIEF: … is not one the project offers` · ipucu: `Inter with latin-modern` |
+| 16:9 brief, platform tiktok | `E-BRIEF: the render profile makes no frame: platform 'tiktok' shows 9:16 pictures …` |
+
+`meta.json` sürümleri (irpipe 0.1.0, Python 3.12.3, manim 0.22.1, Pango 1.52.1, pdfTeX/TeX Live 2023, dvisvgm 3.2.1), font dosyasını, aşama sürelerini ve header'ın hash'ini tutuyor. `alt.txt`:
+
+```
+The projection of a onto b is the shadow a casts on b.
+It shows: a and b drawn from one point, with arrowheads; the projection of a onto b, …
+Words in it: "Projection of a onto b"; "projection:".
+Formulas in it (TeX): b; a; \theta; \operatorname{proj}_b a = \frac{a \cdot b}{b \cdot b}\, b.
+```
+
+**Üretilen dosyalar.** `src/irpipe/orchestrator/` altında 9 dosya, `tests/orchestrator/` altında 3 dosya, `examples/projection/build_ir.py` (Dosya kaydı'nda). Önceki dosyalara yalnızca ekleme: `cli.py` (`run` komutu; `render` olduğu gibi), `Makefile` (`make run`), README (Run a frame), `SEMANTICS.md` (yeni Orchestrator bölümü).
+
+**Plandan sapmalar.**
+
+- Run klasöründe analizin listesinde olmayan `header.json` da var: betiğin okuduğu kilitli header, ve hash'iyle birlikte koşunun kaydı.
+- Proje ayarları (font beyaz listesi, projenin profil değişiklikleri, `overlay`'in proje katmanı) için ayrı bir ayar dosyası yok, değerler kodda: pipeline.toml bilinmeyen bölümleri reddediyor ve bunu değiştirmek Adım 1'in config modelini genişletmek demek.
+- Orchestrator tek tur çalıştırıyor: tur sınırı, en iyi turun seçimi ve kum havuzu 21. adımda ajanla.
+- Kapsam kontrolü bir `checks` eklentisi değil, orchestrator'da; çünkü brief'e ihtiyacı var ve kontroller brief'i görmüyor.
+
+**Bulunan sorunlar.** Yok.
+
+**Varsayımlar.**
+
+- `build_ir.py` şimdilik insan yazısı; kullanıcının haklarıyla çalışıyor. Ajanın yazdığı kod 21. adımdaki kum havuzu olmadan çalıştırılmamalı.
+- E-HEADER koşuyu durdurmuyor (Adım 8'in `check_header` davranışı): resim çiziliyor, NOT READY ve ajana dönüyor.
+- `alt.txt`'nin cümleleri İngilizce; içerik dili İngilizce (K8). Başka bir dil gelirse kalıp cümleler o dile çevrilmeli.
+- Betik için zaman sınırı 120 s.
+
+**Kararlar.** K132–K143 (Karar günlüğü).
+
+**Nasıl denenir.** `make run` (ya da `irpipe run examples/projection/brief.json examples/projection/build_ir.py`); dosyalar `runs/projection/` altında. Hata yolları için brief'te `"focus": ["nothing"]` yazın, betiğe bir `raise` ekleyin ya da betikte `header["intent"]`'i değiştirin.
+
+**Açık kalanlar.** Proje ayarları dosyası; ajan döngüsü, kum havuzu ve tur sınırı (21); planner'a dönüş yolu (22). Commit edildi.
 
 ### Adım 18 — brief ve lesson_plan şeması · 11 Kasım 2026
 
@@ -1233,7 +1312,7 @@ make check    # lint + mypy + testler
 | `src/irpipe/backends/svg/__init__.py` | 7 | SVG referans backend'i: frame.svg ve frame.png yazar; ayarı png | `SvgBackend ("svg"), SvgOptions` |
 | `src/irpipe/backends/svg/writer.py` | 7, 14 | LIR'i saf Python'la SVG metnine çevirir: birimden piksele, matrisler, boya, metin, formül ve görsel | `to_svg(lir), Frame, path_data(), num()` |
 | `src/irpipe/backends/svg/raster.py` | 7 | SVG'yi cairosvg ile PNG'ye çevirir; cairosvg yalnızca burada ve yalnızca PNG istenince yüklenir | `svg_to_png(svg, path, size)` |
-| `src/irpipe/cli.py` | 7 | irpipe komutu: bir ir.json'u pipeline.toml'daki aşamalardan geçirip resmi, lir.json'u ve raporu yazar | `irpipe render IR [-o OUT] [--config FILE]` |
+| `src/irpipe/cli.py` | 7, 19 | irpipe komutu: bir ir.json'u pipeline.toml'daki aşamalardan geçirip resmi, lir.json'u ve raporu yazar | `irpipe render IR [-o OUT] [--config FILE]` |
 | `tests/backends/conftest.py` | 7 | Backend testlerinin ortak LIR kurucuları | `fixture: make_lir, group, line` |
 | `tests/backends/test_base.py` | 7, 14 | Özellik tespiti, backend adı geçmeyen E-CAPABILITY, ayar doğrulaması, kayıt | pytest testi (6) |
 | `tests/backends/test_svg.py` | 7, 14 | Piksel dönüşümü, gruplar, boya, 4K ölçeği, metin, formül, matrisler, PNG ve cairosvg yokken davranış | pytest testi (17) |
@@ -1332,3 +1411,15 @@ make check    # lint + mypy + testler
 | `tests/components/test_brace_and_angle.py` | 17 | Ayracın şekli, yönü ve etiketi; açının yayı, kare köşesi, etiketi ve hataları | pytest testi (9) |
 | `src/irpipe/schema/brief.py` | 18 | Planner'ın çıktısı: ders planı ve kare brief'i; karenin dersten miras aldığı stil; katmanlama (planner, proje, kullanıcı) | `LessonPlan`, `FrameBrief`, `MustShow`, `Texts`, `Constraints`, `Style`, `ProfileChanges`, `frame_style(brief, lesson)`, `overlay(base, *changes)` |
 | `tests/schema/test_brief.py` | 18 | Örneklerin modelden ve yayımlanan şemadan geçmesi, örnek brief ile örnek IR'nin uyumu, id kuralları, miras ve katmanlama | pytest testi (13) |
+| `src/irpipe/orchestrator/__init__.py` | 19 | Orchestrator paketi: brief'ten run klasörüne bir kare; docstring'i modül haritasını verir | `irpipe run` |
+| `src/irpipe/orchestrator/run.py` | 19 | Koşunun tamamı, adım adım; çöken aşama; run klasörünün dosyaları; E-INTERNAL burada | `orchestrate(brief, script, folder, lesson_path=, config_path=)`, `Outcome`, `OUTPUTS` |
+| `src/irpipe/orchestrator/inputs.py` | 19 | brief ve ders planını okur, karenin stilini ve header'ı çıkarır; font çifti beyaz listesi; E-BRIEF burada | `read_inputs(brief, lesson)`, `Inputs`, `FONT_PAIRS` |
+| `src/irpipe/orchestrator/header.py` | 19 | brief ve stilden kilitli header | `header_for(brief, style)`, `STYLES` |
+| `src/irpipe/orchestrator/environment.py` | 19 | Bu resmin istediği font, LaTeX, TeX dosyaları ve paketler kurulu mu | `environment_issues(header, config)` |
+| `src/irpipe/orchestrator/script.py` | 19 | Ajanın build_ir.py'sini run klasöründe çalıştırır; E-SCRIPT burada | `run_script(folder, timeout)` |
+| `src/irpipe/orchestrator/coverage.py` | 19 | brief'in her must_show maddesi bir nesneyle karşılanmış mı; W-UNCOVERED burada | `coverage_issues(brief, document)` |
+| `src/irpipe/orchestrator/routing.py` | 19 | Açık sorunlar kime gider; öncelik | `route(report) -> Route`, `Destination` |
+| `src/irpipe/orchestrator/records.py` | 19 | meta.json ve alt.txt | `meta_record(...)`, `alt_text(brief, document)` |
+| `tests/orchestrator/conftest.py` | 19 | Örneğin brief'i, ders planı ve betiğiyle bir klasör; SVG ile çizen bir pipeline.toml | fixture: `example`, `svg_config` |
+| `tests/orchestrator/test_parts.py` | 19 | Header, girdiler, ortam, betik, kapsam, yönlendirme ve kayıtlar tek tek | pytest testi (23) |
+| `tests/orchestrator/test_run.py` | 19 | Brief'ten run klasörüne: READY koşu, değişen header, çöken betik, bozuk brief, eksik araç, çöken aşama, eski dosyalar, kapsam, komut, Manim'le | pytest testi (10) |

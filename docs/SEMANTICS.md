@@ -100,6 +100,50 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   brief: the brief's `intent` is the IR's intent, the concept colors are
   its `colors`, the render profile its `frame`, `typography` and theme.
 
+## Orchestrator
+
+- `irpipe run brief.json build_ir.py` draws one frame into a run folder
+  (`runs/<brief id>` by default), in order, stopping at the first step that
+  cannot go on: read the brief and its lesson (`lesson_plan.json` beside
+  the brief unless `--lesson` says), lock the header, check the tools, run
+  the agent's script, run `pipeline.toml`'s stages, draw the SVG reference,
+  check coverage, write the records.
+- The header is written from the brief (Briefs) with the project's style
+  classes, `muted` and `construction`; the font pair must be one the
+  project offers (Inter with latin-modern). `check_header` runs right
+  after `validate`, so a header the agent changed is `E-HEADER`.
+- `build_ir.py` runs in the run folder, with the pipeline's own Python
+  (isolated: no user site, no `PYTHONPATH`), for at most 120 s. It reads
+  `header.json`, the locked header, and writes `ir.json`, header and body.
+  A script that fails, runs too long or writes no `ir.json` is `E-SCRIPT`,
+  with the end of its own traceback. It runs with the rights of whoever
+  started the run; the sandbox comes with the agent.
+- At the start, the text font, `latex`, `dvisvgm`, the TeX files the
+  formula template needs, and the Python packages `pipeline.toml`'s choices
+  need (pangocffi, manim, cairosvg) must be installed; what is missing is
+  `E-ENVIRONMENT`, and the script does not run.
+- Every `must_show` item of the brief is covered (`covers`) by at least
+  one drawn object: an item none covers is `W-UNCOVERED` (allowable); a
+  `covers` that names no item is `E-REF`.
+- A stage that crashes is `E-INTERNAL`, with the stage and the exception;
+  the run stops there.
+- Problems with the brief or its lesson are `E-BRIEF`, origin
+  `infeasible`: back to the planner. Next is decided by the open issues'
+  origins: none open, done; else a person (`internal`, `environment`)
+  first, then the planner (`infeasible`), then the agent (`ir`,
+  `capability`).
+- The run folder holds `brief.json`, `build_ir.py`, `header.json`,
+  `ir.json`, `lir.json`, the backend's files, `frame.svg` (the SVG
+  reference, drawn when another backend drew the picture), `report.json`,
+  `meta.json` and `alt.txt`; a run that stops early writes what it got to.
+  These files are removed first when they are left from an earlier run;
+  nothing else in the folder is touched.
+- `meta.json` records what the picture depends on: versions (IR, LIR,
+  irpipe, Python, the backend's library, Pango, LaTeX, dvisvgm), the font
+  file, the stages that ran with their seconds, and the header's hash.
+  `alt.txt` is the IR's intent, the brief's `must_show` items, and the words
+  and formulas in the picture (its sentences are in English).
+
 ## IR document
 
 - `ir.json` is one flat object: the header fields (`version`, `intent`,
