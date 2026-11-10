@@ -1,0 +1,29 @@
+{
+  "version": "lesson-plan/1.0",
+  "id": "vector_projection",
+  "topic": "Projecting one vector onto another",
+  "goals": [
+    "See the projection of a onto b as the shadow a casts on the line of b",
+    "Compute it with the formula (a . b / b . b) b",
+    "Tell the projection (a vector) from its length (a number)"
+  ],
+  "misconceptions": [
+    "The projection of a onto b is the same as the projection of b onto a",
+    "The projection is always shorter than b"
+  ],
+  "frames": [
+    {"id": "two_vectors", "purpose": "introduce", "summary": "a and b drawn from one point, the angle between them"},
+    {"id": "projection", "purpose": "define", "summary": "a's shadow on b, with the formula"},
+    {"id": "longer_shadow", "purpose": "counterexample", "summary": "a shadow longer than b itself"},
+    {"id": "recap", "purpose": "summary", "summary": "the formula, and what each part means"}
+  ],
+  "style": {
+    "concept_colors": {"a": "#FFD43B", "b": [88, 196, 221], "proj": "#83C167"},
+    "notation": {"projection": "\\operatorname{proj}_b a", "dot": "a \\cdot b"},
+    "render_profile": {
+      "aspect": "16:9",
+      "typography": {"scale": "comfortable", "lang": "en"},
+      "theme": {"background": "#0E1117"}
+    }
+  }
+}

@@ -177,7 +177,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 15 | F3 | Manim kod üretici | backends/manim/: scene.py üretimi, render, harness | `manim -s scene.py Frame` çalışır; değişken adları IR id'leri | Tamam |
 | 16 | F3 | Backend uygunluk testleri | tests/conformance/ | SVG ve Manim çıktıları tolerans içinde piksel farkıyla eşleşir | Tamam |
 | 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Tamam |
-| 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Bekliyor |
+| 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Tamam |
 | 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Bekliyor |
 | 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Bekliyor |
 | 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Bekliyor |
@@ -342,6 +342,11 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K124 | Yeni kod E-COMPONENT (köken ir, `components/base.py`): bir bileşen alanlarıyla açılamıyor; o alanın yoluyla. Grafiğin okunamayan fonksiyonu E-EXPR | Hata ajana IR terimleriyle, kendi dosyasındaki alanla döner | Onaylandı |
 | K125 | İlk dört bileşen: `axes` bir grup ve parçaları; `graph` tek bir path (bölgelerde `under`, flood fill sınırı, `{"on": ...}` olarak kullanılabilir); `brace` tek bir path, `angle` tek bir yay (dik açıda kare köşe). Ayracın ve açının etiketi çekirdeğin label mekanizmasıyla şeklin `mid` noktasına (ayracın ucu, yayın ortası), dışa doğru yerleşir | Her bileşen mümkün olduğunca az ve tanıdık çekirdek nesneye açılıyor; mevcut mekanizmalar (etiket, bölge, referans) yeniden yazılmadan kullanılıyor | Onaylandı |
 | K126 | `graph` örnekleri kübik Hermite parçalarıyla bağlar (eğimler x'e göre, tutamaçlar her parçanın x aralığında: eğri her x'e bir kez uğrar); örnek x'ler tam kesir olarak hesaplanır; `y_range` kesimi ikiye bölmeyle eğrinin gerçek kesişiminde | Bölgelerin `under` kuralı grafiğin her x'e bir kez uğramasını istiyor; tam kesir S8'i polinomlarda aşıyor; kesim 2⁻⁴⁰ adım içinde | Onaylandı |
+| K127 | Planner'ın çıktısı iki sözleşme: `lesson_plan.json` (hedefler, yanılgılar, anlatım sırasıyla kareler, stil) ve kare başına `brief.json` (amaç, intent, focus, must_show, metinler, kısıtlar, karenin stil değişiklikleri, kompozisyon notu). İkisi `schema/brief.py`'de; JSON Schema'ları `docs/spec/`'te (`lesson_plan.schema.json`, `brief.schema.json`) | Analiz §1'deki `lesson_plan.json` ve `frame_briefs[]`; run klasöründe her resmin kendi `brief.json`'u var | Onaylandı |
+| K128 | `must_show` id'leri brief içinde benzersiz ve IR'nin ad kuralında (`Name`), böylece bir nesnenin `covers` alanı onları adlandırabilir; `focus` yalnızca `must_show` id'lerini adlar (planner nesne id'lerini bilmez); dersin kare id'leri benzersiz | Kabul kriteri; analiz: kontrol edilebilir id'ler ve statik kapsam kontrolü (`covers`) | Onaylandı |
+| K129 | Kare dersin stilini miras alır, kendi değişiklikleri kazanır: kavram renkleri ve notasyon girdi girdi; render profile alan alan (`ProfileChanges`, yalnızca yazılan alanlar), iç içe parçalar da alan alan; başka türde bir parça bütünü değiştirir; boş alan alttakini bırakır. Dersi olmayan brief profilin tamamını verir, en az `aspect` | Analiz: "her frame miras alsın; frame düzeyinde override serbest olsun". Alan alan birleştirme bir karenin tek bir şeyi (altyazı modu gibi) değiştirmesine izin veriyor | Onaylandı |
+| K130 | Aynı katmanlama sonraki kararlar için de: `overlay(planner, proje, kullanıcı)`, sonraki katman kazanır | Analiz §1'in öncelik sırası: kullanıcının açık isteği > proje ayarı > planner'ın seçimi. Orchestrator 19. adımda kullanacak | Onaylandı |
+| K131 | `purpose` kapalı bir liste: `introduce`, `define`, `example`, `counterexample`, `summary`. Metinler `title`, `labels`, `subtitle`; kısıtlar `must` ve `should` | Analizin brief tablosu (tanıtma, tanım, örnek, karşı örnek, özet; birebir metinler; must / should ayrımı) | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -390,6 +395,49 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 18 — brief ve lesson_plan şeması · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriterleri karşılandı: örnek brief ve ders planı hem pydantic modelinden hem yayımlanan JSON Schema'dan geçiyor; `must_show` id'leri benzersiz olmak zorunda. `examples/projection/` artık zincirin tamamını tutuyor: `lesson_plan.json` → `brief.json` → `ir.json`. Örnek brief'in intent'i, dersten miras aldığı renkler, oranı ve dili örnek IR'ninkilerle aynı (testli). `make check` temiz: 916 test, 4 bilinen ayrışma (17 test yeni), mypy strict, ruff. Kaynak kodda yalnızca `schema/` değişti.
+
+**Nasıl çalışıyor.** Ders planı ders boyunca değişmeyenleri tutuyor: hedefler, yanılgılar, kareler (anlatım sırasıyla, her biri id, amaç ve tek satırlık özet) ve stil: kavram → renk, notasyon, render profile. Brief tek bir resmin ne yapması gerektiğini program tarafından kontrol edilebilir biçimde söylüyor. `frame_style(brief, lesson)` karenin çizileceği stili veriyor: dersin stili, üstünde karenin değişiklikleri (K129).
+
+```json
+"render_profile": {"subtitle": {"mode": "burn_in"}, "typography": {"lang": "tr"}}
+```
+
+Bir karede yalnızca bu yazılırsa altyazının satır sayısı, tip ölçeği, oran ve tema dersten gelir.
+
+| Girdi | Sonuç |
+| --- | --- |
+| İki `must_show` maddesi `"id": "m1"` | `must_show ids must be unique; 'm1' is used more than once` |
+| `"focus": ["shadw"]` | `focus names 'shadw', which is not in must_show (its ids: vectors, shadow, drop, angle, formula)` |
+| `"purpose": "decorate"` | Reddediliyor; izin verilenler introduce, define, example, counterexample, summary |
+| Başka dersin brief'i | `brief 'projection' belongs to lesson 'other', not 'vector_projection'` |
+| Dersi ve oranı olmayan brief | `brief 'projection' has no lesson, so its render_profile must give an aspect` |
+| planner 16:9 plain, proje 9:16 youtube_shorts 4K, kullanıcı tiktok | 9:16, tiktok, 2160 (sonraki katman kazanır) |
+
+**Üretilen dosyalar.** `schema/brief.py`, `tests/schema/test_brief.py`, `examples/projection/lesson_plan.json`, `examples/projection/brief.json`, `docs/spec/lesson_plan.schema.json`, `docs/spec/brief.schema.json` (Dosya kaydı'nda). Önceki dosyalara yalnızca ekleme: `schema/spec.py` (iki yeni sözleşme), `schema/__init__.py` (modül haritası), `SEMANTICS.md` (yeni Briefs bölümü), README (spec listesi ve örnekler).
+
+**Plandan sapmalar.**
+
+- Plan yalnızca brief şemasını söylüyordu; dersten kareye miras (`frame_style`) ve katmanlama (`overlay`) da bu adımda, çünkü ders planının anlamının parçası ve 19. adımda orchestrator'ın ihtiyacı.
+- Brief'in JSON'dan okunup hatalarının IR terimleri gibi okunur issue'lara çevrilmesi ve planner'a yönlendirilmesi 19. adımda, orchestrator'la birlikte. Bu adım modelleri ve kurallarını veriyor; hatalar şimdilik pydantic'in mesajları.
+
+**Bulunan sorunlar.** Yok.
+
+**Varsayımlar.**
+
+- `focus` planner'ın dilinde: nesne id'lerini değil `must_show` id'lerini adlıyor. IR'deki `focus` (nesneler) ile eşleşmesi `covers` üzerinden 19. adımın işi.
+- `must_show[].data` serbest bir sözlük: maddenin göstermesi gereken kesin değerler (`{"a": [2.1, 3.2]}`).
+- Ders planı karelerin yalnızca özetini tutuyor; her karenin brief'i ayrı bir dosya ve `lesson` ile `id` alanlarıyla derse bağlanıyor.
+- Notasyon kavram → TeX yazımı; 21. adımda ajanın prompt'una girecek.
+
+**Kararlar.** K127–K131 (Karar günlüğü).
+
+**Nasıl denenir.** `env -u PYTHONPATH .venv/bin/pytest tests/schema/test_brief.py`. Örnekler `examples/projection/lesson_plan.json` ve `brief.json`; yayımlanan şemalar `docs/spec/`'te. Bir `must_show` id'sini çiftleyin ya da `focus`'a olmayan bir id yazın.
+
+**Açık kalanlar.** Brief'ten kilitli header'ı yazmak, `covers` ile kapsam kontrolü ve brief hatalarının planner'a dönmesi 19. adımda. Commit edildi.
 
 ### Adım 17 — Bileşen mekanizması ve ilk bileşenler · 11 Kasım 2026
 
@@ -1140,7 +1188,7 @@ make check    # lint + mypy + testler
 | `tests/core/test_issues.py` | 2 | Kod biçimi, harften önem, kabul edilebilirlik kuralları, kodun bir kez tanımlanması, JSON gidiş-dönüşü | pytest testi (14) |
 | `tests/core/test_allow.py` | 2 | `allow` eşleşme kuralları ve bozuk girdilerin bildirilmesi | pytest testi (14) |
 | `tests/core/test_report.py` | 2 | READY, NOT\_READY ve STOPPED hesabı, kabul edilen sorunlar, `report.json` gidiş-dönüşü | pytest testi (7) |
-| `src/irpipe/schema/__init__.py` | 3, 4, 5 | Sözleşme modellerinin paketi (render profile, ileride brief, IR, LIR); docstring'i modül haritasını verir | modül haritası |
+| `src/irpipe/schema/__init__.py` | 3, 4, 5, 18 | Sözleşme modellerinin paketi (render profile, ileride brief, IR, LIR); docstring'i modül haritasını verir | modül haritası |
 | `src/irpipe/schema/render_profile.py` | 3, 4, 9 | Resmin neye göre çizileceği: oran, çözünürlük, platform, kenar payları, altyazı, tipografi, tema. Analizin oran tablosu ve tip ölçeği de burada | `RenderProfile, Aspect.parse, ASPECT_PRESETS, Typography.sizes(), SCALE_PRESETS` |
 | `src/irpipe/platforms.py` | 3 | Resmin gösterildiği yer ve uygulamanın resmin üstüne çizdiği arayüz payları; yeni platform tek kayıt satırı | `Platform(name, description, overlays, aspect), PLATFORMS` |
 | `src/irpipe/canvas.py` | 3 | Çerçevenin sayıları: birim, piksel, güvenli alan, altyazı bandı; tüm ölçek katsayıları buradan türer | `Canvas.from_profile(profile), .units, .pixels, .safe, .subtitle_band, .to_pixels(x, y), units(px)` |
@@ -1158,7 +1206,7 @@ make check    # lint + mypy + testler
 | `tests/schema/ir/test_objects.py` | 4, 6, 10, 11, 12 | Her nesne tipinin kabul ettiği ve reddettiği girdiler; örnek bir gövde (vektör izdüşümü) | pytest testi (79) |
 | `tests/schema/test_color.py` | 4 | Renk yazımları, alfa yasağı, karma renk, tema arka planı | pytest testi (10) |
 | `src/irpipe/schema/lir.py` | 5, 6 | Backend'lerin çizdiği çözülmüş liste; IR'den bağımsız, her IR nesnesi id'li bir grup, sıra ve renkler kesinleşmiş | `LIRDocument, LIRCanvas, Group, PathItem, TextItem, MathItem, ImageItem, walk_groups()` |
-| `src/irpipe/schema/spec.py` | 5 | Sözleşmelerin JSON Schema'larını modellerden üretip docs/spec/'e yazar; make spec bunu çağırır | `CONTRACTS, render(model), write_all(dir), python -m irpipe.schema.spec DIR` |
+| `src/irpipe/schema/spec.py` | 5, 18 | Sözleşmelerin JSON Schema'larını modellerden üretip docs/spec/'e yazar; make spec bunu çağırır | `CONTRACTS, render(model), write_all(dir), python -m irpipe.schema.spec DIR` |
 | `tests/schema/test_lir.py` | 5, 6 | Elle yazılmış lir.json; LIR kuralları (hex renk, tekil id, z sırası, yalnız grup) ve IR'den bağımsızlık | pytest testi (19) |
 | `tests/schema/test_spec.py` | 5 | Yayımlanan şemalar güncel mi, geçerli JSON Schema mı, gerçek örnekleri kabul ediyor mu | pytest testi (13) |
 | `src/irpipe/artifacts.py` | 6, 7, 8, 9, 10, 11, 13 | Aşamaların birbirine verdiği verilerin adları ve tipleri; aşamalar birbirini değil bunları import eder | `IR_SOURCE, IR, IR_NORMAL, MEASURED, IR_PLACED, LIR, CHECKED` |
@@ -1282,3 +1330,5 @@ make check    # lint + mypy + testler
 | `tests/components/test_axes.py` | 17 | Kesişme, tikler ve sayılar, adlar, uzayda sabit boyutlar, hatalı aralıklar | pytest testi (9) |
 | `tests/components/test_graph.py` | 17 | Örnekler, x'e göre tutamaçlar, gerçek eğriye yakınlık, kırılma ve kesim, altındaki bölge, okunamayan fonksiyonlar | pytest testi (11) |
 | `tests/components/test_brace_and_angle.py` | 17 | Ayracın şekli, yönü ve etiketi; açının yayı, kare köşesi, etiketi ve hataları | pytest testi (9) |
+| `src/irpipe/schema/brief.py` | 18 | Planner'ın çıktısı: ders planı ve kare brief'i; karenin dersten miras aldığı stil; katmanlama (planner, proje, kullanıcı) | `LessonPlan`, `FrameBrief`, `MustShow`, `Texts`, `Constraints`, `Style`, `ProfileChanges`, `frame_style(brief, lesson)`, `overlay(base, *changes)` |
+| `tests/schema/test_brief.py` | 18 | Örneklerin modelden ve yayımlanan şemadan geçmesi, örnek brief ile örnek IR'nin uyumu, id kuralları, miras ve katmanlama | pytest testi (13) |

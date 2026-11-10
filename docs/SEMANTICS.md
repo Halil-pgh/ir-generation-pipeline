@@ -76,6 +76,30 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   on the bottom margin plus the bottom overlay. The safe area ends at its
   top edge.
 
+## Briefs
+
+- The planner hands on two contracts: `lesson_plan.json` (the lesson's
+  goals, misconceptions, frames in the order they are told, and its style)
+  and one `brief.json` per frame (purpose, intent, focus, `must_show`,
+  texts, constraints, the frame's style changes, composition notes). Both
+  refuse unknown fields, like every contract.
+- `must_show` ids are unique within a brief, and `focus` names only them;
+  a lesson's frame ids are unique. A brief's `lesson` and `id` must name
+  the lesson and one of its frames.
+- A frame is drawn with its lesson's style, changed by its own: its
+  concept colors and notation entries win over the lesson's, the others
+  stay. In the render profile only the fields the frame writes change,
+  nested parts field by field (`{"subtitle": {"mode": "burn_in"}}` keeps
+  the lesson's number of lines); a part of another kind replaces the
+  lesson's whole (a modular type scale over a preset name), and an empty
+  field leaves the lesson's as it is. A brief without a lesson gives its
+  whole profile, at least `aspect`.
+- The same layering puts later choices over the planner's: the project's
+  settings, then the user's explicit wishes, which win.
+- The orchestrator writes the IR's header from the frame's style and
+  brief: the brief's `intent` is the IR's intent, the concept colors are
+  its `colors`, the render profile its `frame`, `typography` and theme.
+
 ## IR document
 
 - `ir.json` is one flat object: the header fields (`version`, `intent`,

@@ -17,6 +17,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from irpipe.core.report import Report
+from irpipe.schema.brief import FrameBrief, LessonPlan
 from irpipe.schema.ir import IRDocument
 from irpipe.schema.lir import LIRDocument
 from irpipe.schema.render_profile import RenderProfile
@@ -24,6 +25,8 @@ from irpipe.schema.render_profile import RenderProfile
 JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
 CONTRACTS: dict[str, type[BaseModel]] = {
+    "lesson_plan": LessonPlan,
+    "brief": FrameBrief,
     "ir": IRDocument,
     "lir": LIRDocument,
     "render_profile": RenderProfile,

@@ -1,0 +1,24 @@
+{
+  "version": "frame-brief/1.0",
+  "id": "projection",
+  "lesson": "vector_projection",
+  "purpose": "define",
+  "intent": "The projection of a onto b is the shadow a casts on b",
+  "focus": ["shadow"],
+  "must_show": [
+    {"id": "vectors", "text": "a and b drawn from one point, with arrowheads", "data": {"a": [2.1, 3.2], "b": [4.2, 0]}},
+    {"id": "shadow", "text": "the projection of a onto b, along b, as its own arrow"},
+    {"id": "drop", "text": "a line from the tip of a straight down to b, dashed"},
+    {"id": "angle", "text": "the angle theta between a and b"},
+    {"id": "formula", "text": "the formula of the projection under the drawing"}
+  ],
+  "texts": {
+    "title": "Projection of a onto b",
+    "labels": {"a": "a", "b": "b", "angle": "\\theta", "formula_name": "projection:"}
+  },
+  "constraints": {
+    "must": ["the shadow ends where the dashed line meets b", "a and b keep their lesson colors"],
+    "should": ["the title is the only text in bold"]
+  },
+  "composition_notes": "The vectors fill the middle of the frame, b along the bottom pointing right, a rising up to the right. The shadow lies on b, in its own color, from the common point to the foot of the dashed line. The formula sits under the drawing, centered."
+}
