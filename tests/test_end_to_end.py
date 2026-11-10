@@ -20,7 +20,7 @@ def run(text: str, out_dir: Path) -> RunResult:
     return pipeline.run({IR_SOURCE: text, OUT_DIR: out_dir})
 
 
-def test_the_configured_pipeline_runs_the_front_end_then_renders() -> None:
+def test_the_configured_pipeline_runs_the_front_end_then_checks_then_renders() -> None:
     config = load_config(ROOT / "pipeline.toml")
     pipeline = Pipeline.from_config(config, inputs=[IR_SOURCE, OUT_DIR])
     assert pipeline.stage_names == (
@@ -29,6 +29,7 @@ def test_the_configured_pipeline_runs_the_front_end_then_renders() -> None:
         "measure",
         "place",
         "resolve",
+        "check",
         "render",
     )
 

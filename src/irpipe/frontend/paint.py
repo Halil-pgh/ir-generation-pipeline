@@ -21,6 +21,7 @@ A label's paint comes from its owner (labels.py).
 from dataclasses import dataclass
 from typing import Any, Literal, cast
 
+from irpipe import colormath
 from irpipe.schema.color import NO_PAINT, Color, ColorRef, Mix, to_rgb
 from irpipe.schema.ir import Area, IRDocument, Math, Style, Text
 from irpipe.schema.ir.objects import ObjectBase
@@ -50,17 +51,10 @@ def to_hex(color: Color) -> str:
 
 def foreground_for(background: Color) -> str:
     """White or black, whichever contrasts more with ``background`` (WCAG contrast)."""
-    lum = _luminance(to_rgb(background))
-    return "#FFFFFF" if 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.05 else "#000000"
-
-
-def _luminance(rgb: tuple[int, int, int]) -> float:
-    def linear(channel: int) -> float:
-        c = channel / 255
-        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-
-    r, g, b = (linear(c) for c in rgb)
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    back = colormath.rgb(to_hex(background))
+    white = colormath.contrast(back, (1.0, 1.0, 1.0))
+    black = colormath.contrast(back, (0.0, 0.0, 0.0))
+    return "#FFFFFF" if white >= black else "#000000"
 
 
 class PaintResolver:

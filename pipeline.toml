@@ -7,15 +7,42 @@
 #   stage as ctx.options. A switched-off stage may keep its table.
 
 [pipeline]
-stages = ["validate", "normalize", "measure", "place", "resolve", "render"]   # in run order
+stages = ["validate", "normalize", "measure", "place", "resolve", "check", "render"]  # in run order
 # "check_header" (after validate) compares the IR's header with the locked one. It needs
 # the locked header as an input, so the orchestrator adds it (step 19), not this file.
-plugins = ["irpipe.frontend", "irpipe.metrics", "irpipe.backends"]  # packages that register plugins
+plugins = ["irpipe.frontend", "irpipe.metrics", "irpipe.checks", "irpipe.backends"]  # packages that register plugins
 
 [options.measure]
 metrics = "pango"   # text through Pango and formulas through LaTeX, as Manim draws them;
                     # "fixed" needs no fonts and no LaTeX (formulas then cannot be drawn)
 # cache_dir = ""    # where typeset formulas are kept; default ~/.cache/irpipe/metrics
+
+[options.check]
+# Which checks run, in order. Delete a name to switch that check off.
+checks = [
+    "offscreen",        # W-OFFSCREEN       nothing past the edge of the frame
+    "safe_area",        # W-UNSAFE          everything inside the safe area
+    "subtitle",         # E-SUBTITLE        nothing in the subtitle band
+    "text_overlap",     # W-TEXT-OVERLAP    no text on top of another
+    "text_crossed",     # W-TEXT-CROSSED    no line through a text
+    "contrast",         # W-LOW-CONTRAST    text stands out from what is behind it
+    "text_size",        # W-SMALL-TEXT      no text too small to read
+    "similar_colors",   # W-SIMILAR-COLORS  colors that can be told apart
+    "fill_overlap",     # W-FILL-OVERLAP    no accidental partial overlap of fills
+    "group_opacity",    # W-GROUP-OPACITY   a faded group's children do not overlap
+    "glyphs",           # W-MISSING-GLYPH   every character is in the font
+]
+
+[options.check.contrast]
+min_ratio = 4.5     # WCAG AA for text
+large_ratio = 3.0   # WCAG AA for large text
+large_size = 48     # reference px from which a text is large
+
+[options.check.text_size]
+min_size = 28       # reference px (a caption is 34)
+
+[options.check.similar_colors]
+min_delta_e = 10    # CIEDE2000; about 1 is just noticeable side by side
 
 [options.render]
 backend = "svg"     # which backend draws the LIR

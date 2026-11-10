@@ -40,9 +40,12 @@ make render IR=path/to/ir.json          # any other IR; OUT=folder to choose whe
 
 This runs the stages `pipeline.toml` lists and writes `frame.svg`,
 `frame.png`, `lir.json` and `report.json` into `runs/<name>/`, then prints
-the report. It fails when the picture is not READY.
+the report. It fails when the picture is not READY. Among the stages, the
+checks `pipeline.toml` lists (offscreen, safe area, subtitle band, text
+overlap, contrast, text size, ...) look at what was drawn; their findings
+are in the report.
 
-## Checks
+## Code checks
 
 ```bash
 make check       # lint + strict type check + tests

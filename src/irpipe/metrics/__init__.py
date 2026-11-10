@@ -12,6 +12,7 @@ Module map:
     latex.py    a formula -> glyph outlines and box (latex + dvisvgm); TexError
     svgpath.py  SVG path data -> straight and Bezier segments
     cache.py    CachedMetrics: answers kept in memory, formulas also on disk
+    fonts.py    what fontconfig knows: is a family installed, which characters it lacks
 """
 
 from irpipe.metrics import fixed as fixed

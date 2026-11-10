@@ -6,6 +6,7 @@ Stages never import each other; they import these keys. A stage's
     ir_source --validate--> ir --normalize--> ir_normal --measure--> measured
     ir_normal, measured --place--> ir_placed
     ir_placed, measured --resolve--> lir
+    lir, ir_normal --check--> checked (and the issues the checks found)
     lir, out_dir --render--> frame.svg, frame.png
 """
 
@@ -29,6 +30,7 @@ MEASURED = ArtifactKey(
     "measured", dict, "id -> TextBox or MathBox of every text and formula, from measure"
 )
 LIR = ArtifactKey("lir", LIRDocument, "the resolved draw list that backends draw")
+CHECKED = ArtifactKey("checked", tuple, "the names of the checks that ran over the LIR")
 OUT_DIR = ArtifactKey("out_dir", Path, "the run folder the backend writes its files into")
 RENDERED = ArtifactKey("rendered", tuple, "the files the backend wrote, as Paths")
 LOCKED_HEADER = ArtifactKey(

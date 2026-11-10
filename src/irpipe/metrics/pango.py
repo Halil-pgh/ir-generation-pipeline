@@ -10,12 +10,10 @@ Text boxes are Pango's logical extents: the font's ascent and descent, the
 same for every string, which keeps baselines steady.
 """
 
-import shutil
-import subprocess
 from collections.abc import Iterable
-from functools import cache
 from typing import Any, Literal
 
+from irpipe.metrics import fonts
 from irpipe.metrics.base import METRICS, MathBox, TextBox, TextMetrics
 from irpipe.metrics.latex import DESIGN_SIZE_PT, MissingToolError, typeset
 from irpipe.metrics.svgpath import Subpath
@@ -93,15 +91,4 @@ class PangoMetrics(TextMetrics):
         )
 
     def missing_fonts(self, families: Iterable[str]) -> list[str]:
-        return [family for family in families if not _installed(family)]
-
-
-@cache
-def _installed(family: str) -> bool:
-    """Does fontconfig, which Pango uses, have ``family`` itself rather than a substitute?"""
-    if shutil.which("fc-match") is None:
-        return True  # no fontconfig to ask (not Linux); assume the font is there
-    found = subprocess.run(
-        ["fc-match", "-f", "%{family}", family], capture_output=True, text=True, check=False
-    ).stdout
-    return family.lower() in (name.strip().lower() for name in found.split(","))
+        return [family for family in families if not fonts.installed(family)]

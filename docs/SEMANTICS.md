@@ -328,6 +328,53 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - An object that paints nothing (no stroke color and no fill) still gets
   its LIR group, with no primitives in it.
 
+## Checks
+
+- The `check` stage runs after `resolve`, on what was drawn (the LIR),
+  with the IR at hand for what was meant (references, groups, the frame,
+  the safe area, the subtitle band). `pipeline.toml` lists the checks
+  that run (`[options.check] checks`; every registered check when the
+  list is left out) and gives each its settings
+  (`[options.check.<name>]`); a misspelled name or setting is refused.
+- A check's findings never stop the run: the picture is still drawn, and
+  the report says whether it is READY. Every finding names the object in
+  IR terms, its id and its JSON path.
+- What an object covers: a path's geometry, its strokes at their width;
+  a text's measured box; a formula's ink box. Group transforms are
+  applied. Lengths are in units, sizes in reference px.
+- Two objects are related on purpose when one is placed by a reference
+  to the other (`"v.tip"`, `{"on": ...}`, `next_to`), one is built from
+  the other (a region's operands, a flood fill's lines, a clip), or both
+  are in the same group or stack. Related objects may overlap; checks of
+  readability ignore relations.
+- `offscreen` (`W-OFFSCREEN`) and `safe_area` (`W-UNSAFE`): an object
+  reaches past the frame or the safe area by more than 0.001 units; each
+  edge is named with how far.
+- `subtitle` (`E-SUBTITLE`): an object covers part of the subtitle band
+  (more than touching its edge).
+- `text_overlap` (`W-TEXT-OVERLAP`): the boxes of two texts or formulas
+  overlap.
+- `text_crossed` (`W-TEXT-CROSSED`): a stroked line of another object runs
+  more than 0.02 units inside a text's or formula's box, taken a tenth of
+  its height smaller all round; whether drawn over the text or under it.
+- `contrast` (`W-LOW-CONTRAST`): the WCAG contrast between a text and the
+  color behind it falls below 4.5:1 (3:1 from 48 px). The color behind is
+  the background with every fill drawn earlier laid over it at its
+  opacity; the text is mixed with it at its own opacity; the worst of a
+  3 x 3 grid of points in the box counts.
+- `text_size` (`W-SMALL-TEXT`): a text or formula is set below 28 px.
+- `similar_colors` (`W-SIMILAR-COLORS`): two different colors something is
+  painted with (fill, stroke, text) differ by less than 10 in CIEDE2000.
+- `fill_overlap` (`W-FILL-OVERLAP`): the fills of two unrelated objects
+  overlap over more than 2% and less than 98% of the smaller one (less is
+  touching; more is one lying inside the other, which is layering).
+- `group_opacity` (`W-GROUP-OPACITY`): a group or stack with opacity below
+  1 has children that overlap, so they show through each other.
+- `glyphs` (`W-MISSING-GLYPH`): a text uses a character the font fontconfig
+  picks for it has no glyph for. Without fontconfig nothing is reported.
+- Every warning above may be accepted with `allow`, except
+  `W-MISSING-GLYPH`: an empty box is never what was meant.
+
 ## Backends
 
 - A backend lists the LIR features it can draw (`quadratic`, `cubic`,

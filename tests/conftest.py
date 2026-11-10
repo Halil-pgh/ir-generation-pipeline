@@ -1,4 +1,4 @@
-"""Builders for small IR documents, shared by the front-end tests."""
+"""Builders for small IR documents, shared by the front-end and check tests."""
 
 import copy
 import json
