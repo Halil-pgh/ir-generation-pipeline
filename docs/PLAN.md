@@ -351,6 +351,25 @@ Tamamlanmış adımlarda bulunan, ama ekip kararıyla dokunulmayan sorunlar: ön
 | S6 | 14 | `frontend/lower.py`, `_dashes()` | Desen tam bir alt yolun sonunda bittiğinde SVG'nin sona koyduğu sıfır uzunluklu kesiği lowering atıyor; yuvarlak ya da kare uçta SVG orada bir nokta çiziyor. SEMANTICS kesiklerin "SVG'nin dizdiği gibi" dizildiğini söylüyor | 14 birimlik çizgi, desen [20, 20], yuvarlak uç: SVG çizgi sonunda 8 px'lik nokta çiziyor, lowering'den geçen Manim çizmiyor | Değiştirilmedi; uygunluk testinde xfail |
 | S7 | 5, 7 | LIR (`StrokePaint`), `SEMANTICS.md`, SVG yazıcısı | LIR ve SEMANTICS miter sınırını belirtmiyor; SVG backend'i SVG'nin varsayılanı 4'ü, Manim cairo'nun 10'unu kullanıyor. ~29°'den dar köşeler iki backend'de farklı | 20 px çizgili dar bir köşe: SVG ucu kesiyor, Manim sivri bırakıyor (mürekkebin %1.9'u farklı) | Değiştirilmedi; uygunluk testinde xfail |
 
+### Öneriler · 11 Kasım 2026
+
+Adım 16'daki uygunluk testlerinin sonuçlarına göre, karar verecek kişiye öneri. Karar ekibin; hiçbiri yapılmadı.
+
+**Genel ilke.** Altın standart herhangi bir backend değil, front-end'in hesapladığı sayılar (LIR) olsun: her backend bu sayılara göre değerlendirilir, SVG testlerde yalnızca basit ve hızlı referans. Uygunluk testleri toleranslı bir emniyet olarak kalsın. Ölçüt: konum ve boyut sapması düzeltilir, çünkü kontroller (örtüşme, kadraj, kontrast, güvenli alan) çizilen piksele değil LIR'e bakar; görünüm farkı ucuzsa düzeltilir, değilse "bilinen fark" olarak kalır. Bir backend'in hatası ajan feedback'iyle IR'de telafi edilmemeli: IR o backend'e göre ayarlanır, öbürlerinde bozulur.
+
+| Öncelik | Sorun | Neden | Efor |
+| --- | --- | --- | --- |
+| 1. Yapılmalı: resmi değiştiriyor | S3 (Adım 14, lowering) | Kendini kesen tek parçalı, `evenodd` dolgulu bir şekil (ör. pentagram) Manim'de ortası dolu çıkıyor, uyarı yok. IR'deki `path` `fill_rule: "evenodd"` alabildiği için ajanın yazabileceği bir durum; Manim varsayılan backend olduğu için ana çıktıyı etkiliyor | Küçük: birkaç satır ve bir test |
+| 1. Yapılmalı: resmi değiştiriyor | S1 (Adım 14, lowering) | Kesiklere bölünen yolda şekil ipucu kalıyor. Manim backend'i bunu karşılıyor (K106), ama ipucunu kullanacak her yeni backend (Motion Canvas, TikZ) kesikli çizgiyi düz çizer; tak-çıkar hedefi için önemli | Çok küçük: tek satır ve bir test |
+| 2. Yapılmalı: kontrollerin doğruluğu | S2 (Adım 12, alan hesabı) | Kendini kesen tek parçalı şekilde dolgu kuralı yok sayılıyor. Resim doğru çıkıyor, ama bölge işlemleri ve kontroller çizilenden farklı bir alan hesaplıyor. S3 ile aynı yerde; birlikte yapılması mantıklı | Orta |
+| 3. Ucuz, yapılabilir: referansı temiz tutar | S5 (Adım 7, SVG yazıcısı) | Dönen gruplar 1080p'de ~0.6 px, 4K'da ~1.2 px kayık. Ölçü aleti kayık olmamalı; ajanın hızlı önizlemesi de SVG | Çok küçük: tek satır |
+| 3. Ucuz, yapılabilir: referansı temiz tutar | S7 (Adım 5 ve 7, miter sınırı) | SEMANTICS'e bir değer yazılsın. En ucuzu 10: Manim'in (cairo) kullandığı değer, SVG'ye tek öznitelik yetiyor. 4 seçilirse Manim tarafında ciddi uğraş gerekir; değmez | Çok küçük |
+| 4. Uğraşmaya değmez: bilinen fark kalsın | S6 (Adım 14) | Desen tam çizginin sonunda bittiğinde uçtaki nokta eksik; nadir ve yalnızca görünüş | — |
+| 4. Uğraşmaya değmez: bilinen fark kalsın | Düz metin | SVG metni ~%3 geniş ve biraz kalın, dikey konum 1 px içinde; font motoru farkı, ölçüme uyan Manim | — |
+| 4. Uğraşmaya değmez: bilinen fark kalsın | Eşit olmayan ölçekte çizgi kalınlığı | Adım 14'te bilerek kabul edilmiş yaklaşım | — |
+
+Birinci ve üçüncü gruplar küçük işler, ikinci grup orta; hepsi testleriyle birlikte yaklaşık yarım gün. Düzeltilen her sorun uygunluk testlerindeki bir xfail'i kırmızıya çevirir; o zaman işareti kaldırılır.
+
 ## Adım raporları
 
 Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki düzende bir rapor eklenir; aynı özet sohbete de yazılır.
