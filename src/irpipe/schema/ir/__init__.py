@@ -10,7 +10,7 @@ Module map:
     common.py    ids, points, boxes, sizes
 """
 
-from irpipe.schema.ir.common import Box, Id, Point, Role, Size
+from irpipe.schema.ir.common import Box, Id, Number, Point, Role, Size
 from irpipe.schema.ir.document import BODY_FIELDS, HEADER_FIELDS, IRBody, IRDocument, Space
 from irpipe.schema.ir.header import (
     IR_VERSION,
@@ -19,6 +19,7 @@ from irpipe.schema.ir.header import (
     Style,
     SubtitleHeader,
     TypographyHeader,
+    header_hash,
 )
 from irpipe.schema.ir.objects import (
     Anchor,
@@ -62,6 +63,7 @@ __all__ = [
     "Id",
     "Line",
     "LineTo",
+    "Number",
     "Path",
     "Point",
     "Polygon",
@@ -80,4 +82,5 @@ __all__ = [
     "SubtitleHeader",
     "Text",
     "TypographyHeader",
+    "header_hash",
 ]

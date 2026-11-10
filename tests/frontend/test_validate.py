@@ -237,3 +237,9 @@ def test_a_bad_allow_entry_is_reported_but_the_ir_is_still_handed_on(
     assert {issue.code for issue in result.issues} == {"E-ALLOW"}
     assert result.stopped_at is None
     assert isinstance(result.get(IR), IRDocument)
+
+
+def test_an_error_in_a_text_is_placed_on_the_right_field(check: Callable[..., RunResult]) -> None:
+    text = {"id": "t", "type": "text", "text": "x", "at": [0, 0], "anchor": "middle"}
+    issue = only(check([text]))
+    assert issue.path == "objects[0].anchor"  # not under its "text" field, which shares the tag

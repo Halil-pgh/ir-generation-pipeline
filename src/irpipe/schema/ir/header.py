@@ -7,6 +7,8 @@ The agent only writes the body (document.py); a later step checks
 with a hash that the header it returns is the one it was given.
 """
 
+import hashlib
+import json
 from typing import Annotated, Final, Literal, Self
 
 from pydantic import AfterValidator, Field, PositiveFloat, PositiveInt, model_validator
@@ -72,3 +74,15 @@ class IRHeader(StrictModel):
     typography: TypographyHeader
     colors: dict[ColorName, Color] = Field(default_factory=dict)
     styles: dict[Name, Style] = Field(default_factory=dict)
+
+
+def header_hash(header: IRHeader) -> str:
+    """SHA-256 of the header's content, the same however the JSON was spaced or ordered.
+
+    The header is hashed after validation, so ``9`` and ``9.0``, key order
+    and whitespace do not matter; only what the header says does.
+    """
+    canonical = json.dumps(
+        header.model_dump(mode="json"), sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

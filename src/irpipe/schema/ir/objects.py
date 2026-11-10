@@ -21,11 +21,19 @@ references such as ``"v.tip"``, coordinate spaces, labels, markers and math
 
 from typing import Annotated, Literal, Self
 
-from pydantic import Field, NonNegativeFloat, PositiveFloat, model_validator
+from pydantic import Field, PositiveFloat, model_validator
 
 from irpipe.schema.base import StrictModel
 from irpipe.schema.color import ColorRef
-from irpipe.schema.ir.common import Id, Name, Point, Size
+from irpipe.schema.ir.common import (
+    Id,
+    Name,
+    NonNegativeNumber,
+    Number,
+    Point,
+    PositiveNumber,
+    Size,
+)
 
 Opacity = Annotated[float, Field(ge=0, le=1)]
 
@@ -72,7 +80,7 @@ class Filled(Stroked):
 class Circle(Filled):
     type: Literal["circle"] = "circle"
     center: Point
-    radius: PositiveFloat
+    radius: PositiveNumber
 
 
 class Ellipse(Filled):
@@ -80,8 +88,8 @@ class Ellipse(Filled):
 
     type: Literal["ellipse"] = "ellipse"
     center: Point
-    rx: PositiveFloat
-    ry: PositiveFloat
+    rx: PositiveNumber
+    ry: PositiveNumber
 
 
 class Rect(Filled):
@@ -89,9 +97,9 @@ class Rect(Filled):
 
     type: Literal["rect"] = "rect"
     center: Point
-    width: PositiveFloat
-    height: PositiveFloat
-    corner_radius: NonNegativeFloat = 0
+    width: PositiveNumber
+    height: PositiveNumber
+    corner_radius: NonNegativeNumber = 0
 
 
 class RegularPolygon(Filled):
@@ -103,9 +111,9 @@ class RegularPolygon(Filled):
 
     type: Literal["regular_polygon"] = "regular_polygon"
     center: Point
-    radius: PositiveFloat
+    radius: PositiveNumber
     sides: int = Field(ge=3, le=64)
-    rotation: float = 0
+    rotation: Number = 0
 
 
 class Polygon(Filled):
@@ -146,9 +154,9 @@ class Arc(Stroked):
 
     type: Literal["arc"] = "arc"
     center: Point
-    radius: PositiveFloat
-    start_angle: float
-    end_angle: float
+    radius: PositiveNumber
+    start_angle: Number
+    end_angle: Number
 
     @model_validator(mode="after")
     def _sweeps(self) -> Self:
@@ -161,9 +169,9 @@ class Sector(Filled):
 
     type: Literal["sector"] = "sector"
     center: Point
-    radius: PositiveFloat
-    start_angle: float
-    end_angle: float
+    radius: PositiveNumber
+    start_angle: Number
+    end_angle: Number
 
     @model_validator(mode="after")
     def _sweeps(self) -> Self:
@@ -243,8 +251,8 @@ class Group(ObjectBase):
     type: Literal["group"] = "group"
     children: tuple[Id, ...] = Field(min_length=1)
     translate: Point = (0, 0)
-    rotate: float = 0
-    scale: PositiveFloat | tuple[PositiveFloat, PositiveFloat] = 1
+    rotate: Number = 0
+    scale: PositiveNumber | tuple[PositiveNumber, PositiveNumber] = 1
     pivot: Point = (0, 0)
 
 

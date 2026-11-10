@@ -175,27 +175,62 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Center",
           "type": "array"
         },
         "radius": {
-          "exclusiveMinimum": 0,
-          "title": "Radius",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Radius"
         },
         "start_angle": {
-          "title": "Start Angle",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Start Angle"
         },
         "end_angle": {
-          "title": "End Angle",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "End Angle"
         }
       },
       "required": [
@@ -402,19 +437,40 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Center",
           "type": "array"
         },
         "radius": {
-          "exclusiveMinimum": 0,
-          "title": "Radius",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Radius"
         }
       },
       "required": [
@@ -437,10 +493,24 @@
               "minItems": 2,
               "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
               ],
               "type": "array"
@@ -450,10 +520,24 @@
               "minItems": 2,
               "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
               ],
               "type": "array"
@@ -463,10 +547,24 @@
               "minItems": 2,
               "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
               ],
               "type": "array"
@@ -677,24 +775,52 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Center",
           "type": "array"
         },
         "rx": {
-          "exclusiveMinimum": 0,
-          "title": "Rx",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Rx"
         },
         "ry": {
-          "exclusiveMinimum": 0,
-          "title": "Ry",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Ry"
         }
       },
       "required": [
@@ -911,37 +1037,79 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Translate",
           "type": "array"
         },
         "rotate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
           "default": 0,
-          "title": "Rotate",
-          "type": "number"
+          "title": "Rotate"
         },
         "scale": {
           "anyOf": [
             {
-              "exclusiveMinimum": 0,
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "gt": 0
             },
             {
               "maxItems": 2,
               "minItems": 2,
               "prefixItems": [
                 {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "gt": 0
                 },
                 {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "gt": 0
                 }
               ],
               "type": "array"
@@ -959,10 +1127,24 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Pivot",
@@ -1121,10 +1303,24 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Start",
@@ -1135,10 +1331,24 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "End",
@@ -1161,10 +1371,24 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Line",
@@ -1667,10 +1891,24 @@
             "minItems": 2,
             "prefixItems": [
               {
-                "type": "number"
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
               },
               {
-                "type": "number"
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "type": "array"
@@ -1834,10 +2072,24 @@
             "minItems": 2,
             "prefixItems": [
               {
-                "type": "number"
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
               },
               {
-                "type": "number"
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "type": "array"
@@ -1866,10 +2118,24 @@
               "minItems": 2,
               "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
               ],
               "type": "array"
@@ -1879,10 +2145,24 @@
               "minItems": 2,
               "prefixItems": [
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 },
                 {
-                  "type": "number"
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
                 }
               ],
               "type": "array"
@@ -2093,30 +2373,65 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Center",
           "type": "array"
         },
         "width": {
-          "exclusiveMinimum": 0,
-          "title": "Width",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Width"
         },
         "height": {
-          "exclusiveMinimum": 0,
-          "title": "Height",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Height"
         },
         "corner_radius": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
           "default": 0,
-          "minimum": 0,
-          "title": "Corner Radius",
-          "type": "number"
+          "ge": 0,
+          "title": "Corner Radius"
         }
       },
       "required": [
@@ -2323,19 +2638,40 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Center",
           "type": "array"
         },
         "radius": {
-          "exclusiveMinimum": 0,
-          "title": "Radius",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Radius"
         },
         "sides": {
           "maximum": 64,
@@ -2344,9 +2680,16 @@
           "type": "integer"
         },
         "rotation": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
           "default": 0,
-          "title": "Rotation",
-          "type": "number"
+          "title": "Rotation"
         }
       },
       "required": [
@@ -2588,27 +2931,62 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Center",
           "type": "array"
         },
         "radius": {
-          "exclusiveMinimum": 0,
-          "title": "Radius",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "gt": 0,
+          "title": "Radius"
         },
         "start_angle": {
-          "title": "Start Angle",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Start Angle"
         },
         "end_angle": {
-          "title": "End Angle",
-          "type": "number"
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "End Angle"
         }
       },
       "required": [
@@ -2838,10 +3216,24 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "Start",
@@ -3022,10 +3414,24 @@
           "minItems": 2,
           "prefixItems": [
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           ],
           "title": "At",
@@ -3238,6 +3644,22 @@
         }
       },
       "title": "Styles",
+      "type": "object"
+    },
+    "values": {
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_]*$": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "title": "Values",
       "type": "object"
     },
     "focus": {

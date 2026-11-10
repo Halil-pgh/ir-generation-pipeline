@@ -206,3 +206,37 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 - SVG text sits at `at` horizontally, aligned by its anchor (start,
   middle, end), and on the measured baseline vertically. Its font is the
   LIR's font, falling back to the system's sans-serif.
+
+## Expressions
+
+- Every number of geometry may be written as text, an expression:
+  positions, radii, widths and heights, corner radii, angles, rotations,
+  and group transforms. Every other number (the header, opacities,
+  stroke widths, dashes, `z`, type sizes) must be a JSON number; text
+  there is an `E-SCHEMA` error and is never converted. `true` and `false`
+  are the only booleans.
+- The language is what sympy prints: numbers (`12`, `0.5`, `1.5e-3`),
+  `+ - * / **` and parentheses, `pi` and `E`, and `sqrt`, `sin`, `cos`,
+  `tan`, `asin`, `acos`, `atan`, `atan2`, `exp`, `log` (`log(x)` natural,
+  `log(x, b)` base b), `Abs`, `Min`, `Max`. `^` is not a power. Trig
+  functions use radians, while the IR's angle fields are degrees.
+- Arithmetic is exact where it can be: `+ - * /` and whole powers of
+  fractions, and the square root of a perfect square, stay fractions;
+  anything with `pi`, `E`, another function or another root becomes a
+  float from there on. The stored value is the nearest float.
+- Names in an expression refer to the body's `values` table. Values may
+  use each other, written in any order, but not in a loop (`E-CYCLE`);
+  they stay exact between each other, and they cannot be named after a
+  constant or a function.
+- A result must be a finite real number. Division by zero, the root of a
+  negative number, the log of a number that is not positive, `asin` or
+  `acos` outside -1…1 are `E-EXPR` errors, with the field's path.
+
+## Header lock
+
+- The header's hash is the SHA-256 of its validated content written as
+  compact JSON with sorted keys; spacing, key order and `9` against `9.0`
+  do not change it.
+- `check_header` compares the IR's header with the one the orchestrator
+  locked. A difference is an `E-HEADER` error that lists the changed
+  fields (the first five).

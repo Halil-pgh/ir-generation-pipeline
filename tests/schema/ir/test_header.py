@@ -34,8 +34,9 @@ def draft(**changes: Any) -> dict[str, Any]:
 
 def test_the_analysis_header_draft_validates_and_round_trips() -> None:
     document = IRDocument.model_validate(ANALYSIS_DRAFT)
-    assert document.model_dump(mode="json", exclude_none=True) == ANALYSIS_DRAFT
-    assert list(document.model_dump()) == list(ANALYSIS_DRAFT)  # same field order
+    written = document.model_dump(mode="json", exclude_unset=True)  # what the draft gives
+    assert written == ANALYSIS_DRAFT
+    assert list(written) == list(ANALYSIS_DRAFT)  # same field order
 
 
 def test_header_and_body_are_separate_models_that_join_back() -> None:

@@ -2,7 +2,7 @@
 
 ``ir.json`` is one flat object, as in the analysis's draft: the header's
 fields (version, intent, frame, typography, colors, styles) and the body's
-(focus, extra_colors, zones, spaces, defs, objects, allow) next to each
+(values, focus, extra_colors, zones, spaces, defs, objects, allow) next to each
 other. They are still two models: ``IRHeader`` belongs to the orchestrator,
 ``IRBody`` to the agent, and no field belongs to both.
 
@@ -19,7 +19,7 @@ from pydantic import Field
 from irpipe.core.allow import Allow
 from irpipe.schema.base import StrictModel
 from irpipe.schema.color import Color, ColorName, Mix
-from irpipe.schema.ir.common import Box, Id, Name
+from irpipe.schema.ir.common import Box, Id, Name, Number
 from irpipe.schema.ir.header import IRHeader
 from irpipe.schema.ir.objects import IRObject
 
@@ -34,11 +34,14 @@ class Space(StrictModel):
 class IRBody(StrictModel):
     """What the agent writes.
 
-    ``focus`` names the objects the eye should go to first. ``defs`` are
+    ``values`` are named numbers the geometry's expressions may use
+    (``"k": "44/17"``, then ``"radius": "k/2"``); they may use each other, but
+    not in a loop. ``focus`` names the objects the eye should go to first. ``defs`` are
     shapes that are only operands (of a region, say) and are not drawn.
     ``allow`` accepts warnings on purpose (core/allow.py).
     """
 
+    values: dict[Name, Number] = Field(default_factory=dict)
     focus: tuple[Id, ...] = ()
     extra_colors: dict[ColorName, Color | Mix] = Field(default_factory=dict)
     zones: dict[Name, Box] = Field(default_factory=dict)

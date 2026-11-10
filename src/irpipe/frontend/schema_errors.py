@@ -19,6 +19,7 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from irpipe.core import ISSUE_CODES, Issue, IssueCode, Origin
+from irpipe.frontend.expressions import E_EXPR
 
 E_JSON = ISSUE_CODES.register(IssueCode("E-JSON", Origin.IR, "the IR cannot be read as JSON"))
 E_SCHEMA = ISSUE_CODES.register(
@@ -56,7 +57,11 @@ def parse_json(text: str) -> tuple[Any, list[Issue]]:
 
 
 def schema_issues(raw: Any, error: ValidationError, field_names: Collection[str]) -> list[Issue]:
-    """One E-SCHEMA issue per place in the file where the IR breaks the schema."""
+    """One issue per place in the file where the IR breaks the schema.
+
+    A failed expression is E-EXPR, even where the field also allows another
+    form; everything else is E-SCHEMA.
+    """
     located = [(locate(raw, detail["loc"]), detail) for detail in error.errors()]
     places: dict[str, tuple[Path, list[ErrorDetails]]] = {}
     for path, detail in located:
@@ -65,6 +70,12 @@ def schema_issues(raw: Any, error: ValidationError, field_names: Collection[str]
         places.setdefault(format_path(path), (path, []))[1].append(detail)
     issues = []
     for where, (path, details) in places.items():
+        expression = next((d for d in details if d["type"] == "expression"), None)
+        if expression is not None:
+            context = expression.get("ctx") or {}
+            hint = str(context.get("hint", "")) or None
+            issues.append(E_EXPR(str(context.get("message")), path=where or None, hint=hint))
+            continue
         if len(details) == 1:
             message, hint = describe(details[0], field_names)
         else:
@@ -84,12 +95,16 @@ def locate(raw: Any, loc: Sequence[str | int]) -> Path:
     """
     path: Path = []
     node = raw
+    tag_skipped = False
     for i, part in enumerate(loc):
+        if isinstance(node, dict) and node.get("type") == part and not tag_skipped:
+            # The "type" tag that picked the model, not a field (a text has a "text" field too).
+            tag_skipped = True
+            continue
         if _holds(node, part):
             path.append(part)
             node = node[part]
-        elif isinstance(node, dict) and node.get("type") == part:
-            continue  # the "type" tag that picked the model; not part of the file
+            tag_skipped = False
         elif isinstance(part, str) and isinstance(node, dict) and i == len(loc) - 1:
             path.append(part)  # a field that is missing from the file
         else:
