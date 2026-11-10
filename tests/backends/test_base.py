@@ -57,9 +57,9 @@ def test_features_are_listed_with_the_groups_that_use_them(
     }
 
 
-def test_a_formula_with_glyph_outlines_needs_no_tex(make_lir: Any, group: Any) -> None:
+def test_every_formula_asks_for_math_outlines_or_not(make_lir: Any, group: Any) -> None:
     lir = make_lir(group("f", {**MATH, "glyphs": [CUBIC]}))
-    assert Capability.MATH not in features_used(lir)
+    assert features_used(lir) == {Capability.MATH: ["f"]}  # lowering turns it into outlines
 
 
 def test_what_a_backend_cannot_draw_is_named_without_the_backend(
@@ -68,7 +68,7 @@ def test_what_a_backend_cannot_draw_is_named_without_the_backend(
     lir = make_lir(group("a", {**line, "subpaths": [CUBIC]}))
     (issue,) = unsupported(lir, LinesOnly())
     assert (issue.code, issue.origin) == ("E-CAPABILITY", "capability")
-    assert issue.message == "cubic curves cannot be drawn yet (used by a)"
+    assert issue.message == "cubic curves cannot be drawn in this picture's output (used by a)"
     assert "lines_only" not in issue.message
     assert issue.objects == ("a",)
 

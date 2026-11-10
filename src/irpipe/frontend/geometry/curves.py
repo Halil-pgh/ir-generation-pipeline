@@ -136,7 +136,7 @@ def point_at(subpaths: Sequence[lir.Subpath], t: float) -> tuple[XY, XY]:
     goal = t * sum(lengths)
     for piece, piece_length in zip(parts, lengths, strict=True):
         if goal <= piece_length or piece is parts[-1]:
-            u = _parameter_at(piece, min(goal, piece_length))
+            u = parameter_at(piece, min(goal, piece_length))
             return point(piece, u), _unit(_direction(piece, u))
         goal -= piece_length
     raise ValueError("no subpaths")
@@ -184,11 +184,26 @@ def bbox(subpaths: Sequence[lir.Subpath]) -> Box:
 
 
 def transform(subpaths: Sequence[lir.Subpath], m: Matrix) -> tuple[lir.Subpath, ...]:
-    """The subpaths through an affine map (exact: a map of a Bezier is a Bezier)."""
-    return tuple(
-        subpath_of([tuple(apply(m, p) for p in piece) for piece in pieces(s)], closed=s.closed)
-        for s in subpaths
-    )
+    """The subpaths through an affine map, segment for segment (a map of a Bezier is a Bezier)."""
+
+    def at(p: XY) -> XY:
+        return apply(m, p)
+
+    out: list[lir.Subpath] = []
+    for subpath in subpaths:
+        segments: list[lir.Segment] = []
+        for segment in subpath.segments:
+            match segment:
+                case lir.LineTo(line=p):
+                    segments.append(lir.LineTo(line=at(p)))
+                case lir.QuadTo(quad=(c, p)):
+                    segments.append(lir.QuadTo(quad=(at(c), at(p))))
+                case lir.CubicTo(cubic=(c1, c2, p)):
+                    segments.append(lir.CubicTo(cubic=(at(c1), at(c2), at(p))))
+        out.append(
+            lir.Subpath(start=at(subpath.start), segments=tuple(segments), closed=subpath.closed)
+        )
+    return tuple(out)
 
 
 def trim(subpaths: Sequence[lir.Subpath], start: float, end: float) -> tuple[lir.Subpath, ...]:
@@ -202,9 +217,9 @@ def trim(subpaths: Sequence[lir.Subpath], start: float, end: float) -> tuple[lir
     if start > 0 and not out[0].closed:
         out[0] = _cut_start(out[0], start, _room(out[0], start, end if len(out) == 1 else 0))
     if end > 0 and not out[-1].closed:
-        reversed_last = _reverse(out[-1])
+        reversed_last = reverse(out[-1])
         room = _room(out[-1], end, start if len(out) == 1 else 0)
-        out[-1] = _reverse(_cut_start(reversed_last, end, room))
+        out[-1] = reverse(_cut_start(reversed_last, end, room))
     return tuple(out)
 
 
@@ -221,18 +236,19 @@ def _cut_start(subpath: lir.Subpath, cut: float, room: float) -> lir.Subpath:
     for k, piece in enumerate(parts):
         piece_length = length(piece)
         if goal < piece_length:
-            _, after = split(piece, _parameter_at(piece, goal))
+            _, after = split(piece, parameter_at(piece, goal))
             return subpath_of([after, *parts[k + 1 :]])
         goal -= piece_length
     return subpath
 
 
-def _reverse(subpath: lir.Subpath) -> lir.Subpath:
+def reverse(subpath: lir.Subpath) -> lir.Subpath:
+    """The same subpath run the other way (a closed one stays closed)."""
     parts = [tuple(reversed(piece)) for piece in reversed(pieces(subpath))]
-    return subpath_of(parts)
+    return subpath_of(parts, closed=subpath.closed)
 
 
-def _parameter_at(piece: Piece, distance: float) -> float:
+def parameter_at(piece: Piece, distance: float) -> float:
     """The parameter at which ``distance`` of the piece's length lies behind."""
     cumulative = _cumulative(piece)
     for k in range(1, len(cumulative)):

@@ -22,5 +22,6 @@ Module map:
     layout.py         box points, placing beside a point or box, grids
     resolve.py        stage "resolve": placed, measured IR -> LIR; spaces, arrowheads, clips
     shapes.py         shapes, group transforms and arrowheads as LIR geometry
+    lower.py          the LIR lowered to a backend's capabilities (called by "render")
     geometry/         affine maps; paths measured and cut; areas, flood fill and clipping
 """

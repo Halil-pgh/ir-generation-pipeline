@@ -39,7 +39,7 @@ def area(subpaths: Sequence[lir.Subpath], rule: FillRule = "nonzero") -> BaseGeo
         return EMPTY
     if len(rings) == 1:
         return _valid(Polygon(rings[0]))
-    surrounds = [(Polygon(points), 1 if _signed_area(points) > 0 else -1) for points in rings]
+    surrounds = [(Polygon(points), 1 if signed_area(points) > 0 else -1) for points in rings]
     faces = polygonize(list(_parts(shapely.union_all([LineString(points) for points in rings]))))
     inside = []
     for face in faces:
@@ -131,7 +131,8 @@ def _valid(polygon: Polygon) -> BaseGeometry:
     return shapely.make_valid(polygon).buffer(0)
 
 
-def _signed_area(points: list[XY]) -> float:
+def signed_area(points: list[XY]) -> float:
+    """Positive when the points run counterclockwise."""
     return (
         sum(
             p[0] * q[1] - q[0] * p[1] for p, q in zip(points, [*points[1:], points[0]], strict=True)

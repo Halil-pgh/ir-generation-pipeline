@@ -11,6 +11,7 @@ import pytest
 from irpipe.backends.base import Capability
 from irpipe.backends.svg import SvgBackend
 from irpipe.backends.svg.writer import Frame, num, to_svg
+from irpipe.frontend.lower import lower
 from irpipe.schema.lir import LIRCanvas
 
 NS = {"svg": "http://www.w3.org/2000/svg"}
@@ -140,7 +141,7 @@ def test_bold_italic_and_special_characters(make_lir: Any, group: Any) -> None:
     assert text.text == "a < b & c"
 
 
-def test_a_formula_is_drawn_from_its_glyphs(make_lir: Any, group: Any) -> None:
+def test_a_formula_is_drawn_from_its_glyphs_once_lowered(make_lir: Any, group: Any) -> None:
     glyph = {"start": [0, 0], "segments": [{"line": [0.1, 0]}, {"line": [0, 0.1]}], "closed": True}
     formula = {
         "type": "math",
@@ -153,8 +154,13 @@ def test_a_formula_is_drawn_from_its_glyphs(make_lir: Any, group: Any) -> None:
         "baseline": -0.05,
         "glyphs": [glyph],
     }
-    path = find(svg(make_lir(group("f", formula))), "svg:g/svg:path")
-    assert (path.get("fill"), path.get("data-tex")) == ("#FFFFFF", "x")
+    with pytest.raises(TypeError, match="lower the LIR first"):
+        svg(make_lir(group("f", formula)))
+    lowered, problems = lower(make_lir(group("f", formula)), SvgBackend.capabilities)
+    assert problems == []
+    path = find(svg(lowered), "svg:g/svg:path")
+    assert path.get("fill") == "#FFFFFF"
+    assert path.get("d", "").startswith("M ")
 
 
 # Transforms

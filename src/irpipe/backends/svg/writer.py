@@ -3,7 +3,8 @@
 LIR positions are units (origin at the center, y up); the SVG is written in
 output pixels (origin top left, y down), so a reader of frame.svg sees plain
 pixel numbers and text is never mirrored. Every IR object is a
-``<g id="...">`` carrying its id and its JSON path in the IR.
+``<g id="...">`` carrying its id and its JSON path in the IR. SVG cannot
+set TeX: formulas arrive lowered to their glyph outlines (frontend/lower.py).
 
     svg_text = to_svg(lir)
 """
@@ -115,7 +116,7 @@ def _group(group: Group, frame: Frame) -> ET.Element:
         elif isinstance(node, TextItem):
             element.append(_text(node, frame))
         elif isinstance(node, MathItem):
-            element.append(_math(node, frame))
+            raise TypeError(f"formula '{group.id}' reached the SVG writer; lower the LIR first")
         elif isinstance(node, ImageItem):
             element.append(_image(node, frame))
     return element
@@ -192,15 +193,6 @@ def _text(item: TextItem, frame: Frame) -> ET.Element:
     if item.opacity != 1:
         element.set("fill-opacity", num(item.opacity))
     element.text = item.text
-    return element
-
-
-def _math(item: MathItem, frame: Frame) -> ET.Element:
-    """A formula drawn from its glyph outlines (the render stage made sure there are some)."""
-    element = ET.Element("path", {"d": path_data(item.glyphs, frame), "fill": item.color})
-    if item.opacity != 1:
-        element.set("fill-opacity", num(item.opacity))
-    element.set("data-tex", item.tex)
     return element
 
 

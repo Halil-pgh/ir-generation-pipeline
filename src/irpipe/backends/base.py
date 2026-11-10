@@ -7,9 +7,9 @@
         def render(self, lir, out_dir) -> Rendered: ...
 
 A backend never lays out or resolves anything; the LIR is already final.
-What it cannot draw is named in its ``capabilities``: the render stage
-checks a LIR against them before drawing, and step 14 will lower such
-features to simpler ones first.
+What it can draw is named in its ``capabilities``: before drawing, the
+render stage lowers every other feature to simpler ones
+(frontend/lower.py), so a backend only ever sees what it listed.
 """
 
 from abc import ABC, abstractmethod
@@ -53,7 +53,7 @@ class Capability(StrEnum):
     EVENODD = "evenodd"  # the even-odd fill rule
     TRANSFORM = "transform"  # group matrices other than the identity
     TEXT = "text"  # text items
-    MATH = "math"  # typesetting TeX itself; formulas with glyph outlines need nothing
+    MATH = "math"  # formula items, typeset by the backend itself (else drawn as glyph outlines)
     IMAGE = "image"  # raster images
 
 
@@ -64,7 +64,7 @@ FEATURE_NAMES = {
     Capability.EVENODD: "even-odd fills",
     Capability.TRANSFORM: "group transforms",
     Capability.TEXT: "text",
-    Capability.MATH: "formulas without glyph outlines",
+    Capability.MATH: "formulas",
     Capability.IMAGE: "images",
 }
 
@@ -145,7 +145,7 @@ def features_used(lir: LIRDocument) -> dict[Capability, list[str]]:
                     note(Capability.EVENODD, group.id)
             elif isinstance(node, LIRText):
                 note(Capability.TEXT, group.id)
-            elif isinstance(node, MathItem) and not node.glyphs:
+            elif isinstance(node, MathItem):
                 note(Capability.MATH, group.id)
             elif isinstance(node, ImageItem):
                 note(Capability.IMAGE, group.id)
@@ -158,12 +158,14 @@ def features_used(lir: LIRDocument) -> dict[Capability, list[str]]:
 def unsupported(lir: LIRDocument, backend: Backend) -> list[Issue]:
     """An E-CAPABILITY issue per feature ``lir`` uses that ``backend`` cannot draw.
 
+    After lowering nothing should be left; the render stage checks anyway.
     The message names the feature and the objects, never the backend: the
     agent fixes the IR, not the choice of backend (analysis §3).
     """
     return [
         E_CAPABILITY(
-            f"{FEATURE_NAMES[feature]} cannot be drawn yet (used by {', '.join(users)})",
+            f"{FEATURE_NAMES[feature]} cannot be drawn in this picture's output "
+            f"(used by {', '.join(users)})",
             objects=users,
         )
         for feature, users in features_used(lir).items()

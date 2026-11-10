@@ -379,12 +379,42 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
 
 - A backend lists the LIR features it can draw (`quadratic`, `cubic`,
   `dash`, `evenodd`, `transform`, `text`, `math`, `image`). Straight
-  lines, fills and opacity every backend must draw. `math` means
-  typesetting TeX itself; a formula that carries glyph outlines needs no
-  capability.
-- The `render` stage checks the LIR first. A feature the chosen backend
-  cannot draw is an `E-CAPABILITY` issue naming the feature and the
-  objects that use it, never the backend; nothing is drawn.
+  lines, fills and opacity every backend must draw. `math` means drawing
+  formula items, setting the TeX itself.
+- The `render` stage lowers the LIR for the chosen backend before it
+  draws: every feature the backend does not list is rewritten with
+  simpler ones. `lir.json` stays the LIR before lowering, the same for
+  every backend.
+  - Cubic curves become quadratic curves, else straight segments, and
+    quadratic curves become cubic curves (exactly), else straight
+    segments; nothing strays more than 0.001 units from the curve. A
+    shape's hint is kept.
+  - A dashed stroke becomes one plain path per dash, laid out as SVG
+    lays them: the pattern (repeated once more when its count is odd)
+    starts afresh on each subpath and runs on across its segments,
+    closing edge included. A filled shape becomes its fill (hint kept)
+    and its dashes, drawn after it.
+  - An even-odd fill becomes a nonzero fill of the same area: subpaths
+    that do not cross are turned (counterclockwise inside an even number
+    of others, clockwise inside an odd number) and keep their curves;
+    crossing ones are recomputed as polygons with their holes.
+  - Group transforms are applied to the children's numbers and every
+    group's transform becomes the identity. Stroke widths and dashes
+    scale by the square root of the transform's area factor. Hints stay
+    under a shift and per-axis scale, and are dropped otherwise. A text
+    or formula follows a shift and an even scale (its size scales).
+  - Formulas become their glyph outlines, filled in the formula's color
+    and opacity, where TeX cannot be set, and wherever a group turns or
+    stretches them and transforms cannot be drawn.
+- What cannot be lowered is reported in IR terms, naming the object and
+  its JSON path, never the backend, and nothing is drawn: a text where
+  texts cannot be drawn, a text (or a formula without outlines, or an
+  image) that a group turns or stretches where transforms cannot be
+  drawn, and an image where images cannot be drawn are `E-CAPABILITY`; a
+  formula without glyph outlines where TeX cannot be set is
+  `E-ENVIRONMENT` (it was measured without typesetting).
+- The SVG backend draws every feature but `math`: formulas reach it as
+  their outlines.
 - The SVG backend writes `frame.svg` in output pixels (origin top left,
   y down), every IR object as a `<g id>` with its IR path in
   `data-source`, and rasterizes it to `frame.png` at the same size. A
