@@ -20,7 +20,7 @@ from collections.abc import Iterator
 
 from irpipe.artifacts import IR, IR_NORMAL
 from irpipe.core import ISSUE_CODES, STAGES, Issue, IssueCode, Origin, Stage, StageContext
-from irpipe.frontend.labels import with_labels
+from irpipe.frontend.labels import part_of, source_paths, with_labels
 from irpipe.frontend.paint import PaintResolver, to_hex
 from irpipe.schema.ir import IRDocument
 
@@ -59,18 +59,27 @@ def normalize(document: IRDocument) -> IRDocument:
 
 
 def undeclared_colors(document: IRDocument) -> Iterator[Issue]:
-    """A W-UNDECLARED-COLOR for every literal color an object writes."""
-    for k, obj in enumerate(document.objects):
+    """A W-UNDECLARED-COLOR for every literal color an object writes.
+
+    The parts of a component share its path and its colors: their warning
+    is given once, at the component.
+    """
+    paths, given = source_paths(document), set[tuple[str, str]]()
+    for obj in document.objects:
         label = getattr(obj, "label", None)
         fields = [("color", obj), ("fill", obj), ("label.color", label)]
         for field, owner in fields:
             value = getattr(owner, field.rpartition(".")[2], None)
             if isinstance(value, tuple) or (isinstance(value, str) and value.startswith("#")):
                 written = json.dumps(value) if isinstance(value, str) else json.dumps(list(value))
+                path = f"{paths[obj.id]}.{field}"
+                if (path, written) in given:
+                    continue
+                given.add((path, written))
                 yield W_UNDECLARED_COLOR(
                     f"{field} {written} is written directly instead of naming a color",
-                    path=f"objects[{k}].{field}",
-                    objects=[obj.id],
+                    path=path,
+                    objects=[part_of(obj.id) or obj.id],
                     hint=f'name it in extra_colors (such as "ink": "{to_hex(value)}") '
                     "and use the name here",
                 )

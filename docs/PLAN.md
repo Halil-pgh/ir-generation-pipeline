@@ -176,7 +176,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 14 | F3 | Yetenek listesi + lowering | frontend/lower.py | Desteklenmeyen özellik basit primitive'lere iner ya da IR terimleriyle hata döner | Tamam |
 | 15 | F3 | Manim kod üretici | backends/manim/: scene.py üretimi, render, harness | `manim -s scene.py Frame` çalışır; değişken adları IR id'leri | Tamam |
 | 16 | F3 | Backend uygunluk testleri | tests/conformance/ | SVG ve Manim çıktıları tolerans içinde piksel farkıyla eşleşir | Tamam |
-| 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Bekliyor |
+| 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Tamam |
 | 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Bekliyor |
 | 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Bekliyor |
 | 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Bekliyor |
@@ -334,6 +334,14 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K116 | Durumlar üç kaynaktan: boya (çizgi, uç, köşe, kesik, dolgu, opaklık, z sırası) doğrudan LIR'den; şekiller, dönüşümler ve metin IR'den, front-end'den geçerek; altı oran ve çözünürlükte aynı sahne ve mutlak çizgi kalınlığı | LIR iki backend'e tam aynı sayıları verir; ipuçları ve metin kutuları ise ancak front-end'den gelince gerçekle tutarlı | Onaylandı |
 | K117 | Bilinen her ayrışma, nedenini (bir S satırı ya da kabul edilmiş bir varsayım) söyleyen katı bir xfail; yalnızca resim farkıyla düşebilir (`raises`). Düzeltildiği gün test kırmızıya döner | Önceki adımlar bu adımda değiştirilemez; fark görünür ve izlenir kalsın | Onaylandı |
 | K118 | Uygunluk testleri `manim` işaretli; Manim ya da cairosvg yoksa atlanır; formüller oturum boyunca tek önbellekte dizilir. `pytest -m "not manim"` hızlı yol | `make check` ~50 s; Manim'siz koşu 9 s | Onaylandı |
+| K119 | Bileşenler ayrı bir aşamada değil, validate'in içinde açılır: şema kontrolünden sonra, ad ve referans kontrolünden önce. validate'ten çıkan IR yalnızca çekirdek nesne taşır | Ad, referans ve bölge kontrolleri nesne türüne göre dallanıyor; açılımdan önce çalışırlarsa her biri bileşenleri tanımak zorunda kalır. validate'ten önce açılsalar doğrulanmamış JSON üzerinde, ifadeler hesaplanmadan çalışırlardı. Bu sırayla geri kalan her aşama değişmeden kalıyor | Onaylandı |
+| K120 | Çekirdek IR şeması değişmez. `components/expand.py`'deki `document_model()`, IRDocument'tan kayıtlı bileşenleri de alan bir model türetir (yalnızca `objects`); bileşen kayıtlı değilse IRDocument'ın kendisi. Bilinmeyen tür ve alan önerileri bileşenleri de kapsar | Plan Adım 4'te listenin nasıl açılacağını 17'ye bırakmıştı; çekirdek model ve yayımlanan şeması olduğu gibi kalıyor | Onaylandı |
+| K121 | Açılım: bileşenin yerinde aynı id'li tek bir çekirdek nesne (kök) durur; parçalar noktalı id'lerle (`ax.x_tick_3`) listenin sonuna eklenir. Bir parçanın JSON yolu bileşeninki (`source_paths`, `body_objects`, normalize'ın renk uyarısı); parçalarda bulunan ad ve renk sorunları bileşen adına bir kez söylenir | Bileşene verilen referanslar (`focus`, gruplar, `"ax.center"`, bölgeler) çalışmaya devam eder, başka hiçbir nesnenin yolu kaymaz, ajan aynı hatayı parça sayısı kadar görmez. Noktalı id'nin parça olması SEMANTICS'te zaten kural (`v.label`, `axes.tick_3`) | Onaylandı |
+| K122 | Açılan her nesnenin `tags`'ine bileşenin türü eklenir (`"graph"`) | Analiz §2.7: anlam kaybolmasın; görsel eleştirmen ve animasyon kullanır | Onaylandı |
+| K123 | Bileşenler place'ten önce açıldığı için geometrilerini kurdukları noktalar (ayracın uçları, açının köşesi ve kolları) sayı ya da ifade olur, referans olmaz. Görünümle ilgili boyutlar (tik boyu, aralıklar, okun taşması, varsayılan derinlik ve yarıçap) çerçevede sabittir ve uzayın birimine çevrilir | Tik sayıları gibi metinlerin ölçülmesi gerekiyor; ölçüm place'ten önce. Analiz bileşenleri kendi argümanlarının saf fonksiyonu olarak tanımlıyor; sayıları SDK (20. adım) hesaplayacak | Onaylandı |
+| K124 | Yeni kod E-COMPONENT (köken ir, `components/base.py`): bir bileşen alanlarıyla açılamıyor; o alanın yoluyla. Grafiğin okunamayan fonksiyonu E-EXPR | Hata ajana IR terimleriyle, kendi dosyasındaki alanla döner | Onaylandı |
+| K125 | İlk dört bileşen: `axes` bir grup ve parçaları; `graph` tek bir path (bölgelerde `under`, flood fill sınırı, `{"on": ...}` olarak kullanılabilir); `brace` tek bir path, `angle` tek bir yay (dik açıda kare köşe). Ayracın ve açının etiketi çekirdeğin label mekanizmasıyla şeklin `mid` noktasına (ayracın ucu, yayın ortası), dışa doğru yerleşir | Her bileşen mümkün olduğunca az ve tanıdık çekirdek nesneye açılıyor; mevcut mekanizmalar (etiket, bölge, referans) yeniden yazılmadan kullanılıyor | Onaylandı |
+| K126 | `graph` örnekleri kübik Hermite parçalarıyla bağlar (eğimler x'e göre, tutamaçlar her parçanın x aralığında: eğri her x'e bir kez uğrar); örnek x'ler tam kesir olarak hesaplanır; `y_range` kesimi ikiye bölmeyle eğrinin gerçek kesişiminde | Bölgelerin `under` kuralı grafiğin her x'e bir kez uğramasını istiyor; tam kesir S8'i polinomlarda aşıyor; kesim 2⁻⁴⁰ adım içinde | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -350,6 +358,8 @@ Tamamlanmış adımlarda bulunan, ama ekip kararıyla dokunulmayan sorunlar: ön
 | S5 | 7 | `backends/svg/writer.py`, `Frame.matrix()` | Grup matrisinin katsayıları 3 ondalığa yuvarlanıyor, ama mutlak piksel koordinatlarıyla (~1000) çarpılıyor: dönen ya da eğik bir grup 1080p'de ~0.6 px kayık çiziliyor, 4K'da iki katı | 0.5 rad dönen bir dikdörtgen: SVG ile Manim arasında 279 güçlü fark pikseli. Aynı SVG yalnızca matris tam değerle yazılınca o bölgede Manim'le piksel piksel aynı (ortalama fark 0.884 → 0.000) | Değiştirilmedi; uygunluk testinde xfail |
 | S6 | 14 | `frontend/lower.py`, `_dashes()` | Desen tam bir alt yolun sonunda bittiğinde SVG'nin sona koyduğu sıfır uzunluklu kesiği lowering atıyor; yuvarlak ya da kare uçta SVG orada bir nokta çiziyor. SEMANTICS kesiklerin "SVG'nin dizdiği gibi" dizildiğini söylüyor | 14 birimlik çizgi, desen [20, 20], yuvarlak uç: SVG çizgi sonunda 8 px'lik nokta çiziyor, lowering'den geçen Manim çizmiyor | Değiştirilmedi; uygunluk testinde xfail |
 | S7 | 5, 7 | LIR (`StrokePaint`), `SEMANTICS.md`, SVG yazıcısı | LIR ve SEMANTICS miter sınırını belirtmiyor; SVG backend'i SVG'nin varsayılanı 4'ü, Manim cairo'nun 10'unu kullanıyor. ~29°'den dar köşeler iki backend'de farklı | 20 px çizgili dar bir köşe: SVG ucu kesiyor, Manim sivri bırakıyor (mürekkebin %1.9'u farklı) | Değiştirilmedi; uygunluk testinde xfail |
+| S8 | 8 | `expr/evaluate.py`, `_power()` (130–136. satırlar) | Ondalıklı (float) negatif bir tabanın tam sayı kuvveti "a negative number to a fractional power" diye reddediliyor; taban kesirken aynı işlem doğru. IR'de gerçek bir sayı olan `"(sqrt(2) - 2)**2"` (≈ 0.343) E-EXPR veriyor | `evaluate("(sqrt(2) - 2)**2")` → E-EXPR; `evaluate("(-1/2)**2")` → 1/4. Graph bileşeninin ilk sürümünde x negatifken eğri boş çıktı | Değiştirilmedi. Graph x'i tam kesir veriyor (K126): polinomlar sorunsuz, ama ondalığa geçen bir ifadenin negatif değerinin kuvveti eğride boşluk bırakır |
+| S9 | 15 | `backends/manim/writer.py`, `function()` ve `_construct()` | Çok parçalı bir nesnenin `make_` imzası, `VGroup(...)` satırı ve `construct`'taki çağrısı satırlara bölünmüyor; `code.py`'nin "scene.py'nin en uzun satırı 99" sözü tutmuyor. Yalnızca okunabilirlik: kod çalışıyor | Bileşen örneğinin scene.py'sinde `def make_ax(...)` satırı ~600 karakter | Değiştirilmedi |
 
 ### Öneriler · 11 Kasım 2026
 
@@ -380,6 +390,60 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 17 — Bileşen mekanizması ve ilk bileşenler · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriterleri karşılandı: bir bileşen tek dosya (modeli ve `expand`'i), ve açıldıktan sonra IR'de yalnızca çekirdek nesne kalıyor. İlk dört bileşen: `axes`, `graph`, `brace`, `angle`. Yeni örnek `examples/components/ir.json` iki backend'le de READY ve uygunluk testinden geçiyor. `make check` temiz: 899 test, 4 bilinen ayrışma (44 test yeni), mypy strict, ruff.
+
+![17. adımın örneği: eksenler, grafik ve altındaki alan, ayraç; açıları ve kenarları işaretli dik üçgen](plan/adim-17.png)
+
+`examples/components/ir.json`, Manim backend'i, 1920×1080. Solda `axes` ve `graph` aynı `P` uzayında; sarı alan grafiğin altında bir `region` (`{"under": "f", "x": [1, 3]}`), altında integral etiketli bir `brace`. Sağda bir üçgen: dik açı kare köşe, β ve γ yaylı `angle`, kenarlarında `brace`.
+
+**Nasıl çalışıyor.** Bileşenler `src/irpipe/components/` paketinde; her biri kendi modelini ve `expand`'ini `COMPONENTS` kaydına yazıyor, `pipeline.toml`'daki `plugins` listesi paketi yüklüyor (K119–K120). validate, ir.json'u kayıtlı bileşenleri de tanıyan bir modelle okuyor, sonra ad kontrolünden önce bileşenleri açıyor: bileşenin yerinde aynı id'li bir kök kalıyor, parçalar noktalı id'lerle listenin sonuna gidiyor (K121). Böylece normalize, measure, place, resolve, kontroller ve backend'ler bileşenlerden habersiz.
+
+```json
+{"id": "f", "type": "graph", "in": "P", "function": "0.15*x**2 + 0.6", "x_range": [-1, 4.8]}
+```
+
+| Girdi | Sonuç |
+| --- | --- |
+| `{"type": "axis", ...}` | `E-SCHEMA objects[0]: unknown type 'axis'` · ipucu: `did you mean 'axes'?` |
+| `"x_rnage"` (graph) | `E-SCHEMA: unknown field 'x_rnage'` · ipucu: `did you mean 'x_range'?` |
+| `"x_range": [3, -1]` (axes) | `E-COMPONENT objects[1].x_range: x_range runs from 3 to -1` |
+| `"function": "q*x"` (graph) | `E-EXPR objects[0].function: unknown name 'q'` |
+| axes, `"in": "Q"` (olmayan uzay) | Bir kez: `E-REF objects[0].in: 'ax' is drawn in space 'Q', which is not in spaces` (16 parçanın her biri için değil) |
+| axes, `"color": "#FFFFFF"` | Bir kez: `W-UNDECLARED-COLOR objects[0].color` |
+| `{"under": "f", "x": [0, 2]}` (f = x²/4) | Alan 0.6667, kesin değer 2/3 (binde bir içinde) |
+
+**Üretilen dosyalar.** `src/irpipe/components/` altında 7 dosya, `tests/components/` altında 5 dosya, `examples/components/ir.json` ve `docs/plan/adim-17.png` (Dosya kaydı'nda). Önceki adımların dosyalarına yalnızca ekleme yapıldı, mevcut davranış ve mevcut testler değişmedi:
+
+- `frontend/validate.py` (Adım 6, 8): bileşenli modelle okuma, açılım, parça sorunlarının birleştirilmesi.
+- `frontend/labels.py` (Adım 11): `part_of()` ve `source_paths()`'te parça kuralı.
+- `frontend/references.py` (Adım 6): `body_objects()` parçaya bileşeninin yolunu veriyor.
+- `frontend/normalize.py` (Adım 9): renk uyarısı parçalar için bileşenin yolunda ve bir kez.
+- `pipeline.toml` (`irpipe.components` eklentisi), `SEMANTICS.md` (yeni Components bölümü), README.
+
+**Plandan sapmalar.**
+
+- Plan bileşen açılımını ayrı bir `expand` aşaması olarak çiziyordu; açılım validate'in içinde (K119). Bileşen yine ayrı bir eklenti noktası: bir dosya eklemek yetiyor, `plugins`'ten çıkarmak hepsini kapatıyor.
+- Ayraç ve açı noktalarını referans olarak değil sayı ya da ifade olarak alıyor (K123).
+- Bileşenlerin şeması yayımlanan `docs/spec/ir.schema.json`'a girmiyor; çekirdek şema olduğu gibi kaldı.
+- Bileşenler `defs`'te kullanılamıyor.
+
+**Bulunan sorunlar.** S8 (Adım 8: float negatif tabanın tam sayı kuvveti reddediliyor) ve S9 (Adım 15: scene.py'de çok parçalı nesnelerin satırları bölünmüyor). İkisi de çalıştırılarak doğrulandı; dokunulmadı, "berkerdnmz cihazında bulunan sıkıntılar" başlığında.
+
+**Varsayımlar.**
+
+- Eksen sayıları TeX (`MathTex`) olarak, `caption` boyunda; eksen adları `label` boyunda. Tik ve sayı, eksenlerin kesiştiği yerde yazılmıyor.
+- Görünümle ilgili sabitler: yarım tik 0.08, sayı aralığı 0.12, okun taşması 0.4, ayraç derinliği 0.25, açı yarıçapı 0.5 çerçeve birimi; ilk resimlerden sonra gözden geçirilmeli.
+- Grafik varsayılan 200 örnekle çiziliyor; 30 örnekte bile gerçek eğriden sapma 5·10⁻⁴ birimin (1080p'de 0.06 px) altında.
+- Uzayın iki ekseni farklı ölçekliyse ayraç ve açı o uzayda gerildiği gibi çiziliyor (SEMANTICS: farklı ölçekte daire elips olur).
+
+**Kararlar.** K119–K126 (Karar günlüğü).
+
+**Nasıl denenir.** `make render IR=examples/components/ir.json`. Yeni bir bileşen için `src/irpipe/components/` altına bir dosya: `Component`'tan türeyen bir model, `type` alanı ve `expand()`, üstünde `@COMPONENTS.register` (örnek `tests/components/test_expand.py`'deki `Dots`). Hata yolları için örnekte `"x_range": [3, -1]` ya da `"function": "q*x"` yazın.
+
+**Açık kalanlar.** Bileşen şemalarının yayımlanması ve ajanın prompt'una girmesi 21. adımda. Plandaki diğer bileşenler (table, network, vector_field, contour, bars…) ihtiyaç oldukça birer dosya olarak eklenir. Commit edildi.
 
 ### Adım 16 — Backend uygunluk testleri · 11 Kasım 2026
 
@@ -1102,9 +1166,9 @@ make check    # lint + mypy + testler
 | `src/irpipe/metrics/base.py` | 6, 10 | Metin ölçümünün arayüzü ve sağlayıcı kaydı; yeni bir font motoru tek dosya | `TextMetrics.text(…)`, `.math(…)`, `.missing_fonts(…)`; `TextBox`, `MathBox` |
 | `src/irpipe/metrics/fixed.py` | 6, 10 | Font gerektirmeyen, her makinede aynı sonucu veren ölçücü; testler ve Pango gelene kadar pipeline için | `FixedMetrics ("fixed")` |
 | `src/irpipe/frontend/__init__.py` | 6, 8, 9, 10, 11, 12, 14 | Front-end paketi; pipeline.toml'da plugins'e yazılınca tüm aşamaları kaydolur; docstring'i modül haritasını verir | `plugins = ["irpipe.frontend"]` |
-| `src/irpipe/frontend/validate.py` | 6, 8, 11 | "validate" aşaması: ir.json metnini okur, JSON'u, şemayı ve adları denetler, geçerse IR'yi verir | `Validate: ir_source -> ir` |
+| `src/irpipe/frontend/validate.py` | 6, 8, 11, 17 | "validate" aşaması: ir.json metnini okur, JSON'u, şemayı ve adları denetler, geçerse IR'yi verir | `Validate: ir_source -> ir` |
 | `src/irpipe/frontend/schema_errors.py` | 6, 8, 11 | JSON ve pydantic hatalarını ajanın anlayacağı issue'lara çevirir: JSON yolu, sade mesaj, öneri; E-JSON ve E-SCHEMA burada | `parse_json(text), schema_issues(raw, error, field_names), format_path()` |
-| `src/irpipe/frontend/references.py` | 6, 11, 12 | Her adın bir şeye işaret ettiğini ve grupların doğru kurulduğunu denetler; E-ID, E-REF ve E-GROUP burada | `reference_issues(document), body_objects(document)` |
+| `src/irpipe/frontend/references.py` | 6, 11, 12, 17 | Her adın bir şeye işaret ettiğini ve grupların doğru kurulduğunu denetler; E-ID, E-REF ve E-GROUP burada | `reference_issues(document), body_objects(document)` |
 | `src/irpipe/frontend/resolve.py` | 6, 9, 10, 11, 12 | "resolve" aşaması: normalize edilmiş, mutlak konumlu IR'yi LIR'e çevirir; gruplar, z sırası, opaklık, metin yerleşimi | `Resolve: ir_placed, measured -> lir`, `Resolver(document, measured)`, `arrow_length()` |
 | `src/irpipe/frontend/paint.py` | 6, 9, 10, 11, 12, 13 | Boya mirası (tema → sınıflar → nesne) ve renk adlarının hex'e çevrilmesi; normalize sonucu nesneye yazar, resolve oradan okur | `PaintResolver(document).paint(obj)`, `.normalized(obj)`, `painted(obj)`, `foreground_for()` |
 | `src/irpipe/frontend/shapes.py` | 6, 11 | Her IR şeklini LIR geometrisine (path + ipucu), grup dönüşümünü matrise çevirir; backend'lerin şekil bilmek zorunda kalmaması buradan geliyor | `outline(shape)`, `ellipse()`, `rect()`, `polyline()`, `arc()`, `sector()`, `group_matrix()`, `arrowhead()`, `mapped_hint()` |
@@ -1138,7 +1202,7 @@ make check    # lint + mypy + testler
 | `tests/expr/test_table.py` | 8 | Adlı değerlerin sırası, tamliği, döngüler ve yasak adlar | pytest testi (9) |
 | `tests/frontend/test_expressions.py` | 8 | Bir IR'deki ifadeler: hesaplanması, hata yolları, E-CYCLE, katı sayı ve boolean kuralı | pytest testi (12) |
 | `tests/frontend/test_header_lock.py` | 8 | Header hash'inin biçimden bağımsızlığı, değişen alanların listelenmesi | pytest testi (5) |
-| `src/irpipe/frontend/normalize.py` | 9, 11 | "normalize" aşaması: her nesnenin boyasını açıkça yazar; doğrudan yazılmış renkleri W-UNDECLARED-COLOR ile bildirir | `Normalize: ir -> ir_normal, normalize(document), undeclared_colors(document)` |
+| `src/irpipe/frontend/normalize.py` | 9, 11, 17 | "normalize" aşaması: her nesnenin boyasını açıkça yazar; doğrudan yazılmış renkleri W-UNDECLARED-COLOR ile bildirir | `Normalize: ir -> ir_normal, normalize(document), undeclared_colors(document)` |
 | `tests/frontend/test_normalize.py` | 9, 11 | Açıkça yazılan boyalar, tema varsayılanları, uyarı ve allow ile kabulü, aşama çıkarılınca zincirin durması | pytest testi (13) |
 | `src/irpipe/metrics/pango.py` | 10, 13 | "pango" ölçücü: metni Pango ile, formülü LaTeX ile ölçer; kurulu olmayan fontu bulur | `PangoMetrics ("pango")` |
 | `src/irpipe/metrics/latex.py` | 10 | Bir formülü latex ve dvisvgm ile dizer, glif çizimlerini ve kutusunu çıkarır; LaTeX hatasını şablonsuz söyler | `typeset(tex, math_font) -> Outline, TexError, MissingToolError` |
@@ -1153,7 +1217,7 @@ make check    # lint + mypy + testler
 | `src/irpipe/frontend/place.py` | 11, 12 | "place" aşaması: referanslar, kutular, stack'ler ve uzay orijinleri sayıya; E-PLACE, E-CYCLE | `Place: ir_normal, measured -> ir_placed, place(document, measured), Placer` |
 | `src/irpipe/frontend/anchors.py` | 11, 12 | Nesnelerin adlı noktaları (anchor sözlüğü) ve bir nesnenin tuttuğu her nokta | `anchor_names(obj), split_ref(ref), map_points(obj, change), references(obj), xy(point)` |
 | `src/irpipe/frontend/layout.py` | 11 | Saf yerleşim matematiği: kutunun noktaları, bir noktanın ya da kutunun yanına yerleşme, ızgara | `box_point, box_at, unit_vector, beside, grid` |
-| `src/irpipe/frontend/labels.py` | 11 | Şeklin etiketini kendi nesnesine açar; nesnelerin ajanın dosyasındaki JSON yolları | `with_labels(document, resolver), label_id, owner_of, source_paths(document)` |
+| `src/irpipe/frontend/labels.py` | 11, 17 | Şeklin etiketini kendi nesnesine açar; nesnelerin ajanın dosyasındaki JSON yolları | `with_labels(document, resolver), label_id, owner_of, source_paths(document)` |
 | `src/irpipe/frontend/geometry/__init__.py` | 11, 12 | Geometri paketi; 12. adımda region, flood\_fill ve clip buraya gelecek | modül haritası |
 | `src/irpipe/frontend/geometry/affine.py` | 11 | 2B afin matrisler: birleştirme, ters alma, nokta ve kutu dönüştürme | `compose, invert, apply, transform_box, union` |
 | `src/irpipe/frontend/geometry/curves.py` | 11, 12, 14 | Yolların uzunluğu, üstündeki noktalar ve yönler, kesin kutusu, dönüştürülmesi ve kırpılması | `point_at, crossing, bbox, transform, trim, end_direction, flatten, stretch` |
@@ -1206,3 +1270,15 @@ make check    # lint + mypy + testler
 | `tests/conformance/test_geometry.py` | 16 | Adlı şekiller ve grup dönüşümleri (IR'den) | pytest testi (4; 2'si bilinen ayrışma: S5, eşit olmayan ölçek) |
 | `tests/conformance/test_frames.py` | 16 | Altı oran ve çözünürlükte aynı sahne; çizgi kalınlığının referans pikselden çıkışa doğru çevrildiği | pytest testi (6) |
 | `tests/conformance/test_text.py` | 16 | Örnekler, tek taban çizgisinde metin ve formül, grubuyla dönen metin | pytest testi (4) |
+| `src/irpipe/components/__init__.py` | 17 | Bileşen paketi; plugins'e yazılınca tüm bileşenler kaydolur; docstring'i modül haritasını verir | `plugins = ["irpipe.components"]` |
+| `src/irpipe/components/base.py` | 17 | Bileşen arayüzü ve kaydı; açılımın biçimi; çekirdek nesneyi kendi şemasıyla kurup noktalı id veren yardımcı; E-COMPONENT burada | `Component` (`expand`, `shared`, `made_tags`), `COMPONENTS`, `Expansion`, `Context`, `ComponentError`, `make()`, `group_of()` |
+| `src/irpipe/components/expand.py` | 17 | ir.json'u bileşenleri de tanıyan modelle okutur; bileşenleri çekirdek nesnelere açar; parça sorunlarını bileşen adına bir kez söyler | `document_model()`, `expand_components(document, values)`, `said_once(issues)` |
+| `src/irpipe/components/axes.py` | 17 | "axes": kesişen iki sayı doğrusu, tikleri, sayıları, adları | `Axes` |
+| `src/irpipe/components/graph.py` | 17 | "graph": bir ifadenin y = f(x) eğrisi, tek bir path | `Graph` |
+| `src/irpipe/components/brace.py` | 17 | "brace": bir doğru parçası boyunca kıvrık ayraç, ucunda etiket | `Brace` |
+| `src/irpipe/components/angle.py` | 17 | "angle": iki kol arasındaki açının yayı ya da kare köşesi, etiketiyle | `Angle` |
+| `tests/components/conftest.py` | 17 | Küçük bir IR'yi validate'ten (ve front-end'den) geçiren yardımcılar | fixture: `opened`, `refused`, `drawn` |
+| `tests/components/test_expand.py` | 17 | Mekanizma: tek sınıflık yeni bileşen, yalnız çekirdek nesne kalması, yollar, sorunların bir kez söylenmesi, öneriler, ifadeler | pytest testi (12) |
+| `tests/components/test_axes.py` | 17 | Kesişme, tikler ve sayılar, adlar, uzayda sabit boyutlar, hatalı aralıklar | pytest testi (9) |
+| `tests/components/test_graph.py` | 17 | Örnekler, x'e göre tutamaçlar, gerçek eğriye yakınlık, kırılma ve kesim, altındaki bölge, okunamayan fonksiyonlar | pytest testi (11) |
+| `tests/components/test_brace_and_angle.py` | 17 | Ayracın şekli, yönü ve etiketi; açının yayı, kare köşesi, etiketi ve hataları | pytest testi (9) |

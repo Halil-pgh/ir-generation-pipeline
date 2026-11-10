@@ -155,6 +155,59 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   only inside an area (`clip`) or only outside one (`clip_out`). See
   Regions.
 
+## Components
+
+- A component (`axes`, `graph`, `brace`, `angle`) is written in `objects`
+  like any object, with its own type and fields; the components are those
+  `pipeline.toml`'s plugins register (`irpipe.components`). A component in
+  `defs` is not read: defs hold core objects only.
+- `validate` reads components with their own schema and opens them into
+  core objects right after the schema check and before names are checked,
+  so the IR it hands on holds core objects only. A component that cannot
+  open with its fields is `E-COMPONENT` at that field (a graph's function
+  that cannot be read is `E-EXPR`), and the run stops there.
+- A component keeps its id and its place: in its slot stands one core
+  object with its id, the root, so whatever names the component (`focus`,
+  a group, `"ax.center"`, `{"on": "f", "x": 2}`, a region) finds it. A
+  component made of several parts makes the root a group of them; the
+  parts have dotted ids (`ax.x_tick_3`) and come after every other object,
+  so no other object's JSON path moves. A part's JSON path is its
+  component's. A name or color validate or normalize finds wrong in the
+  parts is reported once, of the component.
+- What a component opens into keeps its meaning: every object it makes has
+  the component's type in its `tags` (`"graph"`), after its own.
+- A component's numbers are read in the space it names (`in`), like any
+  object's. Sizes that are about looks, not geometry (tick lengths, gaps,
+  an arrow's run-on, a brace's depth or an angle's radius when left out),
+  are fixed on the frame and turned into the space's units, by its mean
+  scale where the two axes differ.
+- Components open before the place stage, so the points they build from
+  (a brace's ends, an angle's vertex and arms) are numbers or expressions,
+  not references.
+- `axes`: `x_range` and `y_range` are `[min, max]` or `[min, max, step]`
+  (step 1). The axes cross where the other is 0, or at the nearer end of
+  its range. Ticks stand at every multiple of the step, at most 100 per
+  axis; numbers (TeX, the `caption` size) sit below and left of them, and
+  the tick and number where the axes cross are left out. With `arrows`
+  (the default) each axis runs on 0.4 frame units past its maximum into an
+  arrowhead; `x_label` and `y_label` (TeX, the `label` size) sit beyond it.
+  Parts: `x_axis`, `y_axis`, `x_tick_<k>`, `y_tick_<k>`, `x_number_<k>`,
+  `y_number_<k>`, `x_label`, `y_label`.
+- `graph`: `function` is an expression in `x` (the IR's `values` may be
+  named; a value named `x` is hidden by the variable). It is sampled at
+  `samples` evenly spaced x on `x_range` and drawn through every sample by
+  cubic pieces whose handles stay within each piece's x, so the curve
+  meets each x once. Where the function is not defined it breaks; with
+  `y_range` it is cut exactly where it leaves the band. It opens into one
+  path with the graph's id, its label and arrowheads included.
+- `brace`: a curly brace from `start` to `end`, bulging to the right of
+  that way (`side` turns it over), its tip `depth` out. `angle`: an arc of
+  `radius` around `vertex`, counterclockwise from the first of `arms` to
+  the second; a square corner when the angle is 90 degrees, or when
+  `right` says so. Each opens into one shape with its id; its label sits
+  at the shape's `mid` point (the brace's tip, the arc's middle), beside it
+  outward, unless the label gives `at` or `dir`.
+
 ## LIR
 
 - `lir.json` holds `version`, `canvas` (`units`, output `pixels`,

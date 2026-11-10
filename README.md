@@ -35,6 +35,7 @@ packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
 make venv                               # once: .venv with dev tools and both backends
 make render                             # draws examples/projection/ir.json
 make render IR=examples/regions/ir.json # regions, a flood fill and clips
+make render IR=examples/components/ir.json # axes, a graph, braces and angles
 make render IR=path/to/ir.json          # any other IR; OUT=folder to choose where
 ```
 

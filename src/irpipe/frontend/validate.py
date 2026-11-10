@@ -10,8 +10,13 @@ run, because resolve cannot draw what does not exist:
     E-EXPR, E-CYCLE   the named ``values`` cannot be computed, or loop
     E-SCHEMA  a field is unknown, missing or of the wrong form
     E-EXPR    an expression in the geometry cannot be read or computed
+    E-COMPONENT   a component (axes, graph...) cannot be opened with its fields
     E-ID, E-REF, E-GROUP   names point at nothing (objects, points, spaces,
               styles, colors), or groups and stacks are built wrongly
+
+Components (irpipe/components) are read with their own schema and opened
+into core objects before names are checked, so the IR handed on, and every
+check, holds core objects only.
 
 Expressions are computed here: the IR handed on holds plain numbers. The
 schema is checked strictly: a number written as text (``"0.5"``) is only an
@@ -21,11 +26,13 @@ A malformed ``allow`` entry (E-ALLOW) is reported but does not stop the run:
 the picture can still be drawn, it just cannot be READY.
 """
 
+import functools
 from typing import Any
 
 from pydantic import ValidationError
 
 from irpipe.artifacts import IR, IR_SOURCE
+from irpipe.components.expand import document_model, expand_components, said_once
 from irpipe.core import STAGES, Stage, StageContext, check_allows
 from irpipe.frontend.expressions import computed_values
 from irpipe.frontend.labels import label_ids
@@ -45,6 +52,12 @@ def _field_names(schema: dict[str, Any]) -> frozenset[str]:
 IR_FIELD_NAMES = _field_names(IRDocument.model_json_schema())
 
 
+@functools.cache
+def _field_names_of(model: type[IRDocument]) -> frozenset[str]:
+    """The "did you mean" pool of a document model (the core one's, or with components)."""
+    return IR_FIELD_NAMES if model is IRDocument else _field_names(model.model_json_schema())
+
+
 @STAGES.register
 class Validate(Stage):
     name = "validate"
@@ -61,12 +74,17 @@ class Validate(Stage):
         if problems:
             ctx.report(*problems)
             return
+        model = document_model()  # IRDocument itself when no component is registered
         try:
-            document = IRDocument.model_validate_json(text, strict=True, context={"values": values})
+            document = model.model_validate_json(text, strict=True, context={"values": values})
         except ValidationError as error:
-            ctx.report(*schema_issues(raw, error, IR_FIELD_NAMES))
+            ctx.report(*schema_issues(raw, error, _field_names_of(model)))
             return
-        problems = reference_issues(document)
+        document, problems = expand_components(document, values)  # only core objects from here
+        if problems:
+            ctx.report(*problems)
+            return
+        problems = said_once(reference_issues(document))  # a component's parts, once
         if problems:
             ctx.report(*problems)
             return

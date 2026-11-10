@@ -33,6 +33,17 @@ def owner_of(oid: str) -> str | None:
     return oid.removesuffix(SUFFIX) if oid.endswith(SUFFIX) else None
 
 
+def part_of(oid: str) -> str | None:
+    """The id of the object a part belongs to (``ax`` for ``ax.x_tick_3``); None for a plain
+    id and for a label, which has its own path.
+
+    A component opens into parts with dotted ids (irpipe/components); a part
+    is reported at its component's place in the agent's file.
+    """
+    whole, dot, _ = oid.partition(".")
+    return whole if dot and owner_of(oid) is None else None
+
+
 def label_ids(document: IRDocument) -> list[str]:
     """The ids the document's labels will have."""
     return [label_id(obj.id) for obj in document.objects if getattr(obj, "label", None)]
@@ -96,10 +107,16 @@ def _with_label_children(group: ObjectBase, owners: list[str]) -> ObjectBase:
 def source_paths(document: IRDocument) -> dict[str, str]:
     """Each object's and def's JSON path in the agent's file.
 
-    A label's path is its owner's with ``.label`` added.
+    A label's path is its owner's with ``.label`` added; a component's part's
+    is its component's.
     """
     paths = {obj.id: f"defs[{k}]" for k, obj in enumerate(document.defs)}
     for k, obj in enumerate(document.objects):
-        owner = owner_of(obj.id)
-        paths[obj.id] = f"{paths[owner]}.label" if owner in paths else f"objects[{k}]"
+        owner, whole = owner_of(obj.id), part_of(obj.id)
+        if owner in paths:
+            paths[obj.id] = f"{paths[owner]}.label"
+        elif whole in paths:
+            paths[obj.id] = paths[whole]
+        else:
+            paths[obj.id] = f"objects[{k}]"
     return paths

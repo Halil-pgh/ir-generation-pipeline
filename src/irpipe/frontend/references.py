@@ -28,7 +28,7 @@ from irpipe.frontend.anchors import (
     references,
     split_ref,
 )
-from irpipe.frontend.labels import label_id
+from irpipe.frontend.labels import label_id, part_of
 from irpipe.frontend.regions import E_REGION, can_bound, has_inside, operands
 from irpipe.schema.color import NO_PAINT
 from irpipe.schema.ir import Area, Container, FloodFill, IRDocument, OnRef, Region, Shape
@@ -65,11 +65,16 @@ def reference_issues(document: IRDocument) -> list[Issue]:
 
 
 def body_objects(document: IRDocument) -> Iterator[tuple[str, ObjectBase]]:
-    """Every object and def with its JSON path."""
+    """Every object and def with its JSON path (a component's part has its component's)."""
     for k, obj in enumerate(document.defs):
         yield f"defs[{k}]", obj
+    paths: dict[str, str] = {}
     for k, obj in enumerate(document.objects):
-        yield f"objects[{k}]", obj
+        path, whole = f"objects[{k}]", part_of(obj.id)
+        if whole is not None:
+            path = paths.get(whole, path)
+        paths[obj.id] = path
+        yield path, obj
 
 
 def _duplicate_ids(document: IRDocument) -> Iterator[Issue]:
