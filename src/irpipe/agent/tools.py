@@ -7,12 +7,15 @@
     tools.measure_tex('{"tex": "\\\\frac{a}{b}"}')
     tools.resolve()                 # where every object landed: its box in frame units
     tools.check()                   # validate, layout, the picture's checks, coverage
+    tools.ask_planner('{"request": "split", "reason": "..."}')   # back to the planner
 
 None of them draws the picture or runs Manim: they are the front-end's
 stages over the workspace's ir.json, with pipeline.toml's settings and the
 locked header (check_header runs after validate). Problems come back as
 issues in IR terms: code, JSON path, objects, hint. ``submit`` belongs to
-the session (session.py), which compiles and draws a turn.
+the session (session.py), which compiles and draws a turn. ``ask_planner``
+turns the agent's request into a PlannerRequest; the session then ends and
+the frame goes back to the planner (step 22).
 """
 
 import json
@@ -40,8 +43,12 @@ from irpipe.orchestrator.inputs import Inputs
 from irpipe.orchestrator.run import E_INTERNAL
 from irpipe.orchestrator.script import HEADER, SCRIPT
 from irpipe.orchestrator.script import IR as IR_FILE
+from irpipe.schema.request import PlannerRequest
 
-NAMES = ("run_python", "validate", "measure_text", "measure_tex", "resolve", "check", "submit")
+NAMES = (
+    "run_python", "validate", "measure_text", "measure_tex", "resolve", "check", "submit",
+    "ask_planner",
+)  # fmt: skip
 """Every tool the model may call."""
 STDOUT_LINES = 40
 TRACEBACK_LINES = 15
@@ -170,6 +177,29 @@ class Tools:
         except (MissingToolError, AttributeError, ValueError) as error:
             return f"cannot measure: {error}"
         return _size(box.width, box.ascent, box.descent)
+
+    # The way back to the planner
+
+    def ask_planner(self, body: str) -> PlannerRequest | str:
+        """The agent's request to change the brief, or what is wrong with it.
+
+        BODY ``{"request": "shorten" | "split", "reason": "...", "items": [...]}``.
+        """
+        args = _arguments(body, {"request", "reason", "items"}, "request")
+        if isinstance(args, str):
+            return args
+        kind = args["request"]
+        if kind not in ("shorten", "split"):
+            return f'request is "shorten" or "split", not {json.dumps(kind)}'
+        reason = str(args.get("reason", "")).strip()
+        if not reason:
+            return "'reason' is required: say what does not fit, and where"
+        items = args.get("items", [])
+        if not isinstance(items, list) or not all(isinstance(i, str) and i for i in items):
+            return "'items' is a list of the must_show ids or texts that do not fit"
+        return PlannerRequest(
+            frame=self.inputs.brief.id, kind=kind, reason=reason, items=tuple(items)
+        )
 
     # Running the front-end
 

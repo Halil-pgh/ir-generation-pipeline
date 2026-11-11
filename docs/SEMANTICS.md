@@ -222,6 +222,67 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   servers, slash commands, settings files or saved session, our system
   prompt only, in an empty folder with PATH, HOME, USER and the language;
   a conversation of several messages is sent as a transcript.
+- `ask_planner` (BODY `{"request": "shorten" | "split", "reason": ..., "items": [...]}`)
+  ends the session and sends the frame back to the planner; a body that is
+  not such a request is answered with what is wrong, and the session goes
+  on. The best turn's files, if there is a turn, fill the run folder, and
+  `report.json` holds that turn's issues and an `E-REPLAN` issue (origin
+  `infeasible`), so the frame goes to the planner; without a turn the
+  report is STOPPED at `agent`. The request is in `agent/planner_request.json`
+  (schema `planner_request`) and in `session.json`.
+
+## Planner
+
+- `irpipe plan "topic"` asks the planner's model (`[planner]`, through the
+  agent's LLM clients) for one JSON object, `{"lesson_plan": ...,
+  "briefs": [...]}`, alone or in a Markdown fence (the longest fence; else
+  from the first `{` to the last `}`). Other keys are refused.
+- Each answer is written into `planner/answers/<n>/` (the model's text as
+  `answer.md`, `lesson_plan.json` and `<frame id>.brief.json`) and every
+  brief is read as the orchestrator reads it, with that lesson plan: its
+  `E-BRIEF` problems (schema with paths, lesson, font pair, the frame the
+  profile makes) come back to the model, each said once. Then: every frame
+  of the lesson plan has a brief, of the frame's purpose; the lesson has
+  at most `max_frames` frames, and exactly `--frames` when the user asks.
+  A brief whose id is not a name, and two briefs with one id, are problems.
+- An answer with problems goes back with all of them, and nothing of it is
+  kept; the first answer without problems is used, within `max_answers`
+  answers, otherwise the planner fails (exit 2) and its records stay.
+- The used answer is copied into the lesson folder (`lessons/<topic>` by
+  default: the topic's letters and digits, accents taken off):
+  `lesson_plan.json` and `<frame id>.brief.json` beside it. `plan` first
+  removes an earlier lesson plan, its briefs and `planner/`.
+- The user's wishes (`--aspect`, `--platform`, `--lang`, as render-profile
+  changes) are told to the model and laid over its answer's JSON before it
+  is read: over the lesson's render profile, and over the fields a brief's
+  profile changes that would undo them. What the model left out stays out.
+  A wish the project cannot meet (an unknown platform, an aspect out of
+  range) fails before the model is asked.
+- `revise` takes a request (`shorten`, `split` or `fix`) for one frame and
+  sends the lesson plan, that frame's brief and the request. The answer
+  holds the whole lesson plan and only the briefs it changes or adds; the
+  others are kept and read again with the new lesson plan. `shorten` and
+  `fix` keep the frame's id, and `shorten` keeps the frames as they were;
+  the answer must hold the frame's new brief. `split` replaces the frame,
+  in its place, by at least two frames under new ids, the others as they
+  were; the old brief is removed.
+- `irpipe lesson "topic"` plans, then lets the agent draw each frame in
+  the lesson's order into `runs/<frame id>/`. A run that goes to the
+  planner goes back with the agent's request or, without one, a `fix`
+  request listing its open issues (code, message, path, hint); the old
+  run folder is kept as `runs/<frame id>.<n>`, and every frame whose brief
+  changed, or that a split made, is drawn (again). A frame and the frames
+  split from it go back at most `max_returns` times; then the frame stays
+  routed to the planner. A planner that cannot change a brief leaves the
+  frame so, and the lesson goes on. A run that goes to a person stops the
+  lesson; a frame the agent made no picture of (`NO_PICTURE`) does not.
+- `lesson.json` holds the topic, the lesson's id, whether every frame is
+  READY, how it ended, each frame (status, who acts next, turns, returns,
+  cost, run folder; `NOT_DRAWN` when the lesson stopped first), every
+  return (frame, kind, reason, the frames drawn in its place) and the
+  whole cost. `planner/session.json` holds the settings, the wishes and
+  each session (what it was asked, each answer's problems, cost, ending);
+  `planner/transcript.md` every message.
 
 ## IR document
 

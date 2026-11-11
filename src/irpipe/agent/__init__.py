@@ -15,7 +15,7 @@ Module map:
     protocol.py    one <call tool="..."> per message: parse()
     prompt.py      the system prompt, the first message, results
     reference.py   the IR's objects and fields, written from the models
-    tools.py       run_python, validate, measure_text/tex, resolve, check
+    tools.py       run_python, validate, measure_text/tex, resolve, check, ask_planner
     sandbox.py     where build_ir.py runs: bwrap or the jail alone
     jail.py        limits and an audit hook around build_ir.py
     session.py     run_agent(): the loop, turns, the best turn, records

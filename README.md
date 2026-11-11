@@ -107,8 +107,33 @@ limits and the sandbox. The script runs without network and may write only
 in its folder: under bubblewrap where the system allows unprivileged user
 namespaces, otherwise with resource limits and an audit hook. The session's
 records (system prompt, transcript, turns, cost) are in `<run folder>/agent/`.
-Tests use a scripted model; `IRPIPE_LLM=1 make test` also runs the one that
-calls the real model.
+Tests use a scripted model; `IRPIPE_LLM=1 make test` also runs the ones that
+call the real model.
+
+When the brief asks for more than one picture can hold at readable sizes,
+the agent does not squeeze it: its `ask_planner` tool ends the session and
+sends the frame back to the planner (shorten the brief, or split the frame),
+with an E-REPLAN issue in the report and `agent/planner_request.json`.
+
+## Let the planner write a lesson
+
+```bash
+make plan TOPIC="the area between two curves"     # calls the model
+irpipe plan "topic" [--frames N] [--aspect 9:16] [--platform tiktok] [--lang tr] [-o folder]
+irpipe lesson "topic" [same options]               # plan it, then draw every frame
+```
+
+`irpipe plan` hands the topic to the planner: a language model writes the
+lesson plan and a brief per frame into `lessons/<topic>/` (`lesson_plan.json`
+and `<frame>.brief.json`, beside each other, so `irpipe agent` can draw any
+of them). Each answer is read as the orchestrator reads a brief; one with
+problems goes back to the model with them. `--frames`, `--aspect`,
+`--platform` and `--lang` are the user's wishes and win over the planner's
+choice. `irpipe lesson` then lets the agent draw every frame into
+`runs/<frame>/`; a frame sent back to the planner is changed and drawn
+again (at most `max_returns` times), and `lesson.json` sums the lesson up.
+`[planner]` in `pipeline.toml` sets the model (a stronger one than the
+agent's) and the limits; the records are in `lessons/<topic>/planner/`.
 
 ## Code checks
 
@@ -135,7 +160,7 @@ src/irpipe/   the package (layers are added step by step, see the plan)
 tests/        unit, end-to-end and backend conformance tests
 docs/         SEMANTICS.md (behaviour the schemas leave open), spec/
               (JSON Schema of lesson_plan.json, brief.json, ir.json, lir.json, the
-              render profile and report.json)
+              render profile, report.json and planner_request.json)
               and PLAN.md (the team's step-by-step plan, decisions and reports, in Turkish)
 examples/     hand-written inputs and outputs, such as a lir.json; projection/ holds
               the whole chain: lesson_plan.json, brief.json and the ir.json drawn from them;

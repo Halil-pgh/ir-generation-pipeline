@@ -56,6 +56,12 @@ Tools:
 - submit: no BODY. Hands the current build_ir.py in; it must pass validate. The pipeline
   runs it again, compiles and draws the picture and reports back: a submission is a turn.
   The best turn is kept.
+- ask_planner: BODY {"request": "shorten" | "split", "reason": "...", "items": [...]}.
+  Ends the session and sends the frame back to the planner, who changes the brief:
+  "shorten" asks for less (fewer must_show items, shorter texts), "split" for two frames
+  instead of one. "items" names the must_show ids or texts that do not fit. Use it only
+  when the brief cannot be met in this frame at readable sizes, after measuring and
+  checking: never to avoid a warning you can fix.
 
 A good session: run_python with a whole first script; read the result; check; fix with
 run_python; check again; submit when check reports no errors and every warning is fixed or

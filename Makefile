@@ -12,8 +12,10 @@ IR   ?= examples/projection/ir.json
 # The frame `make run` draws: its brief and the agent's script (`make agent` writes its own)
 BRIEF  ?= examples/projection/brief.json
 SCRIPT ?= examples/projection/build_ir.py
+# The topic `make plan` and `make lesson` give the planner: make plan TOPIC="vector projection"
+TOPIC  ?= projecting one vector onto another
 
-.PHONY: venv test lint format typecheck spec check render run agent
+.PHONY: venv test lint format typecheck spec check render run agent plan lesson
 
 venv:            ## create .venv and install the package with dev tools, pango, both backends, sympy
 	python3 -m venv $(VENV)
@@ -46,3 +48,9 @@ run:             ## draw a frame from its brief: make run [BRIEF=brief.json SCRI
 
 agent:           ## let the IR agent draw a frame (calls the model): make agent [BRIEF=brief.json] [OUT=folder]
 	$(BIN)/irpipe agent $(BRIEF) $(if $(OUT),-o $(OUT))
+
+plan:            ## let the planner write a lesson (calls the model): make plan [TOPIC="..."] [OUT=folder]
+	$(BIN)/irpipe plan "$(TOPIC)" $(if $(OUT),-o $(OUT))
+
+lesson:          ## plan a lesson and draw every frame (calls the models): make lesson [TOPIC="..."] [OUT=folder]
+	$(BIN)/irpipe lesson "$(TOPIC)" $(if $(OUT),-o $(OUT))

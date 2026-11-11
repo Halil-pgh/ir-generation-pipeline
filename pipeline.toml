@@ -57,6 +57,18 @@ png = true          # draw frame.png with Manim; false writes only scene.py (nee
 timeout = 300       # seconds Manim may take to draw the picture
 # cache_dir = ""    # where Manim keeps typeset formulas and texts; default ~/.cache/irpipe/manim
 
+[planner]
+# The planner (irpipe plan "topic"): a language model writes the lesson plan and a brief per
+# frame; a frame that does not fit comes back to it (irpipe lesson "topic").
+provider = "claude-cli"         # claude -p, on the team's subscription (decision K9)
+model = "claude-sonnet-5-5"     # a stronger model than the agent's: it writes a whole lesson
+max_answers = 3                 # answers per plan or revision; each is checked, problems go back
+max_frames = 6                  # frames a lesson may have
+max_returns = 2                 # times a lesson sends one frame back to the planner
+# effort = ""                   # how hard the model thinks: "low" ... "max"; "" its default
+# call_timeout = 600            # seconds one answer may take
+# example = "examples/projection"   # the lesson plan and brief the system prompt shows
+
 [agent]
 # The IR agent (irpipe agent brief.json): a language model writes build_ir.py with our tools.
 provider = "claude-cli"         # claude -p, on the team's subscription (decision K9)

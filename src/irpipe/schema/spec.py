@@ -21,6 +21,7 @@ from irpipe.schema.brief import FrameBrief, LessonPlan
 from irpipe.schema.ir import IRDocument
 from irpipe.schema.lir import LIRDocument
 from irpipe.schema.render_profile import RenderProfile
+from irpipe.schema.request import PlannerRequest
 
 JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
@@ -31,6 +32,7 @@ CONTRACTS: dict[str, type[BaseModel]] = {
     "lir": LIRDocument,
     "render_profile": RenderProfile,
     "report": Report,
+    "planner_request": PlannerRequest,
 }
 """File stem -> model. ``ir`` is written as ``ir.schema.json``, and so on."""
 

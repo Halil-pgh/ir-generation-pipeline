@@ -14,14 +14,17 @@
 4. The session ends when a turn is READY, when an open issue is not the
    agent's to fix (it goes to a person or the planner), after
    ``max_turns`` turns, when a turn does no better than the best before it
-   (no progress), or when the messages run out (the last script is then
-   compiled as a turn, if it was not submitted).
+   (no progress), when the agent asks the planner to shorten the brief or
+   split the frame (``ask_planner``), or when the messages run out (the last
+   script is then compiled as a turn, if it was not submitted).
 5. The best turn (READY first, then the fewest open errors, then warnings,
    then the later one) is copied into the run folder.
 
 The run folder then holds what the orchestrator writes, and ``agent/``:
 system_prompt.md, transcript.md (every message), session.json (settings,
-turns, choice, cost) and the turns.
+turns, choice, cost) and the turns. When the agent asked the planner, the
+report also holds an E-REPLAN issue (origin infeasible: it routes to the
+planner), and ``agent/planner_request.json`` the request.
 """
 
 import json
@@ -36,13 +39,14 @@ from irpipe.agent.protocol import parse
 from irpipe.agent.sandbox import Sandbox, sandbox_for
 from irpipe.agent.settings import AgentSettings
 from irpipe.agent.tools import NAMES, Tools, describe
-from irpipe.core import Issue, Severity, load_config
+from irpipe.core import ISSUE_CODES, Issue, IssueCode, Origin, Report, Severity, load_config
 from irpipe.core.plugins import load_plugins
 from irpipe.orchestrator.environment import environment_issues
 from irpipe.orchestrator.inputs import read_inputs
-from irpipe.orchestrator.routing import Destination
+from irpipe.orchestrator.routing import Destination, route
 from irpipe.orchestrator.run import OUTPUTS, Outcome, orchestrate
 from irpipe.orchestrator.script import SCRIPT, run_script
+from irpipe.schema.request import PlannerRequest
 
 AGENT = "agent"
 STUB = "# The agent did not run: the brief or the environment stopped the run first.\n"
@@ -50,6 +54,16 @@ NO_IR = (
     "there is no ir.json: the last run of build_ir.py did not write one; fix the script "
     "with run_python"
 )
+
+
+E_REPLAN = ISSUE_CODES.register(
+    IssueCode(
+        "E-REPLAN",
+        Origin.INFEASIBLE,
+        "the agent sends the frame back to the planner: shorten its brief or split it in two",
+    )
+)
+REQUEST_FILE = "planner_request.json"
 
 
 class AgentError(RuntimeError):
@@ -84,6 +98,8 @@ class AgentResult:
     cost_usd: float = 0.0
     ended: str = ""
     """Why the session ended, in words."""
+    request: PlannerRequest | None = None
+    """What the agent asked the planner for, when it sent the frame back."""
 
 
 def run_agent(
@@ -144,6 +160,7 @@ class _Session:
         self.calls = 0
         self.cost = 0.0
         self.ended = ""
+        self.request: PlannerRequest | None = None
         self.transcript = records / "transcript.md"
 
     def talk(self, system: str, first: str) -> None:
@@ -185,6 +202,8 @@ class _Session:
             return tool, f"there is no tool {tool!r}; the tools: {', '.join(NAMES)}"
         if tool == "submit":
             return tool, note + self._submit()
+        if tool == "ask_planner":
+            return tool, note + self._ask_planner(body)
         if tool == "run_python":
             return tool, note + self.tools.run_python(body)
         if tool in ("measure_text", "measure_tex"):
@@ -220,7 +239,17 @@ class _Session:
             self.ended = f"turn {turn.number} did no better than turn {best.number} (no progress)"
         return said
 
+    def _ask_planner(self, body: str) -> str:
+        found = self.tools.ask_planner(body)
+        if isinstance(found, str):
+            return found
+        self.request = found
+        self.ended = f"the agent asked the planner to {found.kind} the brief"
+        return "sent back to the planner"
+
     def finish(self, folder: Path) -> AgentResult:
+        if self.request is not None:
+            return self._back_to_planner(folder, self.request)
         if not self.turns:
             self._record(None)
             raise AgentError(self.ended or "the agent wrote no build_ir.py")
@@ -233,6 +262,33 @@ class _Session:
         outcome = Outcome(folder, best.outcome.report, best.outcome.route, files)
         self._record(best.number)
         return AgentResult(outcome, self.turns, best.number, self.calls, self.cost, self.ended)
+
+    def _back_to_planner(self, folder: Path, request: PlannerRequest) -> AgentResult:
+        """The best turn's files, if any, and a report that sends the frame to the planner."""
+        best = min(self.turns, key=Turn.rank) if self.turns else None
+        for name in OUTPUTS:
+            (folder / name).unlink(missing_ok=True)
+        files = []
+        for path in best.outcome.files if best else ():
+            if path.name != "report.json":
+                files.append(Path(shutil.copy2(path, folder / path.name)))
+        asked = "shorten its brief" if request.kind == "shorten" else "split it in two"
+        what = f" ({', '.join(request.items)})" if request.items else ""
+        issue = E_REPLAN(
+            f"the agent asks the planner to {asked}: {request.reason}{what}",
+            hint="the planner changes the brief; the agent then draws the frame again",
+        )
+        earlier = list(best.outcome.report.issues) if best else []
+        stopped = best.outcome.report.stopped_at if best else AGENT
+        report = Report.build([*earlier, issue], stopped_at=stopped)
+        text = report.model_dump_json(indent=2, exclude_none=True)
+        (folder / "report.json").write_text(text + "\n", encoding="utf-8")
+        request_text = request.model_dump_json(indent=2)
+        (self.records / REQUEST_FILE).write_text(request_text + "\n", encoding="utf-8")
+        outcome = Outcome(folder, report, route(report), (*files, folder / "report.json"))
+        chosen = best.number if best else None
+        self._record(chosen)
+        return AgentResult(outcome, self.turns, chosen, self.calls, self.cost, self.ended, request)
 
     def _record(self, chosen: int | None) -> None:
         record = {
@@ -248,6 +304,8 @@ class _Session:
                 for t in self.turns
             ],
         }  # fmt: skip
+        if self.request is not None:
+            record["planner_request"] = self.request.model_dump()
         text = json.dumps(record, indent=2, ensure_ascii=False)
         (self.records / "session.json").write_text(text + "\n", encoding="utf-8")
 

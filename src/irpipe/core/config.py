@@ -13,6 +13,9 @@ typo such as ``stagse`` fails loudly instead of being silently ignored.
 
     [agent]                             # the IR agent's settings (irpipe/agent, step 21)
     model = "claude-haiku-5-5"
+
+    [planner]                           # the planner's settings (irpipe/planner, step 22)
+    model = "claude-sonnet-5-5"
 """
 
 import tomllib
@@ -47,6 +50,9 @@ class PipelineConfig(BaseModel):
 
     agent: dict[str, Any] = Field(default_factory=dict)
     """The IR agent's settings, ``[agent]``; the agent checks them itself (irpipe/agent)."""
+
+    planner: dict[str, Any] = Field(default_factory=dict)
+    """The planner's settings, ``[planner]``; the planner checks them itself (irpipe/planner)."""
 
 
 def load_config(path: Path) -> PipelineConfig:

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "planner_request.json: one frame, what should change and why.",
+  "properties": {
+    "version": {
+      "const": "planner-request/1.0",
+      "default": "planner-request/1.0",
+      "title": "Version",
+      "type": "string"
+    },
+    "frame": {
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$",
+      "title": "Frame",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "shorten",
+        "split",
+        "fix"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    },
+    "items": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "issues": {
+      "default": [],
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Issues",
+      "type": "array"
+    }
+  },
+  "required": [
+    "frame",
+    "kind",
+    "reason"
+  ],
+  "title": "PlannerRequest",
+  "type": "object"
+}

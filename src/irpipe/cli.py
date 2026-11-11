@@ -4,6 +4,8 @@
     irpipe render my/ir.json -o out/ --config pipeline.toml
     irpipe run examples/projection/brief.json examples/projection/build_ir.py
     irpipe agent examples/projection/brief.json        # the agent writes build_ir.py
+    irpipe plan "vector projection" --frames 3         # the planner: into lessons/<topic>/
+    irpipe lesson "vector projection" --aspect 9:16    # plan, then draw every frame
 
 ``render`` runs the stages ``pipeline.toml`` lists on an IR written by hand.
 Next to the backend's files it writes lir.json and report.json, then
@@ -19,13 +21,21 @@ with the model pipeline.toml's ``[agent]`` names; each submission is drawn,
 and the best one fills the run folder. It prints every turn, then the
 chosen turn's report.
 
+``plan`` lets the planner (irpipe/planner) turn a topic into a lesson plan
+and a brief per frame, in lessons/<topic> by default; ``lesson`` then has
+the agent draw every frame, sends a frame that does not fit back to the
+planner, and writes lesson.json. ``--frames``, ``--aspect``, ``--platform``
+and ``--lang`` are the user's wishes: they win over the planner's choice.
+
 The exit status is 0 when the picture is READY, 1 when it is not, 2 when
 the command itself could not run.
 """
 
 import argparse
 import json
+import re
 import sys
+import unicodedata
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -61,8 +71,26 @@ def main(argv: list[str] | None = None) -> int:
     agent.add_argument(
         "--config", type=Path, default=Path("pipeline.toml"), help="pipeline file to run"
     )
+    for name, about in (
+        ("plan", "let the planner write a lesson plan and its briefs from a topic"),
+        ("lesson", "plan a lesson from a topic, then let the agent draw every frame"),
+    ):
+        command = commands.add_parser(name, help=about)
+        command.add_argument("topic", help="what the lesson is about, in words")
+        command.add_argument(
+            "-o", "--out", type=Path, help="lesson folder (default: lessons/<topic>)"
+        )
+        command.add_argument("--frames", type=int, help="exactly this many frames")
+        command.add_argument("--aspect", help="the frames' aspect, such as 16:9 or 9:16")
+        command.add_argument("--platform", help="where the frames are shown, such as tiktok")
+        command.add_argument("--lang", help="the language of the texts, such as en or tr")
+        command.add_argument(
+            "--config", type=Path, default=Path("pipeline.toml"), help="pipeline file to run"
+        )
     args = parser.parse_args(argv)
     try:
+        if args.command in ("plan", "lesson"):
+            return plan_command(args)
         if args.command == "run":
             return run_brief(args.brief, args.script, args.out, args.lesson, args.config)
         if args.command == "agent":
@@ -144,6 +172,57 @@ def run_agent_command(brief: Path, out: Path | None, lesson: Path | None, config
     _print(result.outcome.report, result.outcome.files)
     print(f"next: {result.outcome.route.describe()}")
     return 0 if result.outcome.report.ready else 1
+
+
+def plan_command(args: argparse.Namespace) -> int:
+    from pydantic import ValidationError
+
+    from irpipe.agent import LLMError
+    from irpipe.planner import PlannerError, Wishes, plan, run_lesson
+
+    try:
+        wishes = Wishes(
+            frames=args.frames, aspect=args.aspect, platform=args.platform, lang=args.lang
+        )
+    except ValidationError as exc:
+        problems = "; ".join(error["msg"].removeprefix("Value error, ") for error in exc.errors())
+        print(f"irpipe: {problems}", file=sys.stderr)
+        return 2
+    folder = args.out or Path("lessons") / slug(args.topic)
+    try:
+        if args.command == "plan":
+            planned = plan(args.topic, folder, wishes=wishes, config_path=args.config)
+        else:
+            lesson = run_lesson(args.topic, folder, wishes=wishes, config_path=args.config)
+    except (PlannerError, LLMError) as exc:
+        print(f"irpipe: the planner made no lesson: {exc}", file=sys.stderr)
+        return 2
+    if args.command == "plan":
+        cost = f", ${planned.cost_usd:.4f}" if planned.cost_usd else ""
+        print(f"lesson {planned.lesson.id!r}: {_count(len(planned.briefs), 'frame')}"
+              f" ({_count(planned.answers, 'answer')}{cost})")  # fmt: skip
+        for outline in planned.lesson.frames:
+            print(f"  {outline.id} ({outline.purpose}): {outline.summary}")
+        for path in [folder / "lesson_plan.json", *planned.briefs.values()]:
+            print(f"  -> {path}")
+        return 0
+    for back in lesson.returns:
+        print(f"back to the planner: {back.frame} ({back.kind}) -> {', '.join(back.became)}")
+    for frame in lesson.frames:
+        status = frame.status.replace("_", " ")
+        where = f" -> {folder / frame.folder}" if frame.folder else ""
+        print(f"{frame.frame}: {status}; {frame.next}{where}")
+    cost = f" (${lesson.cost_usd:.4f})" if lesson.cost_usd else ""
+    print(f"{lesson.ended}{cost} -> {folder / 'lesson.json'}")
+    return 0 if lesson.ready else 1
+
+
+def slug(topic: str) -> str:
+    """A folder name for a topic: its letters and digits, without accents, joined by _."""
+    dotless = topic.replace("\u0131", "i")  # the Turkish dotless i has no accent to take off
+    plain = unicodedata.normalize("NFKD", dotless).encode("ascii", "ignore")
+    words = re.findall(r"[a-z0-9]+", plain.decode().lower())
+    return "_".join(words)[:48].strip("_") or "lesson"
 
 
 def _count(number: int, word: str) -> str:

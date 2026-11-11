@@ -181,7 +181,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Tamam |
 | 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Tamam |
 | 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Tamam |
-| 22 | F6 | Planner + geri dönüş yolu | planner/ | Konu promptundan brief üretilir; sığmayan brief planner'a döner | Bekliyor |
+| 22 | F6 | Planner + geri dönüş yolu | planner/ | Konu promptundan brief üretilir; sığmayan brief planner'a döner | Tamam |
 | 23 | F6 | Eval + regresyon | eval matrisi; kendi `examples/` örneklerimizle regresyon (K27) | `examples/` altındaki her örnek her değişiklikte derlenir; READY sayısı ve resim farkları raporlanır | Bekliyor |
 
 ## Varsayımlar ve açık sorular
@@ -382,6 +382,14 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K164 | Kayıtlar run klasörünün `agent/` alt klasöründe: system_prompt.md, transcript.md (her mesaj), session.json (ayarlar, turlar, seçilen tur, mesaj sayısı, maliyet), turns/<n>/, work/ (ajanın çalışma klasörü) | Bir ajan koşusu sonradan okunabilsin ve tekrarlanabilsin | Onaylandı |
 | K165 | Testler senaryolu bir LLM istemcisiyle; gerçek modeli çağıran test `llm` işaretli ve yalnızca `IRPIPE_LLM=1` ile koşar | Testler kota harcamadan ve ağsız koşar | Onaylandı |
 | K166 | Ajan için elle yazılmış yeni bir brief: `examples/area_between/brief.json` (iki eğri arasındaki alan: eksenler, grafikler, kesişimler, taralı bölge, integral) | Örnek betiği olmayan bir kare; 23. adımın değerlendirmesine de girer | Onaylandı |
+| K167 | Planner paketi `irpipe/planner/` (settings, wishes, prompt, answer, session, lesson); komutlar `irpipe plan "konu"` ve `irpipe lesson "konu"`, Makefile'da `make plan` ve `make lesson` (`TOPIC=...`) | Analiz §1: planner konudan ders planı ve brief'ler yazar. Ajan paketinin kalıbı: ayarlar, prompt, oturum, kayıtlar | Onaylandı |
+| K168 | Planner modele ajanın LLM istemcileriyle ulaşır (K10, `LLM_CLIENTS`; istemciye planner'ın provider, model, effort ve call_timeout'u verilir). Ayarlar `[planner]` tablosunda: provider, model, effort, call_timeout (600 s), max_answers (3), max_frames (6), max_returns (2), example. Varsayılan model `claude-sonnet-5-5`. `PipelineConfig`'e isteğe bağlı `planner` alanı eklendi | Analiz, soru 8: planner için daha güçlü model, ajan Haiku'da kalabilir; karar 23. adımın değerlendirmesinde. Config alanı K161'deki gibi | Onaylandı |
+| K169 | Planner'ın cevabı tek JSON nesnesi: `{"lesson_plan": ..., "briefs": [...]}` (Markdown çiti içinde de olabilir). Ders klasörü `lessons/<konu>/`: `lesson_plan.json` ve yanında `<kare id>.brief.json`. Kayıtlar `planner/` altında: system_prompt.md, transcript.md, answers/<n>/ (cevap ve taslak dosyaları), session.json | Orchestrator ders planını brief'in yanında bulur; böylece `irpipe agent lessons/x/<kare>.brief.json` doğrudan çalışır | Onaylandı |
+| K170 | Her cevap orchestrator'ın okuduğu gibi okunur (`read_inputs`: şema, ders, font çifti, header). Üstüne şemanın söylemediği denetimler: her karenin bir brief'i var ve amacı karenin amacı; kare sayısı en fazla max_frames (kullanıcı istediyse tam o kadar); revizyon isteneni yapıyor. Sorunlu cevap sorunlarıyla birlikte geri gider (en fazla max_answers cevap); sorunsuz ilk cevap ders klasörüne kopyalanır | Planner'ın verdiği brief çizilebilir olmalı. E-BRIEF'i planner'ın kendi döngüsünde düzeltmek, ajan oturumu açıp geri dönmekten ucuz. Canlı koşuda bu döngü iki yanlış `focus` id'sini düzeltti | Onaylandı |
+| K171 | Kullanıcının açık istekleri (`--frames`, `--aspect`, `--platform`, `--lang`) planner'a söylenir ve cevabın JSON'unun üstüne serilir: ders profiline ve bir brief'in bunları bozacak profil değişikliklerine. Modelin yazmadığı alan eklenmez. Proje katmanı şimdilik yok | brief.py'deki öncelik sırası: kullanıcı, proje, planner | Onaylandı |
+| K172 | Geri dönüş isteği `PlannerRequest` (`planner-request/1.0`: frame, kind = shorten, split ya da fix, reason, items, issues; spec'te `planner_request.schema.json`). Ajanın yeni aracı `ask_planner` oturumu bitirir. Rapora `E-REPLAN` eklenir (köken infeasible, yani planner'a gider), en iyi turun dosyaları kalır, istek `agent/planner_request.json`'a yazılır. Ajan dosyalarına yalnızca ekleme yapıldı | Analiz §1 "Planner'a geri dönüş yolu": yapılandırılmış istek, "metni kısalt" ya da "iki resme böl". Yönlendirme 19. adımın köken kuralıyla | Onaylandı |
+| K173 | Revizyon: planner'a ders planı, karenin brief'i ve istek gider. Cevap bütün ders planını ve yalnızca değişen ya da eklenen brief'leri taşır; diğer brief'ler korunur. `shorten`: kare id'si ve kare listesi aynı kalır, yeni brief zorunlu. `split`: kare, kendi yerinde yeni id'li en az iki kareye bölünür; diğer kareler yerinde kalır, eski brief silinir. `fix`: kare id'si kalır, yeni brief zorunlu | Değişiklik sınırlı ve denetlenebilir olsun; çizilmiş kareler boşuna yeniden çizilmesin | Onaylandı |
+| K174 | Ders döngüsü (`run_lesson`): planlanır, sonra her kare sırayla ajana çizdirilir (`runs/<kare>/`). Planner'a giden koşu ajanın isteğiyle döner; istek yoksa açık sorunlardan bir `fix` isteği kurulur (E-BRIEF). Eski koşu `runs/<kare>.<n>` olarak saklanır; brief'i değişen ya da bölünmeyle doğan kareler (yeniden) çizilir. Bir kare, ondan bölünenlerle birlikte, en fazla max_returns kez döner. Bir kişiye giden koşu dersi durdurur; resim çıkmayan kare durdurmaz. Özet `lesson.json`'da | Analiz §1'in akışı: brief, ajan, sığmazsa planner, tekrar ajan. Sınır sonsuz döngüyü önler | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -430,6 +438,108 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 22 — Planner ve geri dönüş yolu · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı:
+
+- **Brief üretimi.** Konu promptundan brief'ler üretiliyor; gerçek modelle (`claude -p`, Sonnet 5.5) iki koşu yapıldı.
+- **Geri dönüş.** Sığmayan brief planner'a dönüyor. Ajanın yeni `ask_planner` aracı ve ders döngüsü bunu sağlıyor; dönüş yolu gerçek ajanla, senaryolu modellerle test edildi.
+- **Testler.** `make check` temiz: 1070 test geçti (35'i yeni). 2 test atlandı; ikisi de gerçek modeli çağırıyor ve `IRPIPE_LLM=1` ister. 4 bilinen ayrışma; mypy strict ve ruff temiz.
+
+Canlı koşular:
+
+| Komut | Sonuç |
+| --- | --- |
+| `irpipe plan "projecting one vector onto another" --frames 3` | 3 kare (introduce, example, summary), ilk cevap kullanıldı, 0.059 $, 15 s. Üç brief de orchestrator'ın okumasından geçti. Konu sistem prompt'undaki örnekle aynı olduğu için hedefler ve yanılgılar neredeyse aynen örnekten geldi |
+| `irpipe plan "iki eğri arasındaki alan" --lang tr --aspect 9:16 --platform tiktok` | 5 kare, metinler Türkçe, profil 9:16, platform tiktok. İlk cevapta iki brief'in `focus`'u `must_show`'da olmayan bir id gösteriyordu; sorunlar geri gitti, ikinci cevap temizdi. Toplam 0.109 $. Brief'lerdeki sayılar doğru: y = x + 2 ile y = x² arasında, −1'den 2'ye alan 9/2; y = x ile y = x³ için düz integral 0, gerçek alan 1/2 |
+
+**Nasıl çalışıyor.**
+
+1. `irpipe plan "konu"` planner'ın sistem prompt'unu kurar. İçinde rol, iyi bir ders ve iyi bir brief'in kuralları, cevabın biçimi ve projenin sundukları var: oranlar, platformlar, tip ölçekleri, font çifti. Ders planı ile brief'in JSON Schema'ları ve örnek olarak `examples/projection`'ın ders planı ve brief'i de ekleniyor. İlk mesaj konu ve kullanıcının istekleri.
+2. Model tek bir JSON nesnesiyle cevap verir: `{"lesson_plan": …, "briefs": […]}`. Cevap `planner/answers/<n>/`'e taslak olarak yazılır ve iki kez denetlenir:
+   - Her brief orchestrator'ın okuduğu gibi okunur (`read_inputs`).
+   - Şemanın söylemediği kurallar denetlenir: her karenin brief'i var mı, amacı karenin amacıyla aynı mı, kare sayısı uygun mu.
+
+   Sorunlu cevap sorunlarıyla geri gider; en fazla 3 cevap. Sorunsuz ilk cevap ders klasörüne kopyalanır: `lesson_plan.json` ve yanında `<kare>.brief.json`.
+3. Ajan bir brief'i okunaklı boyutlarda çizemeyeceğini görürse `ask_planner` çağırır: `{"request": "shorten" | "split", "reason": …, "items": […]}`. Oturum biter. Rapora `E-REPLAN` eklenir; kökeni infeasible olduğu için kare planner'a yönlenir. İstek `agent/planner_request.json`'a yazılır.
+4. `irpipe lesson "konu"` önce planlar, sonra her kareyi sırayla ajana çizdirir (`runs/<kare>/`). Planner'a giden bir kare `revise` ile geri döner:
+   - Planner'a ders planı, brief ve istek gider.
+   - `shorten` aynı kareyi kısaltır; `split` kareyi yerinde iki yeni kareye böler; `fix` açık sorunları düzeltir.
+   - Eski koşu `runs/<kare>.<n>` olarak saklanır ve değişen kareler yeniden çizilir.
+   - Bir kare en fazla 2 kez döner. Bir kişiye giden kare (eksik araç, derleyici hatası) dersi durdurur.
+   - Özet `lesson.json`'a yazılır.
+
+```
+$ irpipe plan "projecting one vector onto another" --frames 3 -o lessons/projection
+lesson 'vector_projection': 3 frames (1 answer, $0.0588)
+  shadow_idea (introduce): a and b from one point, a's shadow on the line of b with a dashed drop
+  compute (example): a=(3,4), b=(5,0): the formula gives projection (3,0)
+  longer_shadow (summary): the shadow can be longer than b; the formula in short
+  -> lessons/projection/lesson_plan.json
+  -> lessons/projection/shadow_idea.brief.json …
+```
+
+**Üretilen dosyalar.** Yeni dosyalar (hepsi Dosya kaydı'nda):
+
+- `src/irpipe/planner/` altında 7 dosya;
+- `src/irpipe/schema/request.py`;
+- `docs/spec/planner_request.schema.json`;
+- `tests/planner/` altında 4 dosya;
+- `tests/agent/test_ask_planner.py`.
+
+Önceki dosyalara yalnızca ekleme yapıldı; mevcut davranış ve testler aynı:
+
+- `agent/tools.py`: `ask_planner` aracı, `NAMES`'e eklendi.
+- `agent/prompt.py`: aracın tarifi.
+- `agent/session.py`: `E-REPLAN`, isteğin işlenmesi, `AgentResult.request`.
+- `agent/__init__.py`: docstring.
+- `core/config.py`: isteğe bağlı `[planner]` tablosu.
+- `schema/spec.py`: `planner_request`.
+- `cli.py`: `plan` ve `lesson` komutları.
+- `pipeline.toml`: `[planner]` tablosu. `[agent]`'ın önünde duruyor, çünkü ajan testlerinin fixture'ı `example`'ı dosyanın sonuna ekliyor.
+- `Makefile`: `make plan` ve `make lesson`.
+- `.gitignore`: `lessons/`.
+- README: "Let the planner write a lesson" bölümü.
+- `SEMANTICS.md`: Agent bölümüne `ask_planner`, yeni Planner bölümü.
+
+**Plandan sapmalar.**
+
+- Önceliğin "proje" katmanı (kullanıcı > proje > planner) yok; yalnızca kullanıcının istekleri planner'ın seçiminin üstüne seriliyor (K171).
+- Tek başına bir `irpipe revise` komutu yok. Geri dönüş `irpipe lesson`'ın içinde; `revise()` Python'dan çağrılabilir.
+- Planner metni ölçmüyor. Sığma, prompt'taki kurallarla (2–6 `must_show`, kısa metin, en fazla bir formül) ve ajanın geri dönüşüyle sağlanıyor.
+
+**Bulunan sorunlar.** Önceki adımlarda yeni bir hata yok. Dosya kaydı'nda iki satır eskimişti ve 22 ile birlikte düzeltildi:
+
+- `core/config.py` ve `cli.py` satırlarının adım sütununda 21 yoktu.
+- `tests/schema/test_spec.py`'nin test sayısı 13 yazıyordu, 17'ydi; şimdi 19.
+
+**Varsayımlar.**
+
+- Planner bütün dersi tek cevapta yazar; bir cevap için 600 s.
+- `fix` isteği yalnızca ajanın isteği yokken ve koşu planner'a giderken kurulur. Planner'ın kendi döngüsü brief'leri `read_inputs`'tan geçirdiği için ders döngüsünde E-BRIEF görmek nadir; örneğin ortam farkında olabilir.
+- Bölünmeyle doğan kareler dönüş sayısını ebeveynden devralır.
+- Revizyon cevabı başka karelerin brief'lerini de değiştirebilir (ör. özet karesi). Brief'i değişen her kare yeniden çizilir.
+- Planner'ın kendi çözemediği bir dönüşte (cevaplar hep sorunlu) kare olduğu gibi kalır ve ders sürer.
+
+**Kararlar.** K167–K174 (Karar günlüğü).
+
+**Nasıl denenir.**
+
+- Planlama (modeli çağırır): `make plan TOPIC="iki eğri arasındaki alan"` ya da `irpipe plan "konu" --frames 3 --lang tr --aspect 9:16`.
+- Planlama ve çizim: `irpipe lesson "konu"`. Planner ve ajan modelleri çağrılır; varsayılan backend Manim olduğu için yavaş.
+- Kareyi tek başına çizmek: `irpipe agent lessons/<konu>/<kare>.brief.json`.
+- Modelsiz testler: `.venv/bin/pytest tests/planner tests/agent/test_ask_planner.py`.
+- Gerçek modelle: `IRPIPE_LLM=1 .venv/bin/pytest tests/planner -k real_model`.
+
+**Açık kalanlar.**
+
+- `irpipe lesson` gerçek modellerle uçtan uca koşulmadı (planner + ajan + geri dönüş). Maliyeti ve süresi kare başına bir ajan oturumu ile Manim çizimi kadar; ister misiniz?
+- Planner için Sonnet ile Haiku karşılaştırması 23. adımın değerlendirmesinde.
+- Önceliğin proje katmanı yok.
+- Planner'a bir ölçüm aracı vermek: metnin genişliği.
+
+Commit edildi.
 
 ### Adım 21 — IR ajanı · 11 Kasım 2026
 
@@ -1408,7 +1518,7 @@ make check    # lint + mypy + testler
 | `src/irpipe/core/pipeline.py` | 1, 2 | Zinciri kurulurken doğrular ve sırayla çalıştırır; çıktısını yazamayıp hata bildiren aşamada durur | `Pipeline.build(…)`, `.from_config(…)`, `.run(inputs)`; `RunResult.get(key)`, `.issues`, `.stopped_at` |
 | `src/irpipe/core/registry.py` | 1, 2 | Tüm eklenti türlerinin (aşama, issue kodu, kontrol, backend…) ortak kayıt kalıbı; yazım hatasında en yakın adı önerir | `Registry(kind, key, check)`, `.register`, `.get`, `.closest`, `.names` |
 | `src/irpipe/core/plugins.py` | 1 | Eklenti paketlerindeki her modülü import eder; böylece yeni dosya kendiliğinden kaydolur | `load_plugins(packages)` |
-| `src/irpipe/core/config.py` | 1 | `pipeline.toml`'u okur ve doğrular; bilinmeyen anahtarı reddeder | `load_config(path)`, `PipelineConfig` |
+| `src/irpipe/core/config.py` | 1, 21, 22 | `pipeline.toml`'u okur ve doğrular; bilinmeyen anahtarı reddeder. `[agent]` ve `[planner]` tablolarını sahipleri kendileri denetler | `load_config(path)`, `PipelineConfig` (`pipeline`, `options`, `agent`, `planner`) |
 | `src/irpipe/core/errors.py` | 1 | Pipeline'ın kendisi yanlış kurulduğunda ya da yazıldığında fırlatılan hataların tek listesi; resimdeki sorunlar burada değil | `PipelineError` ve alt sınıfları |
 | `src/irpipe/core/issues.py` | 2 | Resimdeki sorunların tanımı: `Issue` modeli ve her kodun bir kez tanımlandığı `ISSUE_CODES` kaydı; kodun harfi önemini, kökeni nereye gideceğini belirler | `IssueCode(code, origin, summary, allowable)`, `E_X(message, path=, objects=, hint=)`, `Issue`, `Severity`, `Origin`, `ISSUE_CODES` |
 | `src/irpipe/core/allow.py` | 2 | IR'nin bir sorunu gerekçesiyle bilinçli kabul etmesi: hangi girdinin hangi sorunu kabul ettiği ve bozuk girdilerin `E-ALLOW` ile bildirilmesi | `Allow(code, objects, reason)`, `apply_allows(…)`, `check_allows(…)`, `covers_by_name` |
@@ -1439,9 +1549,9 @@ make check    # lint + mypy + testler
 | `tests/schema/ir/test_objects.py` | 4, 6, 10, 11, 12 | Her nesne tipinin kabul ettiği ve reddettiği girdiler; örnek bir gövde (vektör izdüşümü) | pytest testi (79) |
 | `tests/schema/test_color.py` | 4 | Renk yazımları, alfa yasağı, karma renk, tema arka planı | pytest testi (10) |
 | `src/irpipe/schema/lir.py` | 5, 6 | Backend'lerin çizdiği çözülmüş liste; IR'den bağımsız, her IR nesnesi id'li bir grup, sıra ve renkler kesinleşmiş | `LIRDocument, LIRCanvas, Group, PathItem, TextItem, MathItem, ImageItem, walk_groups()` |
-| `src/irpipe/schema/spec.py` | 5, 18 | Sözleşmelerin JSON Schema'larını modellerden üretip docs/spec/'e yazar; make spec bunu çağırır | `CONTRACTS, render(model), write_all(dir), python -m irpipe.schema.spec DIR` |
+| `src/irpipe/schema/spec.py` | 5, 18, 22 | Sözleşmelerin JSON Schema'larını modellerden üretip docs/spec/'e yazar; make spec bunu çağırır | `CONTRACTS, render(model), write_all(dir), python -m irpipe.schema.spec DIR` |
 | `tests/schema/test_lir.py` | 5, 6 | Elle yazılmış lir.json; LIR kuralları (hex renk, tekil id, z sırası, yalnız grup) ve IR'den bağımsızlık | pytest testi (19) |
-| `tests/schema/test_spec.py` | 5 | Yayımlanan şemalar güncel mi, geçerli JSON Schema mı, gerçek örnekleri kabul ediyor mu | pytest testi (13) |
+| `tests/schema/test_spec.py` | 5, 18, 22 | Yayımlanan şemalar güncel mi, geçerli JSON Schema mı, gerçek örnekleri kabul ediyor mu | pytest testi (19) |
 | `src/irpipe/artifacts.py` | 6, 7, 8, 9, 10, 11, 13 | Aşamaların birbirine verdiği verilerin adları ve tipleri; aşamalar birbirini değil bunları import eder | `IR_SOURCE, IR, IR_NORMAL, MEASURED, IR_PLACED, LIR, CHECKED` |
 | `src/irpipe/metrics/__init__.py` | 6, 10, 13 | Metin ölçümü paketinin yüzü; yerleşik "fixed" sağlayıcıyı her zaman yükler | `METRICS, TextMetrics, TextBox` |
 | `src/irpipe/metrics/base.py` | 6, 10 | Metin ölçümünün arayüzü ve sağlayıcı kaydı; yeni bir font motoru tek dosya | `TextMetrics.text(…)`, `.math(…)`, `.missing_fonts(…)`; `TextBox`, `MathBox` |
@@ -1466,7 +1576,7 @@ make check    # lint + mypy + testler
 | `src/irpipe/backends/svg/__init__.py` | 7 | SVG referans backend'i: frame.svg ve frame.png yazar; ayarı png | `SvgBackend ("svg"), SvgOptions` |
 | `src/irpipe/backends/svg/writer.py` | 7, 14 | LIR'i saf Python'la SVG metnine çevirir: birimden piksele, matrisler, boya, metin, formül ve görsel | `to_svg(lir), Frame, path_data(), num()` |
 | `src/irpipe/backends/svg/raster.py` | 7 | SVG'yi cairosvg ile PNG'ye çevirir; cairosvg yalnızca burada ve yalnızca PNG istenince yüklenir | `svg_to_png(svg, path, size)` |
-| `src/irpipe/cli.py` | 7, 19 | irpipe komutu: bir ir.json'u pipeline.toml'daki aşamalardan geçirip resmi, lir.json'u ve raporu yazar | `irpipe render IR [-o OUT] [--config FILE]` |
+| `src/irpipe/cli.py` | 7, 19, 21, 22 | irpipe komutu: bir ir.json'u pipeline.toml'daki aşamalardan geçirip resmi, lir.json'u ve raporu yazar; brief'ten kare çizer (orchestrator, ajan); konudan ders planlar ve çizer (planner) | `irpipe render IR`, `irpipe run BRIEF SCRIPT`, `irpipe agent BRIEF`, `irpipe plan TOPIC`, `irpipe lesson TOPIC` (`--frames`, `--aspect`, `--platform`, `--lang`, `-o`, `--config`) |
 | `tests/backends/conftest.py` | 7 | Backend testlerinin ortak LIR kurucuları | `fixture: make_lir, group, line` |
 | `tests/backends/test_base.py` | 7, 14 | Özellik tespiti, backend adı geçmeyen E-CAPABILITY, ayar doğrulaması, kayıt | pytest testi (6) |
 | `tests/backends/test_svg.py` | 7, 14 | Piksel dönüşümü, gruplar, boya, 4K ölçeği, metin, formül, matrisler, PNG ve cairosvg yokken davranış | pytest testi (17) |
@@ -1593,20 +1703,33 @@ make check    # lint + mypy + testler
 | `tests/irkit/test_picture.py` | 20 | Builder'lar, tutamaçlar, tam ve float alanlar, satırında yakalanan hatalar, validate, header'ın korunması, ölçüm | pytest testi (9) |
 | `tests/irkit/test_script_errors.py` | 20 | Betikteki her tür hata E-SCRIPT mesajında betiğin satırıyla dönüyor; yalnızca betiğin hataları SDK'nın satırlarını kaybediyor | pytest testi (9) |
 | `tests/irkit/test_example.py` | 20 | Örnek betik orchestrator'dan READY çıkıyor; tam sayılar ve ölçülen kutu ir.json'da; Manim'le de | pytest testi (2) |
-| `src/irpipe/agent/__init__.py` | 21 | IR ajanı paketi; docstring'i modül haritasını verir | `run_agent`, `AgentResult`, `AgentError`, `AgentSettings`, `LLMClient`, `LLM_CLIENTS`, `Message`, `Reply`, `LLMError`, `Turn` |
+| `src/irpipe/agent/__init__.py` | 21, 22 | IR ajanı paketi; docstring'i modül haritasını verir | `run_agent`, `AgentResult`, `AgentError`, `AgentSettings`, `LLMClient`, `LLM_CLIENTS`, `Message`, `Reply`, `LLMError`, `Turn` |
 | `src/irpipe/agent/settings.py` | 21 | pipeline.toml'un `[agent]` tablosu | `AgentSettings.from_config(config)` |
 | `src/irpipe/agent/llm.py` | 21 | Dil modelinin arayüzü ve sağlayıcı kaydı (K10) | `LLMClient.complete(system, messages) -> Reply`, `Message`, `Reply`, `LLMError`, `LLM_CLIENTS` |
 | `src/irpipe/agent/claude_cli.py` | 21 | Sağlayıcı "claude-cli": `claude -p` düz tamamlama olarak (K9) | `ClaudeCLI`, `transcript(messages)`, `parse_result(...)` |
 | `src/irpipe/agent/protocol.py` | 21 | Mesajdaki tek araç çağrısını okur | `parse(message) -> Parsed`, `Call`, `unfence(body)` |
-| `src/irpipe/agent/prompt.py` | 21 | Sistem prompt'u, ilk mesaj, sonuçların geri dönüşü | `system_prompt(settings, example)`, `first_message(inputs)`, `wrap(tool, result, ...)` |
+| `src/irpipe/agent/prompt.py` | 21, 22 | Sistem prompt'u (22: `ask_planner`'ın tarifi), ilk mesaj, sonuçların geri dönüşü | `system_prompt(settings, example)`, `first_message(inputs)`, `wrap(tool, result, ...)` |
 | `src/irpipe/agent/reference.py` | 21 | IR'nin nesneleri ve alanları, modellerden, ajanın okuyacağı biçimde | `object_reference()`, `type_text(field)` |
-| `src/irpipe/agent/tools.py` | 21 | Ajanın araçları, çalışma klasöründe; sorunları IR terimleriyle yazar | `Tools` (`run_python`, `validate`, `measure_text`, `measure_tex`, `resolve`, `check`), `describe(issues)`, `NAMES` |
+| `src/irpipe/agent/tools.py` | 21, 22 | Ajanın araçları, çalışma klasöründe; sorunları IR terimleriyle yazar. 22: planner'a dönüş isteğini okur | `Tools` (`run_python`, `validate`, `measure_text`, `measure_tex`, `resolve`, `check`, `ask_planner`), `describe(issues)`, `NAMES` |
 | `src/irpipe/agent/sandbox.py` | 21 | build_ir.py'nin çalıştığı yer: bwrap ya da yalnızca jail; temiz ortam | `Sandbox` (`run`, `command`), `sandbox_for(kind, memory_mb)`, `bwrap_works()`, `Ran` |
 | `src/irpipe/agent/jail.py` | 21 | build_ir.py'nin etrafındaki kaynak sınırları ve audit hook | `python -m irpipe.agent.jail --cpu S --memory-mb M build_ir.py`, `Guard`, `limit`, `script_traceback` |
-| `src/irpipe/agent/session.py` | 21 | Bir oturum: döngü, turlar, durma kuralları, en iyi tur, kayıtlar | `run_agent(brief, folder, lesson_path=, config_path=, client=, sandbox=)`, `AgentResult`, `Turn`, `AgentError` |
+| `src/irpipe/agent/session.py` | 21, 22 | Bir oturum: döngü, turlar, durma kuralları, en iyi tur, kayıtlar. 22: `ask_planner` oturumu bitirir, rapor planner'a yönlenir | `run_agent(brief, folder, lesson_path=, config_path=, client=, sandbox=)`, `AgentResult` (`request`), `Turn`, `AgentError`, `E_REPLAN` |
 | `tests/agent/conftest.py` | 21 | Senaryolu LLM istemcisi, SVG ile çizen pipeline.toml, test header'ı; `llm` testlerinin atlanması | fixture: `scripted`, `agent_config`, `header` |
 | `tests/agent/test_protocol_and_prompt.py` | 21 | Protokol, ayarlar, IR başvurusu, sistem prompt'u, ilk mesaj, sonuçların kesilmesi | pytest testi (9) |
 | `tests/agent/test_sandbox.py` | 21 | Kum havuzunda irkit betiği; reddedilenler; ortam; süre ve bellek sınırı; bwrap komutu | pytest testi (12) |
 | `tests/agent/test_claude_cli.py` | 21 | Sahte bir `claude` komutuyla: bayraklar, sistem prompt'u, ortam, transkript, hatalar | pytest testi (7) |
 | `tests/agent/test_tools.py` | 21 | Araçlar: betik, hata, validate, check, resolve, ölçüm | pytest testi (5) |
 | `tests/agent/test_session.py` | 21 | Oturum: READY tur, ilerleme yok, tur sınırı, reddedilen teslim, biten bütçe, hatalı son betik, komut, cevapsız model, bozuk brief; gerçek modelle (llm) | pytest testi (9 + 1 llm) |
+| `tests/agent/test_ask_planner.py` | 22 | `ask_planner`: oturumu bitirir, rapor E-REPLAN ile planner'a yönlenir, en iyi tur kalır, istek kaydedilir; tursuz istek; geçersiz istek | pytest testi (3) |
+| `src/irpipe/schema/request.py` | 22 | Planner'a geri dönen isteğin sözleşmesi: hangi kare, ne isteniyor (kısalt, böl, düzelt), neden | `PlannerRequest(frame, kind, reason, items, issues)`, `REQUEST_VERSION` |
+| `src/irpipe/planner/__init__.py` | 22 | Planner paketi; docstring'i modül haritasını verir | `plan`, `revise`, `run_lesson`, `PlanResult`, `LessonResult`, `FrameRun`, `Return`, `PlannerError`, `PlannerSettings`, `Wishes`, `fix_request` |
+| `src/irpipe/planner/settings.py` | 22 | pipeline.toml'un `[planner]` tablosu; LLM istemcisine verilecek ayarlar | `PlannerSettings.from_config(config)`, `.client_settings()` |
+| `src/irpipe/planner/wishes.py` | 22 | Kullanıcının açık istekleri: planner'a söylenir ve cevabının üstüne serilir | `Wishes(frames, aspect, platform, lang)`, `.describe()`, `.lay_over_lesson(raw)`, `.lay_over_brief(raw)` |
+| `src/irpipe/planner/prompt.py` | 22 | Planner'ın sistem prompt'u (kurallar, cevap biçimi, projenin sundukları, şemalar, örnek), plan ve revizyon mesajları, sorunların geri dönüşü | `system_prompt(settings, example)`, `plan_message(topic, wishes)`, `revise_message(...)`, `problems_message(problems)`, `read_example(folder)` |
+| `src/irpipe/planner/answer.py` | 22 | Cevabın JSON'u, taslak dosyaları ve sorunları: orchestrator'ın okuması ve şemanın söylemediği denetimler | `extract(text)`, `write_draft(...)`, `read_draft(draft)`, `plan_problems(...)`, `Draft`, `briefs_in(folder)`, `brief_file(id)` |
+| `src/irpipe/planner/session.py` | 22 | Planlama ve revizyon oturumu: döngü, ders klasörü, kayıtlar | `plan(topic, folder, wishes=, config_path=, client=)`, `revise(request, folder, ...)`, `PlanResult`, `PlannerError` |
+| `src/irpipe/planner/lesson.py` | 22 | Bütün ders: planla, her kareyi ajana çizdir, sığmayanı planner'a geri gönder, lesson.json | `run_lesson(topic, folder, wishes=, config_path=, planner_client=, agent_client=, sandbox=)`, `LessonResult`, `FrameRun`, `Return`, `fix_request(frame, issues)` |
+| `tests/planner/conftest.py` | 22 | Senaryolu LLM istemcisi, örnekten cevaplar, SVG ile çizen ve `[planner]` ayarlı pipeline.toml; `llm` testlerinin atlanması | fixture: `scripted`, `kit`, `planner_config` |
+| `tests/planner/test_answer.py` | 22 | Cevabın JSON'u, biçim hataları, taslağın okunması, sorunlar, kullanıcının istekleri, revizyon kuralları | pytest testi (16) |
+| `tests/planner/test_session.py` | 22 | Plan: ders klasörü, kayıtlar, geri gönderilen cevap, başarısızlık, istekler; kısaltma; bölme; komut; gerçek modelle (llm) | pytest testi (8 + 1 llm) |
+| `tests/planner/test_lesson.py` | 22 | Ders: gerçek ajanla çizim ve kısaltılıp yeniden çizilen kare; bölme, dönüş sınırı, fix isteği, durdurma (vekil ajanla) | pytest testi (6) |
