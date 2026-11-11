@@ -15,9 +15,9 @@ SCRIPT ?= examples/projection/build_ir.py
 
 .PHONY: venv test lint format typecheck spec check render run
 
-venv:            ## create .venv and install the package with dev tools, pango and both backends
+venv:            ## create .venv and install the package with dev tools, pango, both backends, sympy
 	python3 -m venv $(VENV)
-	$(BIN)/pip install -e ".[dev,svg,pango,manim]"
+	$(BIN)/pip install -e ".[dev,svg,pango,manim,irkit]"
 
 test:            ## run the test suite
 	$(BIN)/pytest

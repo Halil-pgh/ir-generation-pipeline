@@ -18,13 +18,13 @@ Stages, checks and backends are plugins; `pipeline.toml` decides which ones run.
 Requires Python 3.12 or newer.
 
 ```bash
-make venv        # python3 -m venv .venv && pip install -e ".[dev,svg,pango,manim]"
+make venv        # python3 -m venv .venv && pip install -e ".[dev,svg,pango,manim,irkit]"
 ```
 
 The front-end needs pydantic and shapely (its geometry core). Optional
 extras, installed when their layer is built: `svg` (cairosvg), `pango`
-(pangocffi: text measured as Manim draws it), `manim` (Manim CE 0.22.1).
-`make venv` installs all three.
+(pangocffi: text measured as Manim draws it), `manim` (Manim CE 0.22.1),
+`irkit` (sympy, for exact values in `build_ir.py`). `make venv` installs all four.
 
 Formulas need TeX Live (`latex`, the `standalone`, `lmodern` and `amsmath`
 packages) and `dvisvgm`; text needs Pango and the fonts the IR names.
@@ -67,6 +67,29 @@ header, runs the agent's `build_ir.py` (which reads `header.json` and writes
 It prints the report and who acts next: done, the agent, the planner or a
 person.
 
+## Write a build_ir.py
+
+`build_ir.py` is written with irkit, the builder SDK (`irpipe.irkit`): the
+script works its numbers out and the SDK writes `ir.json`, so no number is
+copied by hand. Fractions and sympy numbers reach the IR exactly, as
+expressions (`"9/5"`).
+
+```python
+from irpipe.irkit import Picture, label, geometry as g
+
+pic = Picture.open()                                 # header.json, the locked header
+T1, T2 = g.tangent_points((5, 0), (0, 0), 3)         # exactly (9/5, ±12/5)
+c = pic.circle("c", center=(0, 0), radius=3)
+t = pic.line("t", start=(5, 0), end=T1, label=label(tex="T_1", at="end", dir="up"))
+box = pic.measure_tex(r"PT_1 = 4")                   # its size, in frame units
+pic.write()                                          # ir.json
+```
+
+Every object type is a method (`pic.axes`, `pic.flood_fill`...) and returns
+a handle (`t.tip`, `c.at(t=0.5)`); `pic.check()` runs the validate stage.
+`examples/tangents/` is a whole frame written this way:
+`make run BRIEF=examples/tangents/brief.json SCRIPT=examples/tangents/build_ir.py`.
+
 ## Code checks
 
 ```bash
@@ -95,5 +118,6 @@ docs/         SEMANTICS.md (behaviour the schemas leave open), spec/
               render profile and report.json)
               and PLAN.md (the team's step-by-step plan, decisions and reports, in Turkish)
 examples/     hand-written inputs and outputs, such as a lir.json; projection/ holds
-              the whole chain: lesson_plan.json, brief.json and the ir.json drawn from them
+              the whole chain: lesson_plan.json, brief.json and the ir.json drawn from them;
+              tangents/ a brief and a build_ir.py written with irkit
 ```

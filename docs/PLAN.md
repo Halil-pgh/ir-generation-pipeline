@@ -179,7 +179,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 17 | F4 | Bileşen mekanizması + ilk bileşenler | components/: axes, graph, brace, angle | Bileşen eklemek tek dosya; açıldıktan sonra yalnızca çekirdek nesne kalır | Tamam |
 | 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Tamam |
 | 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Tamam |
-| 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Bekliyor |
+| 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Tamam |
 | 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Bekliyor |
 | 22 | F6 | Planner + geri dönüş yolu | planner/ | Konu promptundan brief üretilir; sığmayan brief planner'a döner | Bekliyor |
 | 23 | F6 | Eval + regresyon | eval matrisi; kendi `examples/` örneklerimizle regresyon (K27) | `examples/` altındaki her örnek her değişiklikte derlenir; READY sayısı ve resim farkları raporlanır | Bekliyor |
@@ -359,6 +359,16 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K141 | Çöken bir aşama E-INTERNAL (köken internal), aşamanın adı ve istisnasıyla; koşu orada durur | Adım 2: beklenmeyen istisnayı orchestrator internal bir sorun olarak raporlayacaktı | Onaylandı |
 | K142 | Run klasörü: brief.json, build_ir.py, header.json, ir.json, lir.json, backend'in dosyaları, frame.svg (resmi başka bir backend çizdiyse SVG referansı, PNG'siz), report.json, meta.json, alt.txt. Erken duran koşu ulaştığı kadarını yazar. Önceki koşudan kalan bu dosyalar önce silinir; klasördeki başka hiçbir şeye dokunulmaz | Analiz §1'in çıktı klasörü; Adım 7 ve K111'deki ad sorusu: `frame.png` seçilen backend'in, `frame.svg` referansın | Onaylandı |
 | K143 | `meta.json` resmin bağlı olduğu her şeyi tutar: sürümler (IR, LIR, irpipe, Python, backend'in kütüphanesi, Pango, LaTeX, dvisvgm), font dosyası, çalışan aşamalar ve süreleri, header'ın hash'i. `alt.txt` IR'nin intent'i, brief'in `must_show` maddeleri, resimdeki metinler ve formüllerden yazılır, cümleleri İngilizce | Analiz §1: aynı resmi tekrar üretmek için meta.json; erişilebilirlik metni otomatik | Onaylandı |
+| K144 | SDK `src/irpipe/irkit/` paketi (K1), her dosya tek iş: picture (resim ve builder'lar), handles, fields (modellerden alan bilgisi), numbers (tam sayılar), shapes (etiket, renk karışımı, bölge ifadeleri, yol kısayolları), geometry, measure. Betik `Picture.open()` ile header.json'u okur, nesneleri ekler, `write()` ile ir.json'u yazar | Analiz §4: pydantic modelleri üzerinde ince bir builder SDK; ajan JSON'u elle yazmaz, sayıları hesaplar | Onaylandı |
+| K145 | Builder'lar modellerden: her çekirdek tip ve kayıtlı her bileşen için `pic.<tip>(id, **alanlar)` (`pic.add(tip, id, ...)` aynısı), `pic.defs.<tip>` çizilmeyen işlenenler için. Alan adları modelin Python adları (`"in"` için `space`). Bilinmeyen ya da eksik alan, bilinmeyen tip, alınmış id ve nesnede olmayan anchor betiğin kendi satırında istisna, "did you mean" ile; değerleri validate denetler (`pic.check()` ya da koşunun kendisi), JSON yoluyla | Modeller IR'nin tek tanımı kalır, SDK alan listesi tekrarlamaz; yeni bir bileşen SDK değişmeden kullanılır. Yapı hatası satırında, değer hatası pipeline'ın raporladığı biçimde yakalanır | Onaylandı |
+| K146 | Builder'lar bir tutamaç (handle) döndürür: anchor'lar nitelik olarak (`a.tip` → `"a.tip"`), çizgi üstünde nokta (`f.at(x=2)`), etiket (`a.label`), bileşen parçası (`ax.part("x_axis")`); id istenen her yerde tutamaç kullanılabilir. Bileşenin kökü açılmadan bilinmediği için tutamacı kutu ve açık şekil anchor'larının hepsini sunar | Betik nesnelere değişkenle başvurur, id'ler yeniden yazılmaz; yazım hatası NameError ya da AttributeError olur | Onaylandı |
+| K147 | Tam sayılar: Fraction `"p/q"` olarak yazılır (tam sayıysa int); sympy sayısı sympy'nin yazdığı biçimle, irpipe/expr onu aynı değere (1e-9 içinde) okuyabiliyorsa, okuyamıyorsa float olarak. Sembol kalmış, karmaşık ya da sonsuz sympy ifadesi reddedilir. İfade yalnızca ifade alan alanlarda (geometri, `Number`) kalır; almayan alan (çizgi kalınlığı, opaklık, etiketin `dir`'i) tamamen float alır. Seçimi alanın kendi tipi yapar: tam yazım alanın tipinden geçmezse float yazım denenir. numpy sayıları ve dizileri düz JSON olur | Analiz §4: sayılar kopyalanmaz ya da yuvarlanmaz, `"44/17"` gibi tam kalır; validate sıkı modda metni yalnızca geometride ifade sayar | Onaylandı |
+| K148 | sympy opsiyonel bir extra (`irkit = ["sympy>=1.13"]`); irpipe onu import etmez, ajanın betikleri eder. `make venv` kurar | Analiz §4 tam değerler için sympy'yi anıyor; SDK onsuz da çalışır | Onaylandı |
+| K149 | Geometri yardımcıları referansla değil sayıyla çalışır: `foot`, `line_line`, `line_circle`, `circle_circle`, `tangent_points`, `crossings` (iki Python fonksiyonu), `inside_point` (flood_fill tohumu), `midpoint`, `along`, `distance`. int ve Fraction girdiyle cevap rasyonel olduğu sürece tam kalır (tam karelerin kökü tam alınır); sıralar SEMANTICS'te | Analiz §4: kesişim, teğet, tohum noktası betikte. Referansları yalnızca front-end çözer | Onaylandı |
+| K150 | K36'nın SDK'ya bıraktığı kısayollar: `through(noktalar)` (düz parçalı alt yol) ve `smooth(noktalar)` (Catmull-Rom, kübik parçalar); bölge ifadeleri (`union`, `intersection`, `difference`, `xor`, `half_plane`, `under`, `between`), `label` (alanları denetlenir), `mix` | IR'de her şeyin tek yazılışı kalır; kısayol betikte bir fonksiyon çağrısıdır | Onaylandı |
+| K151 | `pic.measure_text` ve `pic.measure_tex` measure aşamasının varsayılan sağlayıcısıyla (`pango`), header'ın fontları ve puntolarıyla ölçer; cevap çerçeve biriminde ya da istenen uzayın biriminde. Sağlayıcı ilk ölçümde kurulur (`Picture(..., metrics="fixed")` testler için) | Analiz §2.5 ve §4: ajan tahmin etmez, ölçer; sonuç IR birimiyle döner | Onaylandı |
+| K152 | Header okunduğu gibi geri yazılır; `pic.header` donmuş bir model. `pic.check()` validate aşamasını çalıştırır; bir koşunun bildiği her issue kodunu (kontroller, backend'ler, W-UNCOVERED) yükler ki `allow` girdisi bilinmeyen kod sayılmasın | Header orchestrator'ın (K132); ajanın aracı validate 21. adımda bunu sarar | Onaylandı |
+| K153 | Örnek yeni bir kare: `examples/tangents/` (brief.json ve irkit'le yazılmış build_ir.py). `examples/projection/build_ir.py` değişmedi | 19. adımın testleri o betiğin metnini değiştirerek çalışıyor; yeniden yazmak 19'u bozardı. Teğet örneği tam değerlerin (9/5, 12/5) ve ölçümün işe yaradığı bir resim | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -407,6 +417,75 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 20 — irkit SDK · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı: örnek `build_ir.py` sayılarını hesaplıyor ve geçerli bir `ir.json` yazıyor. Örnek yeni bir kare, bir noktadan çembere çizilen teğetler: `examples/tangents/` (brief.json ve irkit'le yazılmış build_ir.py). Orchestrator onu bir ajanın betiği gibi çalıştırıyor; resim SVG ile de Manim ile de READY. Değme noktaları ir.json'a `"9/5"`, `"12/5"` olarak tam giriyor; formül kutusu ölçülen formüle göre boyutlanıyor. `make check` temiz: 984 test (35'i yeni), 4 bilinen ayrışma, mypy strict, ruff.
+
+![20. adımın örneği: P'den çembere iki teğet, dik açı işaretleri, kesikli kiriş, taralı alan ve ölçülen formül kutusu](plan/adim-20.png)
+
+**Nasıl çalışıyor.** Betik header'ı açar, sayıları Python'da (Fraction, istenirse sympy) hesaplar, nesneleri builder'larla ekler ve ir.json'u yazar:
+
+```python
+from irpipe.irkit import Picture, label, geometry as g
+
+pic = Picture.open()                                  # header.json: kilitli header
+T1, T2 = g.tangent_points((5, 0), (0, 0), 3)          # tam olarak (9/5, 12/5), (9/5, -12/5)
+M = g.line_line(T1, T2, (0, 0), (5, 0))               # kiriş OP'yi (9/5, 0)'da keser
+formula = pic.measure_tex(r"PT_1 = PT_2 = \sqrt{OP^2 - r^2} = 4")   # çerçeve biriminde
+S = pic.space("S", origin=(...), unit=Fraction(9, 10))
+circle = pic.circle("circle", center=(0, 0), radius=3, space=S, color="circle")
+t1 = pic.line("t1", start=(5, 0), end=g.along((5, 0), T1, Fraction(6, 5)), space=S)
+pic.flood_fill("region", seed=(4, 0), bounded_by=[t1, t2, circle], space=S, fill="tangent")
+pic.write()
+```
+
+Yazılan ir.json'dan:
+
+```
+{"id": "T1", "type": "circle", "center": ["9/5", "12/5"], "radius": "2/25", "in": "S", …,
+ "label": {"tex": "T_1", "dir": [1.8, 2.4]}}
+{"id": "t1", "type": "line", "start": [5, 0], "end": ["29/25", "72/25"], "in": "S", …}
+{"id": "region", "type": "flood_fill", "seed": [4, 0], "bounded_by": ["t1", "t2", "circle"], …}
+```
+
+Etiketin `dir`'i ifade almadığı için (K147) orada aynı sayılar float olarak yazılıyor. Betiğin hataları kendi satırında yakalanıyor ve koşu E-SCRIPT olarak ajana dönüyor:
+
+| Betikte | Sonuç |
+| --- | --- |
+| `pic.line("a", strat=(0, 0), end=(1, 1))` | `TypeError: line 'a' has no field 'strat'; did you mean 'start'?` |
+| `pic.circle("c")` | `TypeError: circle 'c' needs center, radius` |
+| `pic.cirle(...)` | `AttributeError: there is no object type 'cirle'; did you mean 'circle'?` |
+| `a.tpi` | `AttributeError: 'a' (line) has no anchor 'tpi'; did you mean 'tip'?` |
+| Aynı id iki kez | `ValueError: the id 'a' is taken already (by a line)` |
+| `pic.circle("c", ..., radius=-1)` | Satırında değil: `pic.check()` ya da koşu `E-SCHEMA objects[0].radius` |
+| `sympy.Symbol("x") + 1` | `ValueError: the sympy expression x + 1 still holds x; put numbers in first (.subs)` |
+| `sympy.sqrt(2)/2`, `180*atan2(3, 2)/pi` | `"sqrt(2)/2"`, `"180*atan(3/2)/pi"` (tam) |
+| `sympy.sec(1)`, `(sqrt(2) - 2)**2` | float: IR'nin ifade dili okuyamıyor (ikincisi S8) |
+
+**Üretilen dosyalar.** `src/irpipe/irkit/` altında 8 dosya, `tests/irkit/` altında 5 dosya, `examples/tangents/` (brief.json, build_ir.py), `docs/plan/adim-20.png` (Dosya kaydı'nda). Önceki dosyalara yalnızca ekleme: `pyproject.toml` (`irkit` extra'sı), `Makefile` (`make venv` sympy'yi de kuruyor), README (Setup, yeni "Write a build_ir.py" bölümü, Layout), `SEMANTICS.md` (yeni irkit bölümü). Önceki adımların kodu ve testleri değişmedi.
+
+**Plandan sapmalar.**
+
+- Örnek, projeksiyon örneğinin betiği değil yeni bir kare (K153): 19. adımın testleri `examples/projection/build_ir.py`'nin metnini değiştirerek çalışıyor.
+- Yeni bir bağımlılık: sympy, opsiyonel `irkit` extra'sı olarak (K148).
+- Plan SDK'da doğrulama aracı saymıyordu; `pic.check()` validate aşamasını çalıştırıyor (K152). 21. adımda ajanın `validate` aracı bunu saracak.
+- Builder'lar tip başına elle yazılmış metotlar değil, modellerden çıkan dinamik metotlar (K145): mypy alan adlarını statik denetleyemiyor, SDK çalışırken denetliyor. Karşılığında bir bileşen eklemek yine tek dosya.
+
+**Bulunan sorunlar.** Yeni yok. S8 burada da çıktı: sympy `(sqrt(2) - 2)**2`'yi `(-2 + sqrt(2))**2` diye yazıyor, ifade dili onu reddediyor. SDK böyle bir sayıyı float yazıyor (K147); `expr`'e dokunulmadı.
+
+**Varsayımlar.**
+
+- Betik `header.json`'un olduğu yerde, run klasöründe çalışıyor (K134).
+- Ölçüm measure aşamasının varsayılan sağlayıcısıyla (`pango`). Bir proje pipeline.toml'da başka bir sağlayıcı seçerse betiğin `Picture.open(metrics=...)` demesi gerekiyor, çünkü run klasöründe pipeline.toml yok.
+- Formüllerin disk önbelleği measure aşamasınınkiyle aynı (`~/.cache/irpipe/metrics`). Kum havuzunda (21) bu klasör yazılamayabilir.
+- Bileşenin anchor'ları açılmadan bilinmiyor; tutamaç geniş bir küme sunuyor, adı validate denetliyor.
+
+**Kararlar.** K144–K153 (Karar günlüğü).
+
+**Nasıl denenir.** `make run BRIEF=examples/tangents/brief.json SCRIPT=examples/tangents/build_ir.py`; dosyalar `runs/tangents/` altında, `ir.json`'da `"9/5"`. Bir hatayı görmek için betikte bir alanın adını bozun (`strat=`): koşu E-SCRIPT ile ve "did you mean" ile durur. Testler: `.venv/bin/pytest tests/irkit`.
+
+**Açık kalanlar.** Ajanın araçları SDK'yı saracak (21): kum havuzunda `run_python`, `validate` (`pic.check`), `measure_text` / `measure_tex`, `resolve`, `check`, `submit`. Ajanın prompt'u için SDK'nın kısa başvuru metni docstring'lerden üretilebilir (analiz §4, "Prompt boyutu"). Ölçüm sağlayıcısının ve önbellek klasörünün orchestrator'dan betiğe geçmesi. Commit edildi.
 
 ### Adım 19 — Orchestrator · 11 Kasım 2026
 
@@ -1423,3 +1502,17 @@ make check    # lint + mypy + testler
 | `tests/orchestrator/conftest.py` | 19 | Örneğin brief'i, ders planı ve betiğiyle bir klasör; SVG ile çizen bir pipeline.toml | fixture: `example`, `svg_config` |
 | `tests/orchestrator/test_parts.py` | 19 | Header, girdiler, ortam, betik, kapsam, yönlendirme ve kayıtlar tek tek | pytest testi (23) |
 | `tests/orchestrator/test_run.py` | 19 | Brief'ten run klasörüne: READY koşu, değişen header, çöken betik, bozuk brief, eksik araç, çöken aşama, eski dosyalar, kapsam, komut, Manim'le | pytest testi (10) |
+| `src/irpipe/irkit/__init__.py` | 20 | Builder SDK paketi: ajanın build_ir.py'si bununla yazılır; docstring'i SDK'nın kısa kılavuzu ve modül haritası | `Picture`, `Handle`, `Box`, `label`, `mix`, `union`, `intersection`, `difference`, `xor`, `half_plane`, `under`, `between`, `through`, `smooth`, `geometry` |
+| `src/irpipe/irkit/picture.py` | 20 | Resim: kilitli header ve betiğin kurduğu gövde; her tip için builder; uzay, bölge, değer, renk, focus, allow; ölçüm; ir.json'u yazma ve validate'ten geçirme | `Picture.open(path, metrics=)`, `pic.<tip>(id, **alanlar)`, `pic.add`, `pic.defs`, `space`, `zone`, `value`, `color`, `focus`, `allow`, `measure_text`, `measure_tex`, `body`, `document`, `json_text`, `write`, `check`, `Builder` |
+| `src/irpipe/irkit/handles.py` | 20 | Builder'ların döndürdüğü tutamaç: anchor'lar, çizgi üstünde nokta, etiket, parça; id yerine geçer | `Handle` (`a.tip`, `at(t=, x=)`, `label`, `part(name)`) |
+| `src/irpipe/irkit/fields.py` | 20 | Builder'ların modellerden bildikleri: tipler, alan adları, bir alanın tam ifade alıp almadığı | `object_models()`, `checked(model, what, fields)`, `to_json(model, fields, values)`, `field_json(...)` |
+| `src/irpipe/irkit/numbers.py` | 20 | Betiğin verdiğini JSON'a çevirir; Fraction ve sympy sayılarını tam ifade olarak işaretler | `plain(value)`, `render(tree, exact=)`, `has_exact(tree)`, `Exact` |
+| `src/irpipe/irkit/shapes.py` | 20 | Alanların aldığı küçük parçalar: etiket, renk karışımı, bölge ifadeleri, yol kısayolları (K36) | `label`, `mix`, `union`, `intersection`, `difference`, `xor`, `half_plane`, `under`, `between`, `through`, `smooth` |
+| `src/irpipe/irkit/geometry.py` | 20 | Betiğin sayılarını bulduğu geometri; rasyonel kaldıkça tam | `foot`, `line_line`, `line_circle`, `circle_circle`, `tangent_points`, `crossings`, `inside_point`, `midpoint`, `along`, `distance`, `sqrt`, `exact` |
+| `src/irpipe/irkit/measure.py` | 20 | Betikten metin ve formül ölçümü, measure aşamasının sağlayıcısı ve header'ın tipografisiyle, IR biriminde | `Measurer`, `Box`, `DEFAULT_PROVIDER` |
+| `examples/tangents/build_ir.py` | 20 | irkit'le yazılmış örnek betik: teğetler, kesişim, tohum noktası, ölçümle yerleşim | `irpipe run examples/tangents/brief.json examples/tangents/build_ir.py` |
+| `tests/irkit/conftest.py` | 20 | Test header'ında, "fixed" ölçümle bir resim | fixture: `header`, `pic` |
+| `tests/irkit/test_numbers.py` | 20 | Fraction, sympy, numpy, tutamaçlar ve reddedilenler | pytest testi (15) |
+| `tests/irkit/test_geometry.py` | 20 | Teğetler, kesişimler, dikme ayağı, fonksiyon kesişimleri, tohum noktası, `through` ve `smooth` | pytest testi (9) |
+| `tests/irkit/test_picture.py` | 20 | Builder'lar, tutamaçlar, tam ve float alanlar, satırında yakalanan hatalar, validate, header'ın korunması, ölçüm | pytest testi (9) |
+| `tests/irkit/test_example.py` | 20 | Örnek betik orchestrator'dan READY çıkıyor; tam sayılar ve ölçülen kutu ir.json'da; Manim'le de | pytest testi (2) |

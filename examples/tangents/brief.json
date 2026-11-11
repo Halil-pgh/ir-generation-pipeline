@@ -1,0 +1,34 @@
+{
+  "version": "frame-brief/1.0",
+  "id": "tangents",
+  "purpose": "define",
+  "intent": "The two tangents from a point outside a circle are equally long and meet the radii at right angles",
+  "focus": ["tangents"],
+  "must_show": [
+    {"id": "circle", "text": "a circle with center O and radius 3", "data": {"O": [0, 0], "r": 3}},
+    {"id": "point", "text": "a point P outside the circle, 5 from O", "data": {"P": [5, 0]}},
+    {"id": "tangents", "text": "the two tangents from P, touching the circle at T1 and T2"},
+    {"id": "radii", "text": "the radii OT1 and OT2, with right-angle marks where they meet the tangents"},
+    {"id": "chord", "text": "the chord T1T2, dashed, crossing OP at M"},
+    {"id": "region", "text": "the area between the two tangents and the circle, lightly shaded"},
+    {"id": "formula", "text": "the length of the tangents, PT1 = PT2 = sqrt(OP^2 - r^2) = 4, in a framed box"}
+  ],
+  "texts": {
+    "title": "Tangents from a point",
+    "labels": {"O": "O", "P": "P", "T1": "T_1", "T2": "T_2", "M": "M"}
+  },
+  "concept_colors": {"circle": "#58C4DD", "tangent": "#FFD43B", "radius": "#83C167"},
+  "constraints": {
+    "must": [
+      "the tangents touch the circle exactly at T1 and T2",
+      "the formula's box fits the formula"
+    ],
+    "should": ["the title is the only text in bold"]
+  },
+  "render_profile": {
+    "aspect": "16:9",
+    "typography": {"scale": "comfortable", "lang": "en"},
+    "theme": {"background": "#0E1117"}
+  },
+  "composition_notes": "The circle sits left of the middle with P to its right, OP level. The two tangents run from P to the circle and a little past it; the shaded area lies between them and the circle. The formula sits in a box on the right."
+}

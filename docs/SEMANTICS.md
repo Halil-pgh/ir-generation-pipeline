@@ -144,6 +144,40 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   `alt.txt` is the IR's intent, the brief's `must_show` items, and the words
   and formulas in the picture (its sentences are in English).
 
+## irkit (the SDK of build_ir.py)
+
+- `Picture.open()` reads `header.json`; `write()` writes `ir.json`: the
+  header exactly as it was read, then the body's non-empty fields in the
+  schema's order (values, focus, extra_colors, zones, spaces, defs,
+  objects, allow). Objects are written in the order they were made, which
+  is their drawing order.
+- `pic.<type>(id, **fields)` exists for every core type and every
+  registered component; fields are named as the models name them in
+  Python (`space` for `"in"`). An unknown field, a missing required one,
+  an unknown type, a taken id or an anchor the object does not have is an
+  exception at the script's line. Values are not checked there: the
+  validate stage checks them all (`pic.check()`, or the run itself).
+- A handle stands for its id wherever one goes. A component's anchors
+  are not known before it opens, so its handle offers a box's and an open
+  shape's; validate checks the name.
+- A Fraction is written as `"p/q"` (a whole one as an int); a sympy
+  number as sympy prints it, when irpipe/expr reads that back to the same
+  value (within 1e-9), else as a float. sympy expressions with symbols,
+  complex or infinite numbers are refused. Exact numbers stay expressions
+  only where the field takes expressions (geometry); a field that does
+  not (a stroke width, an opacity, a label's `dir`) gets floats, decided
+  for the whole field. numpy numbers and arrays become plain JSON.
+- `measure_text` and `measure_tex` use the provider the measure stage
+  uses by default (`pango`), the header's fonts and type sizes (a role or
+  reference pixels; `body` when left out), and answer in frame units, or
+  in a space's units (width by its x unit, heights by its y unit).
+- The geometry helpers work on numbers, not references. With int and
+  Fraction inputs they stay exact while the answer is rational (square
+  roots of perfect squares are exact); otherwise they return floats.
+  `tangent_points` lists the counterclockwise touching point first,
+  `circle_circle` the one left of the way from the first center,
+  `line_circle` the points in the line's direction.
+
 ## IR document
 
 - `ir.json` is one flat object: the header fields (`version`, `intent`,

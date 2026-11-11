@@ -23,6 +23,9 @@ svg = ["cairosvg>=2.7"]           # SVG reference backend: frame.svg -> frame.pn
 pango = ["pangocffi>=0.14", "pangocairocffi>=0.7"]   # text measured as Manim draws it (step 10)
 # Manim backend, pinned as the analysis asks (step 15); Pango tells it where a text's ink lies.
 manim = ["manim==0.22.1", "pangocffi>=0.14", "pangocairocffi>=0.7"]
+# Exact values in build_ir.py (step 20): irkit writes sympy numbers as expressions; it does
+# not import sympy itself, the scripts the agent writes do.
+irkit = ["sympy>=1.13"]
 dev = [
     "pytest>=8", "ruff>=0.6", "mypy>=1.11", "jsonschema>=4.23", "types-jsonschema",
     "types-shapely",
