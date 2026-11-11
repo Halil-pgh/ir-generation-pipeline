@@ -8,12 +8,14 @@ finds ``header.json``, the header the orchestrator locked; it adds the body
 ``ir.json``. A script that stops with an error, runs too long or writes no
 ir.json is the agent's to fix: E-SCRIPT, with the end of its own traceback.
 
-It runs with the rights of whoever started the pipeline: the sandbox for
-code an LLM wrote comes with the agent (step 21).
+It runs with the rights of whoever started the pipeline, unless a caller
+hands in another ``command`` and ``env``: the agent (step 21) runs it in its
+sandbox that way.
 """
 
 import subprocess
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final
 
@@ -29,12 +31,29 @@ IR: Final = "ir.json"
 TRACEBACK_LINES = 6
 
 
-def run_script(folder: Path, timeout: float) -> list[Issue]:
-    """Run ``folder/build_ir.py`` there; the issue when it does not write ``folder/ir.json``."""
+def run_script(
+    folder: Path,
+    timeout: float,
+    *,
+    command: Sequence[str] | None = None,
+    env: Mapping[str, str] | None = None,
+) -> list[Issue]:
+    """Run ``folder/build_ir.py`` there; the issue when it does not write ``folder/ir.json``.
+
+    ``command`` and ``env`` replace the plain ``python -I -B build_ir.py`` and the
+    caller's environment (a sandbox's command must still run build_ir.py in ``folder``).
+    """
     (folder / IR).unlink(missing_ok=True)
-    command = [sys.executable, "-I", "-B", SCRIPT]
+    command = [sys.executable, "-I", "-B", SCRIPT] if command is None else list(command)
     try:
-        run = subprocess.run(command, cwd=folder, capture_output=True, timeout=timeout, check=False)
+        run = subprocess.run(
+            command,
+            cwd=folder,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+            env=None if env is None else dict(env),
+        )
     except subprocess.TimeoutExpired:
         return [
             E_SCRIPT(

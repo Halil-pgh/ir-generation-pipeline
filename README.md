@@ -90,6 +90,26 @@ a handle (`t.tip`, `c.at(t=0.5)`); `pic.check()` runs the validate stage.
 `examples/tangents/` is a whole frame written this way:
 `make run BRIEF=examples/tangents/brief.json SCRIPT=examples/tangents/build_ir.py`.
 
+## Let the agent draw a frame
+
+```bash
+make agent                              # the projection brief; calls the model
+irpipe agent path/to/brief.json [--lesson lesson_plan.json] [-o folder]
+```
+
+`irpipe agent` hands the brief to the IR agent: a language model writes
+`build_ir.py` with irkit, checks it with the front-end's own tools (validate,
+measure, resolve, check) and submits it; each submission is compiled and
+drawn, up to three, and the best one fills the run folder. The model is
+reached through `claude -p` on the team's subscription (`claude` must be
+installed and logged in); `[agent]` in `pipeline.toml` sets the model, the
+limits and the sandbox. The script runs without network and may write only
+in its folder: under bubblewrap where the system allows unprivileged user
+namespaces, otherwise with resource limits and an audit hook. The session's
+records (system prompt, transcript, turns, cost) are in `<run folder>/agent/`.
+Tests use a scripted model; `IRPIPE_LLM=1 make test` also runs the one that
+calls the real model.
+
 ## Code checks
 
 ```bash
@@ -119,5 +139,6 @@ docs/         SEMANTICS.md (behaviour the schemas leave open), spec/
               and PLAN.md (the team's step-by-step plan, decisions and reports, in Turkish)
 examples/     hand-written inputs and outputs, such as a lir.json; projection/ holds
               the whole chain: lesson_plan.json, brief.json and the ir.json drawn from them;
-              tangents/ a brief and a build_ir.py written with irkit
+              tangents/ a brief and a build_ir.py written with irkit; area_between/
+              a brief for the agent alone
 ```

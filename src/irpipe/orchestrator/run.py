@@ -24,6 +24,7 @@ reference frame.svg, report.json, meta.json and alt.txt.
 
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -66,6 +67,9 @@ OUTPUTS: Final = (
 
 SCRIPT_TIMEOUT: Final = 120.0
 
+type ScriptRunner = Callable[[Path, float], list[Issue]]
+"""Runs build_ir.py in a folder within a time limit; the issues when it writes no ir.json."""
+
 
 @dataclass(frozen=True)
 class Outcome:
@@ -83,8 +87,12 @@ def orchestrate(
     lesson_path: Path | None = None,
     config_path: Path = Path("pipeline.toml"),
     script_timeout: float = SCRIPT_TIMEOUT,
+    script_runner: ScriptRunner = run_script,
 ) -> Outcome:
-    """Draw the frame ``brief_path`` describes with the agent's ``script_path`` into ``folder``."""
+    """Draw the frame ``brief_path`` describes with the agent's ``script_path`` into ``folder``.
+
+    ``script_runner`` runs build_ir.py; the agent hands in one that uses its sandbox.
+    """
     started, clock = datetime.now(UTC).isoformat(timespec="seconds"), time.perf_counter()
     folder.mkdir(parents=True, exist_ok=True)
     for name in OUTPUTS:
@@ -103,7 +111,7 @@ def orchestrate(
     issues = environment_issues(inputs.header, config)
     if issues:
         return run.finish(issues, stopped_at="environment")
-    issues = run_script(folder, script_timeout)
+    issues = script_runner(folder, script_timeout)
     if issues:
         return run.finish(issues, stopped_at="script")
 

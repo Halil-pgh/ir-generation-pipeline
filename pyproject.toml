@@ -45,6 +45,7 @@ testpaths = ["tests"]
 addopts = "-ra --import-mode=importlib"
 markers = [
     "manim: needs Manim and LaTeX installed (slow)",
+    "llm: calls the real language model and uses the subscription; runs only with IRPIPE_LLM=1",
 ]
 
 [tool.ruff]

@@ -1,0 +1,29 @@
+{
+  "version": "frame-brief/1.0",
+  "id": "area_between",
+  "purpose": "example",
+  "intent": "The area between y = x + 2 and y = x^2 is the integral of their difference from x = -1 to x = 2, which is 9/2",
+  "focus": ["area"],
+  "must_show": [
+    {"id": "axes", "text": "x and y axes with ticks and numbers"},
+    {"id": "curves", "text": "the parabola y = x^2 and the line y = x + 2, each labelled with its formula", "data": {"parabola": "x^2", "line": "x + 2"}},
+    {"id": "crossings", "text": "the two points where they cross, (-1, 1) and (2, 4), marked"},
+    {"id": "area", "text": "the area between them, from x = -1 to x = 2, shaded"},
+    {"id": "result", "text": "the integral and its value 9/2, beside the drawing"}
+  ],
+  "texts": {
+    "title": "Area between two curves",
+    "labels": {"parabola": "y = x^2", "line": "y = x + 2"}
+  },
+  "concept_colors": {"parabola": "#58C4DD", "line": "#FFD43B", "area": "#83C167"},
+  "constraints": {
+    "must": ["the shaded area ends exactly at the crossings"],
+    "should": ["the title is the only text in bold"]
+  },
+  "render_profile": {
+    "aspect": "16:9",
+    "typography": {"scale": "comfortable", "lang": "en"},
+    "theme": {"background": "#0E1117"}
+  },
+  "composition_notes": "The axes fill the left two thirds of the frame, the area in their middle. The integral and its value sit on the right."
+}

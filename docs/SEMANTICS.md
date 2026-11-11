@@ -183,6 +183,46 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   `circle_circle` the one left of the way from the first center,
   `line_circle` the points in the line's direction.
 
+## Agent
+
+- `irpipe agent brief.json` reads the brief, locks the header and checks
+  the tools as `irpipe run` does; a problem there stops it before the model
+  is asked, with the orchestrator's report.
+- The model writes one tool call per message, `<call tool="NAME">BODY</call>`;
+  text before it is kept as its notes. A message without a call, with an
+  unclosed call or with several gets an answer saying so (only the first of
+  several runs). A Markdown fence around a body, and a stray closing tag of
+  another tool format on its last line, are taken off.
+- Tools: `run_python` (replace build_ir.py, run it in the sandbox, validate
+  what it wrote), `validate`, `measure_text`, `measure_tex`, `resolve` (the
+  box each object reaches, strokes included, in frame units), `check` (the
+  front-end and the picture's checks, with the IR's allow entries applied,
+  and the brief's coverage) and `submit`. None draws the picture.
+- `submit` refuses a script whose ir.json fails validate; otherwise it is a
+  turn: the orchestrator runs the script again in the sandbox and compiles
+  and draws it into `agent/turns/<n>/`, and its report goes back.
+- The session ends at a READY turn; at a turn whose open issues go to a
+  person or the planner; after `max_turns` turns; at a turn whose (errors,
+  warnings) are not fewer than the best turn's (no progress); or when the
+  model has written `max_calls` messages or cannot answer. A script that
+  was never submitted is then compiled as a turn.
+- The kept turn is the best: READY first, then fewer open errors, then
+  fewer open warnings, then the later one. Its files are copied into the
+  run folder; a session without a turn is an error and draws nothing.
+- Results going back are cut to `result_chars` characters and end with the
+  messages and submissions left.
+- The sandbox gives build_ir.py PATH, LANG, and a home, a temporary folder
+  and a cache inside `<folder>/.sandbox/`, nothing else of the environment.
+  Its limits: the time limit (wall clock and CPU), `memory_mb` of address
+  space, 64 MB per file written. It may start only latex, dvisvgm,
+  fc-match and ldconfig; it may not use the network or write, remove or
+  rename outside its folder. A refusal is a PermissionError in the
+  script's traceback, which starts at the script's own first frame.
+- The `claude-cli` client runs `claude -p` with no tools of its own, no MCP
+  servers, slash commands, settings files or saved session, our system
+  prompt only, in an empty folder with PATH, HOME, USER and the language;
+  a conversation of several messages is sent as a transcript.
+
 ## IR document
 
 - `ir.json` is one flat object: the header fields (`version`, `intent`,

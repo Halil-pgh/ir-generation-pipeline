@@ -56,3 +56,15 @@ png = true          # also rasterize frame.svg to frame.png (needs the svg extra
 png = true          # draw frame.png with Manim; false writes only scene.py (needs the manim extra)
 timeout = 300       # seconds Manim may take to draw the picture
 # cache_dir = ""    # where Manim keeps typeset formulas and texts; default ~/.cache/irpipe/manim
+
+[agent]
+# The IR agent (irpipe agent brief.json): a language model writes build_ir.py with our tools.
+provider = "claude-cli"         # claude -p, on the team's subscription (decision K9)
+model = "claude-haiku-5-5"      # "" leaves the model to the provider
+max_turns = 3                   # submissions; each is compiled and drawn, the best one is kept
+max_calls = 30                  # messages the model may write in one session
+sandbox = "auto"                # where build_ir.py runs: "bwrap" where the system allows it,
+                                # else "audit" (limits and an audit hook); "none" for no sandbox
+# effort = ""                   # how hard the model thinks: "low" ... "max"; "" its default
+# script_timeout = 120          # seconds build_ir.py may run
+# example = "examples/tangents/build_ir.py"   # the whole script the system prompt shows

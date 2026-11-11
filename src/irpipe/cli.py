@@ -3,6 +3,7 @@
     irpipe render examples/projection/ir.json          # into runs/projection/
     irpipe render my/ir.json -o out/ --config pipeline.toml
     irpipe run examples/projection/brief.json examples/projection/build_ir.py
+    irpipe agent examples/projection/brief.json        # the agent writes build_ir.py
 
 ``render`` runs the stages ``pipeline.toml`` lists on an IR written by hand.
 Next to the backend's files it writes lir.json and report.json, then
@@ -12,6 +13,11 @@ prints the report.
 it locks the header, runs the agent's build_ir.py, compiles and draws what
 it wrote, and fills the whole run folder (runs/<brief id> by default); it
 prints the report and who acts next.
+
+``agent`` lets the IR agent (irpipe/agent) write build_ir.py for the brief,
+with the model pipeline.toml's ``[agent]`` names; each submission is drawn,
+and the best one fills the run folder. It prints every turn, then the
+chosen turn's report.
 
 The exit status is 0 when the picture is READY, 1 when it is not, 2 when
 the command itself could not run.
@@ -46,10 +52,21 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument(
         "--config", type=Path, default=Path("pipeline.toml"), help="pipeline file to run"
     )
+    agent = commands.add_parser("agent", help="let the IR agent draw one frame from its brief")
+    agent.add_argument("brief", type=Path, help="the planner's brief.json")
+    agent.add_argument(
+        "--lesson", type=Path, help="the lesson plan (default: lesson_plan.json beside the brief)"
+    )
+    agent.add_argument("-o", "--out", type=Path, help="run folder (default: runs/<brief id>)")
+    agent.add_argument(
+        "--config", type=Path, default=Path("pipeline.toml"), help="pipeline file to run"
+    )
     args = parser.parse_args(argv)
     try:
         if args.command == "run":
             return run_brief(args.brief, args.script, args.out, args.lesson, args.config)
+        if args.command == "agent":
+            return run_agent_command(args.brief, args.out, args.lesson, args.config)
         return render_ir(args.ir, args.out or default_out(args.ir), args.config)
     except (OSError, PipelineError) as exc:
         print(f"irpipe: {exc}", file=sys.stderr)
@@ -105,6 +122,32 @@ def run_brief(
     _print(outcome.report, outcome.files)
     print(f"next: {outcome.route.describe()}")
     return 0 if outcome.report.ready else 1
+
+
+def run_agent_command(brief: Path, out: Path | None, lesson: Path | None, config: Path) -> int:
+    from irpipe.agent import AgentError, LLMError, run_agent
+
+    folder = out or Path("runs") / _brief_id(brief)
+    try:
+        result = run_agent(brief, folder, lesson_path=lesson, config_path=config)
+    except (AgentError, LLMError) as exc:
+        print(f"irpipe: the agent made no picture: {exc}", file=sys.stderr)
+        return 2
+    for turn in result.turns:
+        errors, warnings = turn.counts
+        status = str(turn.outcome.report.status).replace("_", " ")
+        counts = f"{_count(errors, 'error')}, {_count(warnings, 'warning')}"
+        print(f"turn {turn.number}: {status} ({counts})")
+    if result.turns:
+        cost = f", ${result.cost_usd:.4f}" if result.cost_usd else ""
+        print(f"chose turn {result.chosen} ({result.calls} messages{cost}); {result.ended}")
+    _print(result.outcome.report, result.outcome.files)
+    print(f"next: {result.outcome.route.describe()}")
+    return 0 if result.outcome.report.ready else 1
+
+
+def _count(number: int, word: str) -> str:
+    return f"{number} {word}{'' if number == 1 else 's'}"
 
 
 def _brief_id(brief: Path) -> str:

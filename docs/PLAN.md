@@ -180,7 +180,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 18 | F5 | brief ve lesson\_plan şeması | schema/brief.py | Örnek brief doğrulanır; must\_show id'leri benzersiz | Tamam |
 | 19 | F5 | Orchestrator | header kilitleme, ortam kontrolü, run klasörü, meta.json, alt.txt, hata yönlendirme | `irpipe run brief.json build_ir.py` tüm çıktı klasörünü yazar | Tamam |
 | 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Tamam |
-| 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Bekliyor |
+| 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Tamam |
 | 22 | F6 | Planner + geri dönüş yolu | planner/ | Konu promptundan brief üretilir; sığmayan brief planner'a döner | Bekliyor |
 | 23 | F6 | Eval + regresyon | eval matrisi; kendi `examples/` örneklerimizle regresyon (K27) | `examples/` altındaki her örnek her değişiklikte derlenir; READY sayısı ve resim farkları raporlanır | Bekliyor |
 
@@ -370,6 +370,18 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K152 | Header okunduğu gibi geri yazılır; `pic.header` donmuş bir model. `pic.check()` validate aşamasını çalıştırır; bir koşunun bildiği her issue kodunu (kontroller, backend'ler, W-UNCOVERED) yükler ki `allow` girdisi bilinmeyen kod sayılmasın | Header orchestrator'ın (K132); ajanın aracı validate 21. adımda bunu sarar | Onaylandı |
 | K153 | Örnek yeni bir kare: `examples/tangents/` (brief.json ve irkit'le yazılmış build_ir.py). `examples/projection/build_ir.py` değişmedi | 19. adımın testleri o betiğin metnini değiştirerek çalışıyor; yeniden yazmak 19'u bozardı. Teğet örneği tam değerlerin (9/5, 12/5) ve ölçümün işe yaradığı bir resim | Onaylandı |
 | K154 | Betiğin hataları (bilinmeyen ya da eksik alan, bilinmeyen tip, alınmış id, IR'ye giremeyen sayı) `ScriptError` türünden (TypeError, ValueError ya da AttributeError olarak); betiğin çağırdığı her builder bunları ve TexError'ı SDK'nın kendi satırları atılmış olarak fırlatır. Traceback betiğin satırı (hata satırın bir parçasıysa altı çizili), SDK'nın tek `raise` satırı ve mesajla biter: en fazla altı satır. Başka bir istisna SDK'nın kusurudur ve traceback'ini olduğu gibi taşır | E-SCRIPT traceback'in son altı satırını tutuyor (K134); SDK'nın iç satırları betiğin satırını mesajdan düşürüyordu. 19. adım değişmeden düzeltilir | Onaylandı |
+| K155 | Ajan `src/irpipe/agent/` paketi, her dosya tek iş: settings, llm, claude_cli, protocol, prompt, reference, tools, sandbox, jail, session. Komut `irpipe agent brief.json [--lesson] [-o] [--config]`, kısayolu `make agent` | Analiz §4 ve plan (dalga 2); orchestrator gibi bir komut, run klasörü aynı | Onaylandı |
+| K156 | LLM `LLMClient` arayüzünün ve `LLM_CLIENTS` kaydının arkasında (K10); ilk sağlayıcı "claude-cli": `claude -p` düz bir tamamlama olarak: kendi araçları yok (`--tools ""`), sistem prompt'u yalnızca bizimki (`--system-prompt-file`), JSON çıktı, kayıtlı oturum, MCP, slash komutu ve ayar dosyası yok; boş bir geçici klasörde, yalnızca PATH, HOME, USER ve dil ortamıyla. Birden çok mesaj transkript olarak gönderilir. Hata, zaman aşımı ya da hata sonucu LLMError. Model `claude-haiku-5-5` | K9 (döngü bizim harness'imizde); model kullanıcının seçimi ve analizin önerisi. `--bare` aboneliği (OAuth) okumadığı için kullanılamıyor | Onaylandı |
+| K157 | Çağrı protokolü: her mesajda tek `<call tool="AD">GÖVDE</call>`; önündeki metin modelin notu. Gövde olduğu gibi (run_python'da Python, ölçümde JSON); etrafındaki Markdown çiti ve son satırdaki başka bir araç biçiminin kapanış etiketi atılır. Çağrısız, kapanmamış ya da çok çağrılı mesaja durumu söyleyen bir cevap gider | Kod JSON içinde kaçışsız gider; sağlayıcıdan bağımsız. İlk canlı koşuda model betiğin sonuna `</parameter>` yazdı | Onaylandı |
+| K158 | Ajanın araçları: `run_python` (betiği yazar, kum havuzunda çalıştırır, yazdığını doğrular), `validate`, `measure_text`, `measure_tex`, `resolve` (her nesnenin ulaştığı kutu, çerçeve biriminde), `check` (front-end, resmin kontrolleri, IR'nin allow'ları uygulanmış, brief'in kapsamı), `submit`. Hiçbiri resmi çizmez; pipeline.toml'un aşamaları gereken aşamaya kadar, validate'in arkasında check_header ile çalışır | Analiz §4'ün araç tablosu; render ajanın aracı değil | Onaylandı |
+| K159 | Tur: her `submit`, validate'ten geçmişse bir tur: orchestrator betiği kum havuzunda yeniden çalıştırıp `agent/turns/<n>/`'e derler ve çizer; raporu ajana döner. Oturum READY turda, ajanın olmayan bir sorunda (insan ya da planner), `max_turns` (3) turdan sonra, en iyi turdan daha iyi olmayan turda (ilerleme yok), `max_calls` (30) mesajdan sonra ya da model cevap veremeyince biter; hiç teslim edilmemiş son betik yine tur olarak derlenir. En iyi tur (önce READY, sonra az açık hata, sonra az uyarı, sonra daha geç olan) run klasörüne kopyalanır | Analiz §1: tur sınırı 3, "ilerleme yoksa dur", her turun IR'si saklansın, en az açık sorunlu sürüm teslim edilsin | Onaylandı |
+| K160 | Kum havuzu: `bwrap` (ağ yok, sistem salt okunur, yalnızca run klasörü yazılabilir), `audit` (yalnızca jail) ya da `none`; `auto` bwrap çalışıyorsa onu, yoksa audit'i seçer. Jail: kaynak sınırları (CPU = süre + 5 s, 2048 MB adres alanı, dosya başına 64 MB, core yok) ve bir audit hook (ağ; latex, dvisvgm, fc-match ve ldconfig dışında program; klasör dışına yazma, silme, taşıma; adıyla ctypes kütüphanesi reddedilir). Betik temiz bir ortam (PATH, LANG ve `.sandbox/` içinde home, tmp, cache) alır; traceback betiğin ilk çerçevesinden başlar | Analiz §4: ağsız, yalnızca run klasörüne yazabilen, sınırlı. Bu makinede AppArmor ayrıcalıksız user namespace'i kapatıyor; kullanıcı Python düzeyi + bwrap'i seçti. Audit hook kasıtlı kötü koda karşı bir duvar değil | Onaylandı |
+| K161 | Ayarlar pipeline.toml'un `[agent]` tablosunda (provider, model, effort, max_turns, max_calls, call_timeout, script_timeout, sandbox, memory_mb, result_chars, example); `PipelineConfig`'e isteğe bağlı `agent` alanı eklendi, tabloyu `AgentSettings` sıkı denetler | K4: pipeline'ın içeriği pipeline.toml'dan; config modeli bilinmeyen bölümü reddettiği için alan eklemek gerekiyordu (mevcut davranış aynı) | Onaylandı |
+| K162 | Orchestrator'a yalnızca ekleme: `orchestrate(..., script_runner=run_script)` ve `run_script(..., command=None, env=None)`; varsayılanlar 19. adımın davranışı. Ajan turlarda betiği kum havuzunun komutuyla çalıştırır | 19. adımın akışı ve testleri değişmeden tur derlemesi orchestrator'ı yeniden kullanır | Onaylandı |
+| K163 | Sistem prompt'u projede her kare için aynı (sağlayıcı önbelleğe alabilir): rol, protokol, bütçe, READY kuralları, betik kuralları, çerçeve, irkit modüllerinin docstring'leri, modellerden üretilen IR başvurusu (`reference.py`) ve bütün bir örnek betik (`examples/tangents/build_ir.py`, ayarlanabilir). Kareye özel olan (brief, dersin notları, kilitli header) ilk mesajda | Analiz §4 "Prompt boyutu": spec şemadan üretilsin; bileşen belgeleri docstring'lerde | Onaylandı |
+| K164 | Kayıtlar run klasörünün `agent/` alt klasöründe: system_prompt.md, transcript.md (her mesaj), session.json (ayarlar, turlar, seçilen tur, mesaj sayısı, maliyet), turns/<n>/, work/ (ajanın çalışma klasörü) | Bir ajan koşusu sonradan okunabilsin ve tekrarlanabilsin | Onaylandı |
+| K165 | Testler senaryolu bir LLM istemcisiyle; gerçek modeli çağıran test `llm` işaretli ve yalnızca `IRPIPE_LLM=1` ile koşar | Testler kota harcamadan ve ağsız koşar | Onaylandı |
+| K166 | Ajan için elle yazılmış yeni bir brief: `examples/area_between/brief.json` (iki eğri arasındaki alan: eksenler, grafikler, kesişimler, taralı bölge, integral) | Örnek betiği olmayan bir kare; 23. adımın değerlendirmesine de girer | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -418,6 +430,63 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 21 — IR ajanı · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı: ajan elle yazılmış bir brief'ten READY resim üretiyor. `irpipe agent examples/projection/brief.json` (ekibin brief'i, dersiyle) gerçek modelle (`claude -p`, Haiku 5.5) ilk teslimde READY çıktı: 4 mesaj (betik iki kez, check, submit), 0.012 $. İkinci koşu örnek betiği olmayan yeni bir brief'le (`examples/area_between/brief.json`, iki eğri arasındaki alan): 18 mesaj, 8 check'te uyarıları 13'ten 0'a indirdi, ilk teslimde READY, 0.059 $. Testler senaryolu bir LLM istemcisiyle: `make check` temiz, 1035 test (42'si yeni), 1 atlanan (gerçek modelle olan, `IRPIPE_LLM=1` ister), 4 bilinen ayrışma, mypy strict, ruff.
+
+![21. adım: ajanın iki canlı koşusu, solda ekibin projeksiyon brief'i, sağda yeni alan brief'i](plan/adim-21.png)
+
+**Nasıl çalışıyor.** `irpipe agent brief.json` brief'i okuyup header'ı kilitler ve araçları denetler (orchestrator'ınkiyle aynı; sorun varsa model çağrılmaz). Sonra modelle konuşur:
+
+1. Sistem prompt'u projede her kare için aynı: rol, çağrı protokolü, araçlar, READY kuralları, irkit'in docstring'leri, modellerden üretilen IR başvurusu ve bütün bir örnek betik (`examples/tangents/build_ir.py`), yaklaşık 30 bin karakter. İlk mesaj brief, dersin notları ve kilitli header.
+2. Model her mesajda tek bir araç çağırır: `<call tool="run_python">…betik…</call>`. Araçlar: `run_python` (betiği kum havuzunda çalıştırıp yazdığını doğrular), `validate`, `measure_text`, `measure_tex`, `resolve` (her nesnenin kutusu), `check` (front-end, resmin kontrolleri, brief'in kapsamı), `submit`.
+3. Her `submit` bir tur: orchestrator betiği kum havuzunda yeniden çalıştırıp `agent/turns/<n>/`'e çizer, raporu modele döner. En fazla 3 tur ve 30 mesaj; READY'de, ilerleme olmayınca ya da sorun ajanın değilse biter. En iyi tur run klasörüne kopyalanır.
+
+```
+$ irpipe agent examples/projection/brief.json -o runs/projection
+turn 1: READY (0 errors, 0 warnings)
+chose turn 1 (4 messages, $0.0123); turn 1 is READY
+READY
+  -> runs/projection/brief.json … build_ir.py, header.json, ir.json, lir.json, scene.py,
+     frame.png, frame.svg, report.json, meta.json, alt.txt
+next: done: the picture is ready
+```
+
+Kayıtlar `runs/<id>/agent/` altında: system_prompt.md, transcript.md, session.json (turlar, seçilen tur, mesaj sayısı, maliyet), turns/, work/. Canlı koşularda görülenler:
+
+| Durum | Sonuç |
+| --- | --- |
+| Model betiğin sonuna kendi araç biçiminden `</parameter>` yazdı | İlk koşuda SyntaxError, sonraki mesajda düzeltti; protokol artık bu etiketi atıyor (K157) |
+| Bir çağrı yarıda kesildi | `the call to run_python was not closed with </call>; …`; model kısaltıp yeniden gönderdi |
+| check: 13 uyarı (metne çizgi, dolgu örtüşmesi, beyan edilmemiş renk) | Ajan sekiz turda sıfıra indirdi; bir kez E-PLACE aldı, düzeltti |
+| Kum havuzunda ağa, klasör dışına yazmaya, `ls`'e, `os.system`'e, adıyla ctypes'a deneme | `PermissionError: the sandbox does not let build_ir.py …`; dosyaya dokunulmaz |
+| 4 GB'lık bir dizi | `MemoryError` (2048 MB sınırı) |
+
+**Üretilen dosyalar.** `src/irpipe/agent/` altında 11 dosya, `tests/agent/` altında 6 dosya, `examples/area_between/brief.json`, `docs/plan/adim-21.png` (Dosya kaydı'nda). Önceki dosyalara yalnızca ekleme, mevcut davranış ve testler aynı: `core/config.py` (isteğe bağlı `[agent]` tablosu), `orchestrator/script.py` (`run_script`'e `command` ve `env`), `orchestrator/run.py` (`orchestrate`'e `script_runner`), `cli.py` (`agent` komutu), `pipeline.toml` (`[agent]`), `pyproject.toml` (`llm` işareti), `Makefile` (`make agent`), README (Let the agent draw a frame), `SEMANTICS.md` (yeni Agent bölümü).
+
+**Plandan sapmalar.**
+
+- Analizin `check` aracı SVG referansından id etiketli bir önizleme de veriyordu. Modele resim gitmiyor: `claude -p` metin istemi alıyor. `resolve`'un kutu tablosu yerini kısmen tutuyor.
+- `claude -p --bare` kullanılamadı: bu mod aboneliği (OAuth) okumuyor, yalnızca API anahtarı. Yalıtım bayraklar, temiz ortam ve boş bir çalışma klasörüyle (K156).
+- Kum havuzu bu makinede `audit`: AppArmor ayrıcalıksız user namespace'i kapattığı için bwrap çalışmıyor. Kullanıcı Python düzeyi + bwrap'i seçti; bwrap'e izin veren makinede kendiliğinden o kullanılıyor (K160).
+- Planner'a geri dönüş aracı (brief sığmıyor → kısalt ya da böl) 22. adımda; şimdilik planner'a giden bir sorun oturumu durduruyor.
+- Adım 1'in config modeline isteğe bağlı bir `agent` alanı eklendi (K161); pipeline.toml bilinmeyen bölümü reddediyordu.
+
+**Bulunan sorunlar.** Önceki adımlarda yeni yok. İkinci koşunun resmi kontrollerden temiz geçtiği halde iki yerleşim kusuru taşıyor: `y` ekseninin adı başlığa çok yakın, `(2, 4)` etiketi işarete değiyor. Kontrollerde "yakınlık" diye bir ölçüt yok; analizin görsel eleştirmeni (ileride) bunu görecek yer. Bir hata değil, bir boşluk; "Açık kalanlar"da.
+
+**Varsayımlar.**
+
+- `claude` komutu kurulu ve abonelikle giriş yapılmış. Maliyetler CLI'ın bildirdiği liste fiyatı karşılığı; abonelikte kotadan düşer.
+- Audit hook kasıtlı kötü koda karşı bir duvar değil (C uzantısı her şeyi yapabilir); ajanın hatalarını run klasöründe tutar. Gerçek yalıtım için bwrap'e AppArmor profili gerekir (tek seferlik sudo).
+- Kum havuzundaki betik okuma yapabilir (sistem dosyaları, fontlar); yalnızca yazma, ağ ve program başlatma kısıtlı.
+- Bir tur, teslim demek; ilerleme (açık hata, açık uyarı) çiftinin en iyi turdan küçük olması.
+
+**Kararlar.** K155–K166 (Karar günlüğü).
+
+**Nasıl denenir.** `make agent` (projeksiyon brief'i; modeli çağırır) ya da `irpipe agent examples/area_between/brief.json`; dosyalar `runs/<id>/`, oturumun kaydı `runs/<id>/agent/`. Modelsiz testler: `.venv/bin/pytest tests/agent`; gerçek modelle: `IRPIPE_LLM=1 .venv/bin/pytest tests/agent -k real_model`.
+
+**Açık kalanlar.** Modele resim (önizleme) göndermek: `claude -p`'nin stream-json girdisi görsel kabul ediyor, denenmedi. Yakınlık/kalabalık için bir kontrol ya da görsel eleştirmen. bwrap için AppArmor profili (belgesi). Planner'a dönüş yolu (22). Ajanın kendi değerlendirmesi, brief'ler × modeller (23). Commit edildi.
 
 ### Adım 20 — irkit SDK · 11 Kasım 2026
 
@@ -1524,3 +1593,20 @@ make check    # lint + mypy + testler
 | `tests/irkit/test_picture.py` | 20 | Builder'lar, tutamaçlar, tam ve float alanlar, satırında yakalanan hatalar, validate, header'ın korunması, ölçüm | pytest testi (9) |
 | `tests/irkit/test_script_errors.py` | 20 | Betikteki her tür hata E-SCRIPT mesajında betiğin satırıyla dönüyor; yalnızca betiğin hataları SDK'nın satırlarını kaybediyor | pytest testi (9) |
 | `tests/irkit/test_example.py` | 20 | Örnek betik orchestrator'dan READY çıkıyor; tam sayılar ve ölçülen kutu ir.json'da; Manim'le de | pytest testi (2) |
+| `src/irpipe/agent/__init__.py` | 21 | IR ajanı paketi; docstring'i modül haritasını verir | `run_agent`, `AgentResult`, `AgentError`, `AgentSettings`, `LLMClient`, `LLM_CLIENTS`, `Message`, `Reply`, `LLMError`, `Turn` |
+| `src/irpipe/agent/settings.py` | 21 | pipeline.toml'un `[agent]` tablosu | `AgentSettings.from_config(config)` |
+| `src/irpipe/agent/llm.py` | 21 | Dil modelinin arayüzü ve sağlayıcı kaydı (K10) | `LLMClient.complete(system, messages) -> Reply`, `Message`, `Reply`, `LLMError`, `LLM_CLIENTS` |
+| `src/irpipe/agent/claude_cli.py` | 21 | Sağlayıcı "claude-cli": `claude -p` düz tamamlama olarak (K9) | `ClaudeCLI`, `transcript(messages)`, `parse_result(...)` |
+| `src/irpipe/agent/protocol.py` | 21 | Mesajdaki tek araç çağrısını okur | `parse(message) -> Parsed`, `Call`, `unfence(body)` |
+| `src/irpipe/agent/prompt.py` | 21 | Sistem prompt'u, ilk mesaj, sonuçların geri dönüşü | `system_prompt(settings, example)`, `first_message(inputs)`, `wrap(tool, result, ...)` |
+| `src/irpipe/agent/reference.py` | 21 | IR'nin nesneleri ve alanları, modellerden, ajanın okuyacağı biçimde | `object_reference()`, `type_text(field)` |
+| `src/irpipe/agent/tools.py` | 21 | Ajanın araçları, çalışma klasöründe; sorunları IR terimleriyle yazar | `Tools` (`run_python`, `validate`, `measure_text`, `measure_tex`, `resolve`, `check`), `describe(issues)`, `NAMES` |
+| `src/irpipe/agent/sandbox.py` | 21 | build_ir.py'nin çalıştığı yer: bwrap ya da yalnızca jail; temiz ortam | `Sandbox` (`run`, `command`), `sandbox_for(kind, memory_mb)`, `bwrap_works()`, `Ran` |
+| `src/irpipe/agent/jail.py` | 21 | build_ir.py'nin etrafındaki kaynak sınırları ve audit hook | `python -m irpipe.agent.jail --cpu S --memory-mb M build_ir.py`, `Guard`, `limit`, `script_traceback` |
+| `src/irpipe/agent/session.py` | 21 | Bir oturum: döngü, turlar, durma kuralları, en iyi tur, kayıtlar | `run_agent(brief, folder, lesson_path=, config_path=, client=, sandbox=)`, `AgentResult`, `Turn`, `AgentError` |
+| `tests/agent/conftest.py` | 21 | Senaryolu LLM istemcisi, SVG ile çizen pipeline.toml, test header'ı; `llm` testlerinin atlanması | fixture: `scripted`, `agent_config`, `header` |
+| `tests/agent/test_protocol_and_prompt.py` | 21 | Protokol, ayarlar, IR başvurusu, sistem prompt'u, ilk mesaj, sonuçların kesilmesi | pytest testi (9) |
+| `tests/agent/test_sandbox.py` | 21 | Kum havuzunda irkit betiği; reddedilenler; ortam; süre ve bellek sınırı; bwrap komutu | pytest testi (12) |
+| `tests/agent/test_claude_cli.py` | 21 | Sahte bir `claude` komutuyla: bayraklar, sistem prompt'u, ortam, transkript, hatalar | pytest testi (7) |
+| `tests/agent/test_tools.py` | 21 | Araçlar: betik, hata, validate, check, resolve, ölçüm | pytest testi (5) |
+| `tests/agent/test_session.py` | 21 | Oturum: READY tur, ilerleme yok, tur sınırı, reddedilen teslim, biten bütçe, hatalı son betik, komut, cevapsız model, bozuk brief; gerçek modelle (llm) | pytest testi (9 + 1 llm) |
