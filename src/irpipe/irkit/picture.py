@@ -34,6 +34,7 @@ from irpipe.core.allow import Allow
 from irpipe.core.plugins import load_plugins
 from irpipe.expr import CycleError, TableError, Value, evaluate_table
 from irpipe.frontend.anchors import BASELINE_ANCHORS, BOX_ANCHORS, PATH_ANCHORS, RESERVED
+from irpipe.irkit.errors import ScriptAttributeError, ScriptValueError, at_the_call
 from irpipe.irkit.fields import checked, object_models, to_json
 from irpipe.irkit.handles import Handle
 from irpipe.irkit.measure import DEFAULT_PROVIDER, Box, Measurer
@@ -61,15 +62,17 @@ class Builder:
         self._picture = picture
         self._into = into
 
+    @at_the_call
     def add(self, type_name: str, id: str, /, **fields: Any) -> Handle:
         """An object of ``type_name`` with id ``id``; TypeError for a field it does not take."""
         return self._picture._make(self._into, type_name, id, fields)
 
+    @at_the_call
     def __getattr__(self, name: str) -> Callable[..., Handle]:
         if name.startswith("_"):
             raise AttributeError(name)
         if name not in object_models():
-            raise AttributeError(_unknown_type(name))
+            raise ScriptAttributeError(_unknown_type(name))
         return functools.partial(self.add, name)
 
 
@@ -109,10 +112,12 @@ class Picture:
 
     # Objects
 
+    @at_the_call
     def add(self, type_name: str, id: str, /, **fields: Any) -> Handle:
         """A drawn object of ``type_name``; ``pic.<type_name>(id, ...)`` is the same."""
         return self._draw.add(type_name, id, **fields)
 
+    @at_the_call
     def __getattr__(self, name: str) -> Callable[..., Handle]:
         if name.startswith("_"):
             raise AttributeError(name)
@@ -127,10 +132,10 @@ class Picture:
     ) -> Handle:
         model = object_models().get(type_name)
         if model is None:
-            raise ValueError(_unknown_type(type_name))
+            raise ScriptValueError(_unknown_type(type_name))
         if oid in self._handles or oid in RESERVED:
             taken = self._handles[oid].kind if oid in self._handles else "the picture"
-            raise ValueError(f"the id '{oid}' is taken already (by a {taken})")
+            raise ScriptValueError(f"the id '{oid}' is taken already (by a {taken})")
         given = checked(model, f"{type_name} '{oid}'", fields)
         into.append({"id": oid, "type": type_name, **to_json(model, given, self._computed())})
         self._handles[oid] = Handle(oid, type_name, _anchors(model), labelled="label" in given)
@@ -138,34 +143,40 @@ class Picture:
 
     # The rest of the body
 
+    @at_the_call
     def space(self, id: str, *, origin: Any = (0, 0), unit: Any = 1) -> Handle:
         """A coordinate space: its point (x, y) is drawn at ``origin + (x, y) * unit``."""
         if id in self._spaces:
-            raise ValueError(f"there is a space '{id}' already")
+            raise ScriptValueError(f"there is a space '{id}' already")
         given = checked(Space, f"space '{id}'", {"origin": origin, "unit": unit})
         self._spaces[id] = {"id": id, **to_json(Space, given, self._computed())}
         return Handle(id, "space")
 
+    @at_the_call
     def zone(self, name: str, box: Any) -> Handle:
         """A named box ``[left, bottom, right, top]`` (frame units) others may refer to."""
         self._zones[name] = render(plain(box), exact=False)
         return Handle(name, "zone", BOX_ANCHORS)
 
+    @at_the_call
     def value(self, name: str, number: Any) -> str:
         """A named number in the IR's ``values``; geometry may use it in expressions
         (``"k/2"``). Returns the name."""
         self._values[name] = plain(number)
         return name
 
+    @at_the_call
     def color(self, name: str, color: Any) -> str:
         """An extra color, ``"#RRGGBB"``, ``[r, g, b]`` or ``mix(a, b)``. Returns its name."""
         self._colors[name] = render(plain(color), exact=False)
         return name
 
+    @at_the_call
     def focus(self, *objects: Any) -> None:
         """The objects the eye should go to first."""
         self._focus.extend(objects)
 
+    @at_the_call
     def allow(self, code: str, reason: str, objects: Iterable[Any] = ()) -> None:
         """Accept a warning on purpose: its code, why, and the objects it is about."""
         entry = checked(Allow, f"allow '{code}'", {"code": code, "reason": reason})
@@ -173,6 +184,7 @@ class Picture:
 
     # Measuring
 
+    @at_the_call
     def measure_text(
         self,
         text: str,
@@ -185,6 +197,7 @@ class Picture:
         """The box ``text`` will have, in frame units (or ``space``'s)."""
         return self._measurer.text(text, size, weight, italic, self._units(space))
 
+    @at_the_call
     def measure_tex(
         self, tex: str, *, size: Size = "body", space: Handle | str | None = None
     ) -> Box:
@@ -239,7 +252,7 @@ class Picture:
             return (1.0, 1.0)
         name = str(space)
         if name not in self._spaces:
-            raise ValueError(f"there is no space '{name}'; make it with pic.space first")
+            raise ScriptValueError(f"there is no space '{name}'; make it with pic.space first")
         return Space.model_validate(self._spaces[name], context={"values": self._computed()}).units
 
 

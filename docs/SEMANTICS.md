@@ -157,6 +157,11 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   an unknown type, a taken id or an anchor the object does not have is an
   exception at the script's line. Values are not checked there: the
   validate stage checks them all (`pic.check()`, or the run itself).
+- Such an exception (and a TexError from measuring) leaves the SDK
+  without the SDK's own frames: its traceback ends with the script's line
+  (underlined when the mistake is part of it), the SDK's one `raise` line
+  and the message, six lines at most, the end E-SCRIPT keeps. Any other
+  exception is a fault in the SDK and keeps its whole traceback.
 - A handle stands for its id wherever one goes. A component's anchors
   are not known before it opens, so its handle offers a box's and an open
   shape's; validate checks the name.

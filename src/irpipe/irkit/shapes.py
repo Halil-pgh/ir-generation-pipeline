@@ -21,6 +21,7 @@ from collections.abc import Sequence
 from fractions import Fraction
 from typing import Any
 
+from irpipe.irkit.errors import at_the_call
 from irpipe.irkit.fields import checked
 from irpipe.schema.ir import Label
 
@@ -28,6 +29,7 @@ type Point = Any
 """Two numbers, an anchor (``a.tip``) or a point on an outline (``f.at(x=2)``)."""
 
 
+@at_the_call
 def label(text: str | None = None, *, tex: str | None = None, **fields: Any) -> dict[str, Any]:
     """A label: ``text`` or ``tex``, and where it sits (``at``, ``dir``, ``gap``), its ``size``,
     ``color``, ``weight``, ``italic``."""

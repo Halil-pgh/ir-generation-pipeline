@@ -36,9 +36,11 @@ What it gives:
 - **Measuring** (measure.py): ``pic.measure_text`` and ``pic.measure_tex``,
   in IR units, with the provider and font the pipeline measures with.
 - **Checking**: ``pic.check()`` returns the validate stage's issues.
+- **Mistakes** (errors.py): a wrong field, type or id raises at the
+  script's own line, and the traceback ends there, so E-SCRIPT shows it.
 
 Module map: picture.py, handles.py, fields.py, numbers.py, shapes.py,
-geometry.py, measure.py.
+geometry.py, measure.py, errors.py.
 """
 
 from irpipe.irkit import geometry as geometry

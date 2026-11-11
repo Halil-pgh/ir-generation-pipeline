@@ -369,6 +369,7 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K151 | `pic.measure_text` ve `pic.measure_tex` measure aşamasının varsayılan sağlayıcısıyla (`pango`), header'ın fontları ve puntolarıyla ölçer; cevap çerçeve biriminde ya da istenen uzayın biriminde. Sağlayıcı ilk ölçümde kurulur (`Picture(..., metrics="fixed")` testler için) | Analiz §2.5 ve §4: ajan tahmin etmez, ölçer; sonuç IR birimiyle döner | Onaylandı |
 | K152 | Header okunduğu gibi geri yazılır; `pic.header` donmuş bir model. `pic.check()` validate aşamasını çalıştırır; bir koşunun bildiği her issue kodunu (kontroller, backend'ler, W-UNCOVERED) yükler ki `allow` girdisi bilinmeyen kod sayılmasın | Header orchestrator'ın (K132); ajanın aracı validate 21. adımda bunu sarar | Onaylandı |
 | K153 | Örnek yeni bir kare: `examples/tangents/` (brief.json ve irkit'le yazılmış build_ir.py). `examples/projection/build_ir.py` değişmedi | 19. adımın testleri o betiğin metnini değiştirerek çalışıyor; yeniden yazmak 19'u bozardı. Teğet örneği tam değerlerin (9/5, 12/5) ve ölçümün işe yaradığı bir resim | Onaylandı |
+| K154 | Betiğin hataları (bilinmeyen ya da eksik alan, bilinmeyen tip, alınmış id, IR'ye giremeyen sayı) `ScriptError` türünden (TypeError, ValueError ya da AttributeError olarak); betiğin çağırdığı her builder bunları ve TexError'ı SDK'nın kendi satırları atılmış olarak fırlatır. Traceback betiğin satırı (hata satırın bir parçasıysa altı çizili), SDK'nın tek `raise` satırı ve mesajla biter: en fazla altı satır. Başka bir istisna SDK'nın kusurudur ve traceback'ini olduğu gibi taşır | E-SCRIPT traceback'in son altı satırını tutuyor (K134); SDK'nın iç satırları betiğin satırını mesajdan düşürüyordu. 19. adım değişmeden düzeltilir | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -420,7 +421,7 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 
 ### Adım 20 — irkit SDK · 11 Kasım 2026
 
-**Yapılanlar.** Kabul kriteri karşılandı: örnek `build_ir.py` sayılarını hesaplıyor ve geçerli bir `ir.json` yazıyor. Örnek yeni bir kare, bir noktadan çembere çizilen teğetler: `examples/tangents/` (brief.json ve irkit'le yazılmış build_ir.py). Orchestrator onu bir ajanın betiği gibi çalıştırıyor; resim SVG ile de Manim ile de READY. Değme noktaları ir.json'a `"9/5"`, `"12/5"` olarak tam giriyor; formül kutusu ölçülen formüle göre boyutlanıyor. `make check` temiz: 984 test (35'i yeni), 4 bilinen ayrışma, mypy strict, ruff.
+**Yapılanlar.** Kabul kriteri karşılandı: örnek `build_ir.py` sayılarını hesaplıyor ve geçerli bir `ir.json` yazıyor. Örnek yeni bir kare, bir noktadan çembere çizilen teğetler: `examples/tangents/` (brief.json ve irkit'le yazılmış build_ir.py). Orchestrator onu bir ajanın betiği gibi çalıştırıyor; resim SVG ile de Manim ile de READY. Değme noktaları ir.json'a `"9/5"`, `"12/5"` olarak tam giriyor; formül kutusu ölçülen formüle göre boyutlanıyor. `make check` temiz: 993 test (44'ü yeni), 4 bilinen ayrışma, mypy strict, ruff.
 
 ![20. adımın örneği: P'den çembere iki teğet, dik açı işaretleri, kesikli kiriş, taralı alan ve ölçülen formül kutusu](plan/adim-20.png)
 
@@ -449,7 +450,12 @@ Yazılan ir.json'dan:
 {"id": "region", "type": "flood_fill", "seed": [4, 0], "bounded_by": ["t1", "t2", "circle"], …}
 ```
 
-Etiketin `dir`'i ifade almadığı için (K147) orada aynı sayılar float olarak yazılıyor. Betiğin hataları kendi satırında yakalanıyor ve koşu E-SCRIPT olarak ajana dönüyor:
+Etiketin `dir`'i ifade almadığı için (K147) orada aynı sayılar float olarak yazılıyor. Betiğin hataları kendi satırında yakalanıyor ve koşu E-SCRIPT olarak ajana dönüyor; E-SCRIPT'in tuttuğu son altı satırda betiğin satırı da görünüyor (K154):
+
+```
+E-SCRIPT: build_ir.py stopped with an error: Traceback (most recent call last): / File ".../build_ir.py", line 50, in <module> / pic.line("op", strat=center, end=P, space=S, stroke_width=3) / File ".../irkit/errors.py", line 54, in call / raise mistake.with_traceback(None) from None / irpipe.irkit.errors.ScriptTypeError: line 'op' has no field 'strat'; did you mean 'start'?
+```
+
 
 | Betikte | Sonuç |
 | --- | --- |
@@ -463,7 +469,7 @@ Etiketin `dir`'i ifade almadığı için (K147) orada aynı sayılar float olara
 | `sympy.sqrt(2)/2`, `180*atan2(3, 2)/pi` | `"sqrt(2)/2"`, `"180*atan(3/2)/pi"` (tam) |
 | `sympy.sec(1)`, `(sqrt(2) - 2)**2` | float: IR'nin ifade dili okuyamıyor (ikincisi S8) |
 
-**Üretilen dosyalar.** `src/irpipe/irkit/` altında 8 dosya, `tests/irkit/` altında 5 dosya, `examples/tangents/` (brief.json, build_ir.py), `docs/plan/adim-20.png` (Dosya kaydı'nda). Önceki dosyalara yalnızca ekleme: `pyproject.toml` (`irkit` extra'sı), `Makefile` (`make venv` sympy'yi de kuruyor), README (Setup, yeni "Write a build_ir.py" bölümü, Layout), `SEMANTICS.md` (yeni irkit bölümü). Önceki adımların kodu ve testleri değişmedi.
+**Üretilen dosyalar.** `src/irpipe/irkit/` altında 9 dosya, `tests/irkit/` altında 6 dosya, `examples/tangents/` (brief.json, build_ir.py), `docs/plan/adim-20.png` (Dosya kaydı'nda). Önceki dosyalara yalnızca ekleme: `pyproject.toml` (`irkit` extra'sı), `Makefile` (`make venv` sympy'yi de kuruyor), README (Setup, yeni "Write a build_ir.py" bölümü, Layout), `SEMANTICS.md` (yeni irkit bölümü). Önceki adımların kodu ve testleri değişmedi.
 
 **Plandan sapmalar.**
 
@@ -472,7 +478,7 @@ Etiketin `dir`'i ifade almadığı için (K147) orada aynı sayılar float olara
 - Plan SDK'da doğrulama aracı saymıyordu; `pic.check()` validate aşamasını çalıştırıyor (K152). 21. adımda ajanın `validate` aracı bunu saracak.
 - Builder'lar tip başına elle yazılmış metotlar değil, modellerden çıkan dinamik metotlar (K145): mypy alan adlarını statik denetleyemiyor, SDK çalışırken denetliyor. Karşılığında bir bileşen eklemek yine tek dosya.
 
-**Bulunan sorunlar.** Yeni yok. S8 burada da çıktı: sympy `(sqrt(2) - 2)**2`'yi `(-2 + sqrt(2))**2` diye yazıyor, ifade dili onu reddediyor. SDK böyle bir sayıyı float yazıyor (K147); `expr`'e dokunulmadı.
+**Bulunan sorunlar.** Önceki adımlarda yeni sorun yok. Bu adımın kendisinde, commit'ten sonra hata yolunu denerken bir kusur çıktı: SDK'nın derininde fırlatılan bir hata traceback'e SDK'nın kendi satırlarını taşıyordu, E-SCRIPT de traceback'in yalnızca son altı satırını tuttuğu için betiğin hatalı satırı mesajdan düşüyordu. SDK'da düzeltildi, ayrı bir commit'te (K154, `irkit/errors.py`, 9 yeni test); 19. adıma dokunulmadı. 19. adımın ipucundaki "the error and the line above are its own" cümlesi hâlâ tam doğru değil: hatanın hemen üstünde SDK'nın tek `raise` satırı, onun üstünde betiğin satırı duruyor. S8 burada da çıktı: sympy `(sqrt(2) - 2)**2`'yi `(-2 + sqrt(2))**2` diye yazıyor, ifade dili onu reddediyor. SDK böyle bir sayıyı float yazıyor (K147); `expr`'e dokunulmadı.
 
 **Varsayımlar.**
 
@@ -481,7 +487,7 @@ Etiketin `dir`'i ifade almadığı için (K147) orada aynı sayılar float olara
 - Formüllerin disk önbelleği measure aşamasınınkiyle aynı (`~/.cache/irpipe/metrics`). Kum havuzunda (21) bu klasör yazılamayabilir.
 - Bileşenin anchor'ları açılmadan bilinmiyor; tutamaç geniş bir küme sunuyor, adı validate denetliyor.
 
-**Kararlar.** K144–K153 (Karar günlüğü).
+**Kararlar.** K144–K154 (Karar günlüğü).
 
 **Nasıl denenir.** `make run BRIEF=examples/tangents/brief.json SCRIPT=examples/tangents/build_ir.py`; dosyalar `runs/tangents/` altında, `ir.json`'da `"9/5"`. Bir hatayı görmek için betikte bir alanın adını bozun (`strat=`): koşu E-SCRIPT ile ve "did you mean" ile durur. Testler: `.venv/bin/pytest tests/irkit`.
 
@@ -1509,10 +1515,12 @@ make check    # lint + mypy + testler
 | `src/irpipe/irkit/numbers.py` | 20 | Betiğin verdiğini JSON'a çevirir; Fraction ve sympy sayılarını tam ifade olarak işaretler | `plain(value)`, `render(tree, exact=)`, `has_exact(tree)`, `Exact` |
 | `src/irpipe/irkit/shapes.py` | 20 | Alanların aldığı küçük parçalar: etiket, renk karışımı, bölge ifadeleri, yol kısayolları (K36) | `label`, `mix`, `union`, `intersection`, `difference`, `xor`, `half_plane`, `under`, `between`, `through`, `smooth` |
 | `src/irpipe/irkit/geometry.py` | 20 | Betiğin sayılarını bulduğu geometri; rasyonel kaldıkça tam | `foot`, `line_line`, `line_circle`, `circle_circle`, `tangent_points`, `crossings`, `inside_point`, `midpoint`, `along`, `distance`, `sqrt`, `exact` |
+| `src/irpipe/irkit/errors.py` | 20 | Betiğin hataları ve onların betiğin kendi satırında raporlanması (E-SCRIPT'in tuttuğu son altı satırda) | `ScriptError`, `ScriptTypeError`, `ScriptValueError`, `ScriptAttributeError`, `at_the_call` |
 | `src/irpipe/irkit/measure.py` | 20 | Betikten metin ve formül ölçümü, measure aşamasının sağlayıcısı ve header'ın tipografisiyle, IR biriminde | `Measurer`, `Box`, `DEFAULT_PROVIDER` |
 | `examples/tangents/build_ir.py` | 20 | irkit'le yazılmış örnek betik: teğetler, kesişim, tohum noktası, ölçümle yerleşim | `irpipe run examples/tangents/brief.json examples/tangents/build_ir.py` |
 | `tests/irkit/conftest.py` | 20 | Test header'ında, "fixed" ölçümle bir resim | fixture: `header`, `pic` |
 | `tests/irkit/test_numbers.py` | 20 | Fraction, sympy, numpy, tutamaçlar ve reddedilenler | pytest testi (15) |
 | `tests/irkit/test_geometry.py` | 20 | Teğetler, kesişimler, dikme ayağı, fonksiyon kesişimleri, tohum noktası, `through` ve `smooth` | pytest testi (9) |
 | `tests/irkit/test_picture.py` | 20 | Builder'lar, tutamaçlar, tam ve float alanlar, satırında yakalanan hatalar, validate, header'ın korunması, ölçüm | pytest testi (9) |
+| `tests/irkit/test_script_errors.py` | 20 | Betikteki her tür hata E-SCRIPT mesajında betiğin satırıyla dönüyor; yalnızca betiğin hataları SDK'nın satırlarını kaybediyor | pytest testi (9) |
 | `tests/irkit/test_example.py` | 20 | Örnek betik orchestrator'dan READY çıkıyor; tam sayılar ve ölçülen kutu ir.json'da; Manim'le de | pytest testi (2) |

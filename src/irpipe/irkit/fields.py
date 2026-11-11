@@ -27,6 +27,7 @@ from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from irpipe.components.base import COMPONENTS
 from irpipe.expr import Value
+from irpipe.irkit.errors import ScriptTypeError
 from irpipe.irkit.numbers import has_exact, plain, render
 from irpipe.schema.ir import IRObject
 from irpipe.schema.ir.objects import ObjectBase
@@ -54,7 +55,7 @@ def checked(model: type[BaseModel], what: str, fields: Mapping[str, Any]) -> dic
         if given not in names:
             close = difflib.get_close_matches(given, list(names), n=1)
             hint = f"; did you mean '{close[0]}'?" if close else ""
-            raise TypeError(f"{what} has no field '{given}'{hint}")
+            raise ScriptTypeError(f"{what} has no field '{given}'{hint}")
         if value is not None:
             found[names[given]] = value
     missing = [
@@ -63,7 +64,7 @@ def checked(model: type[BaseModel], what: str, fields: Mapping[str, Any]) -> dic
         if info.is_required() and name not in FIXED and name not in found
     ]
     if missing:
-        raise TypeError(f"{what} needs {', '.join(missing)}")
+        raise ScriptTypeError(f"{what} needs {', '.join(missing)}")
     return found
 
 

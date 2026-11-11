@@ -33,6 +33,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from irpipe.expr import ExprError, evaluate
+from irpipe.irkit.errors import ScriptTypeError, ScriptValueError
 from irpipe.irkit.handles import Handle
 
 SAME = 1e-9
@@ -70,7 +71,7 @@ def plain(value: object) -> Any:
         return plain(value.tolist())
     if isinstance(value, Iterable):
         return [plain(item) for item in value]
-    raise TypeError(f"{type(value).__name__} {value!r} cannot go into the IR")
+    raise ScriptTypeError(f"{type(value).__name__} {value!r} cannot go into the IR")
 
 
 def render(tree: Any, *, exact: bool) -> Any:
@@ -97,7 +98,7 @@ def has_exact(tree: Any) -> bool:
 
 def _finite(number: float, given: object) -> float:
     if not math.isfinite(number):
-        raise ValueError(f"{given!r} is not a finite number, so it cannot go into the IR")
+        raise ScriptValueError(f"{given!r} is not a finite number, so it cannot go into the IR")
     return number
 
 
@@ -109,7 +110,7 @@ def _is_sympy(value: object) -> bool:
 def _from_sympy(value: Any) -> Any:
     if value.free_symbols:
         names = ", ".join(sorted(str(symbol) for symbol in value.free_symbols))
-        raise ValueError(
+        raise ScriptValueError(
             f"the sympy expression {value} still holds {names}; put numbers in first (.subs)"
         )
     if value.is_Integer:
@@ -119,9 +120,9 @@ def _from_sympy(value: Any) -> Any:
     try:
         number = complex(value.evalf(17))
     except TypeError:
-        raise ValueError(f"the sympy expression {value} is not a number") from None
+        raise ScriptValueError(f"the sympy expression {value} is not a number") from None
     if number.imag != 0:
-        raise ValueError(f"{value} is not a real number, so it cannot go into the IR")
+        raise ScriptValueError(f"{value} is not a real number, so it cannot go into the IR")
     real = _finite(number.real, value)
     if value.is_Float:
         return real
