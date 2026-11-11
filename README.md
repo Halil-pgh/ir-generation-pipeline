@@ -135,6 +135,30 @@ again (at most `max_returns` times), and `lesson.json` sums the lesson up.
 `[planner]` in `pipeline.toml` sets the model (a stronger one than the
 agent's) and the limits; the records are in `lessons/<topic>/planner/`.
 
+## Measure it: regression and eval
+
+```bash
+make regress                   # every example drawn again (Manim) and compared; no model
+make regress UPDATE=1          # accept this run's pictures as the new references
+make eval                      # eval/lessons.toml: lessons planned and drawn by the models
+make eval EVAL=eval/planners.toml   # the planners compared, plan only (a minute)
+```
+
+`irpipe regress` draws every example of `examples/` that has a `brief.json`
+and a `build_ir.py`, or an `ir.json`, several at once, and compares each
+`frame.png` with the example's `reference.png`: it prints each one's status
+and whether its picture is the same, changed (a `difference.png` is
+written) or new, and exits 1 when one is not READY or changed. Run it
+after a change to the front-end or a backend.
+
+`irpipe eval file.toml` runs a matrix of lessons: topics x aspects x model
+pairs x repeats (`eval/lessons.toml` holds our math and geometry topics),
+each cell planned and drawn in a process of its own (`jobs` at once). It
+writes `evals/<file>/`: `summary.md` (frames READY, turns, returns to the
+planner, cost and time; by aspect, model pair and topic), `gallery.html`
+(every frame, to look at) and `results.json`. It calls the models and
+uses the subscription.
+
 ## Code checks
 
 ```bash
@@ -162,8 +186,10 @@ docs/         SEMANTICS.md (behaviour the schemas leave open), spec/
               (JSON Schema of lesson_plan.json, brief.json, ir.json, lir.json, the
               render profile, report.json and planner_request.json)
               and PLAN.md (the team's step-by-step plan, decisions and reports, in Turkish)
+eval/         eval files: the topics and models the eval runs (irpipe eval)
 examples/     hand-written inputs and outputs, such as a lir.json; projection/ holds
               the whole chain: lesson_plan.json, brief.json and the ir.json drawn from them;
               tangents/ a brief and a build_ir.py written with irkit; area_between/
-              a brief for the agent alone
+              a brief for the agent alone; reference.png is an example's accepted
+              picture (irpipe regress)
 ```

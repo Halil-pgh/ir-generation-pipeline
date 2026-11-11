@@ -182,7 +182,7 @@ Fazlar: F0 temel · F1 ilk resim · F2 front-end · F3 Manim · F4 bileşenler �
 | 20 | F5 | irkit SDK | irkit/ | Örnek build\_ir.py sayıları hesaplayıp geçerli ir.json yazar | Tamam |
 | 21 | F6 | IR ajanı | agent/: araçlar, sandbox, tur sınırı, en iyi turun seçimi | Ajan elle yazılmış brief'ten READY resim üretir | Tamam |
 | 22 | F6 | Planner + geri dönüş yolu | planner/ | Konu promptundan brief üretilir; sığmayan brief planner'a döner | Tamam |
-| 23 | F6 | Eval + regresyon | eval matrisi; kendi `examples/` örneklerimizle regresyon (K27) | `examples/` altındaki her örnek her değişiklikte derlenir; READY sayısı ve resim farkları raporlanır | Bekliyor |
+| 23 | F6 | Eval + regresyon | eval matrisi; kendi `examples/` örneklerimizle regresyon (K27) | `examples/` altındaki her örnek her değişiklikte derlenir; READY sayısı ve resim farkları raporlanır | Tamam |
 
 ## Varsayımlar ve açık sorular
 
@@ -390,6 +390,13 @@ Analizin ötesinde aldığım her karar burada, onayınızı bekleyen "Öneri" d
 | K172 | Geri dönüş isteği `PlannerRequest` (`planner-request/1.0`: frame, kind = shorten, split ya da fix, reason, items, issues; spec'te `planner_request.schema.json`). Ajanın yeni aracı `ask_planner` oturumu bitirir. Rapora `E-REPLAN` eklenir (köken infeasible, yani planner'a gider), en iyi turun dosyaları kalır, istek `agent/planner_request.json`'a yazılır. Ajan dosyalarına yalnızca ekleme yapıldı | Analiz §1 "Planner'a geri dönüş yolu": yapılandırılmış istek, "metni kısalt" ya da "iki resme böl". Yönlendirme 19. adımın köken kuralıyla | Onaylandı |
 | K173 | Revizyon: planner'a ders planı, karenin brief'i ve istek gider. Cevap bütün ders planını ve yalnızca değişen ya da eklenen brief'leri taşır; diğer brief'ler korunur. `shorten`: kare id'si ve kare listesi aynı kalır, yeni brief zorunlu. `split`: kare, kendi yerinde yeni id'li en az iki kareye bölünür; diğer kareler yerinde kalır, eski brief silinir. `fix`: kare id'si kalır, yeni brief zorunlu | Değişiklik sınırlı ve denetlenebilir olsun; çizilmiş kareler boşuna yeniden çizilmesin | Onaylandı |
 | K174 | Ders döngüsü (`run_lesson`): planlanır, sonra her kare sırayla ajana çizdirilir (`runs/<kare>/`). Planner'a giden koşu ajanın isteğiyle döner; istek yoksa açık sorunlardan bir `fix` isteği kurulur (E-BRIEF). Eski koşu `runs/<kare>.<n>` olarak saklanır; brief'i değişen ya da bölünmeyle doğan kareler (yeniden) çizilir. Bir kare, ondan bölünenlerle birlikte, en fazla max_returns kez döner. Bir kişiye giden koşu dersi durdurur; resim çıkmayan kare durdurmaz. Özet `lesson.json`'da | Analiz §1'in akışı: brief, ajan, sığmazsa planner, tekrar ajan. Sınır sonsuz döngüyü önler | Onaylandı |
+| K175 | Paket `irpipe/evaluation/` (images, configs, regression, matrix, cells, run, summary). Komutlar `irpipe regress [--update]` ve `irpipe eval EVAL_DOSYASI`; Makefile'da `make regress [UPDATE=1]` ve `make eval [EVAL=...]` | Analiz §8, madde 6; 23. adım: regresyon ve eval matrisi | Onaylandı |
+| K176 | Regresyon vakası: `examples/` altında `brief.json` ve `build_ir.py` olan klasör (orchestrator'la) ya da `ir.json` olan klasör (render'la). Referans resim repoda, `examples/<vaka>/reference.png` (Manim, 1080p, dört örnek toplam ~330 KB). Karşılaştırma uygunluk testlerinin eşikleriyle: mürekkebin en fazla %0.1'i güçlü farklı, ortalama fark en fazla 0.1. `--update` referansları yeniler. Çıkış kodu 1: READY olmayan, resmi değişen ya da çizilmeyen vaka | K27: kendi örneklerimiz. Aynı makinede Manim çıktısı piksel piksel aynı (iki koşuda 0 fark), bu yüzden eşik yalnızca kenar yumuşatma payı | Onaylandı |
+| K177 | Paralel çalışma: her vaka ve her hücre ayrı bir süreçte (`ProcessPoolExecutor`). Her süreç kendi `pipeline.toml` kopyasını ve kendi Manim önbelleğini (`<çıktı>/.cache/manim-<pid>`) kullanır. Ölçüm önbelleği paylaşılır | Kullanıcının isteği: zaman kısıtı. Manim formül ve metin dosyalarını atomik yazmadığı için aynı formülü aynı anda dizen iki süreç yarım dosya okuyabilir; ölçüm önbelleği atomik yazıyor | Onaylandı |
+| K178 | Eval dosyası (`eval/*.toml`, `[eval]` tablosu): `topics` × `aspects` × `models` (planner ve ajan çifti) × `repeats`. `frames` ve `lang` kullanıcı isteği olarak verilir; `draw = false` yalnızca planlar; ayrıca `backend` ve `jobs`. Bilinmeyen anahtar reddedilir. Hücre id'si `t<konu>-<oran>-m<çift>-r<tekrar>` | Bir deney bir dosyayla tanımlansın ve aynen tekrarlanabilsin | Onaylandı |
+| K179 | Korpus: kendi yazdığımız 10 matematik ve geometri konusu, eski projeden alınmadı. Vektör izdüşümü planner'ın örneği olduğu için dışarıda. İki dosya: `eval/lessons.toml` (10 konu × 16:9 ve 9:16, 2'şer kare, Sonnet planner + Haiku ajan, Manim, 8 paralel) ve `eval/planners.toml` (yalnızca plan, Sonnet ve Haiku planner, 10 paralel) | Kullanıcı: konular eskilerle aynı türde (matematik, geometri). K27 | Onaylandı |
+| K180 | Ölçülenler: hücre başına planner'ın ilk plan için cevap ve sorun sayısı; kare başına durum, tur, mesaj, geri dönüş, açık sorun kodları, maliyet; planner ve toplam maliyet; süre. Çıktılar: `results.json`, `summary.md` (bütün koşu; orana, model çiftine ve konuya göre; READY olmayan karelerde açık kalan kodlar; başarısız hücreler) ve `gallery.html` (her kare, durumuyla). Bir hücrenin hatası diğerlerini durdurmaz | READY yalnızca kontrollerin bir şey bulmadığını söyler; resmin öğretici olup olmadığına bir insan bakmalı. Galeri bunun için | Onaylandı |
+| K181 | Planner'ın varsayılan modeli Sonnet kalır (K168). Planner karşılaştırmasında Sonnet 10 konunun 10'unda ilk cevapta kullanılabilir plan verdi (16 s, 0.028 $). Haiku 2'sinde verdi; geri bildirimle hepsi en fazla 2 cevapta düzeldi (28 s, 0.005 $) | Analiz, soru 8: kararı eval versin. Haiku 5 kat ucuz ama daha yavaş ve her seferinde geri bildirime muhtaç; planların kalitesi çizilmeden bilinmiyor | Onaylandı |
 
 Nov 8, 2026 — ekip isteğiyle K1–K7 ve K10–K19 "Onaylandı" yapıldı. Dayanak: K1–K7 ve K10 planla birlikte kabul edildi; K11–K13 0. adımda, K2–K4 ve K14–K19 1. adımda koda döküldü ve ekip bu kodu inceledi. Reddedilen karar ya da itiraz yorumu yok. Bundan sonra her yeni karar, adımı onaylandığında güncellenecek.
 
@@ -438,6 +445,111 @@ Her adım bittiğinde buraya, en yenisi en üstte olacak şekilde aşağıdaki d
 - **Kararlar:** Karar günlüğü'ne eklenen satırların numaraları.
 - **Nasıl denenir:** sizin çalıştırabileceğiniz komutlar.
 - **Açık kalanlar:** bilerek ertelenenler ve sorular.
+
+### Adım 23 — Eval ve regresyon · 11 Kasım 2026
+
+**Yapılanlar.** Kabul kriteri karşılandı. `examples/` altındaki her örnek `make regress` ile Manim'le, paralel olarak yeniden çiziliyor ve referans resmiyle karşılaştırılıyor. READY sayısı ile resim farkları raporlanıyor.
+
+- **Regresyon:** dört vaka var (projection, tangents, components, regions); dördü de READY. İkinci koşu piksel piksel aynı çıktı (0 fark), dördü birlikte ~8 s.
+- **Eval:** gerçek modellerle iki eval koşuldu, sonuçlar aşağıda.
+- **Testler:** `make check` temiz: 1077 test geçti (7'si yeni). 2 test atlandı; ikisi de gerçek modeli çağırıyor. 4 bilinen ayrışma; mypy strict ve ruff temiz.
+
+Kullanıcının isteği üzerine:
+
+- Konular matematik ve geometri.
+- Çizim Manim'le yapılıyor.
+- Her şey paralel çalışıyor: her vaka ve her hücre ayrı bir süreçte.
+
+| Eval | Sonuç |
+| --- | --- |
+| `eval/lessons.toml`: 10 konu × 16:9 ve 9:16, 2'şer kare; Sonnet planner + Haiku ajan; Manim; 8 paralel | **40 karenin 40'ı READY.** Planlar 20 dersin 19'unda ilk cevapta kullanılabilirdi. Her kare ilk teslimde READY oldu: kare başına 1 tur, ortalama 7.7 mesaj. Planner'a dönüş olmadı. Toplam 1.26 $ (planner 0.50, ajan 0.77); kare başına ~0.03 $. Duvar saatiyle 10.1 dk; ders başına ortalama 3.2 dk, sıralı koşsaydı ~64 dk sürerdi |
+| `eval/planners.toml`: aynı 10 konu, yalnızca plan, 3'er kare; Sonnet ve Haiku planner; 10 paralel | **Sonnet:** 10 konunun 10'unda ilk cevap kullanılabilir; 16 s, plan başına 0.028 $. **Haiku:** 2'sinde ilk cevap kullanılabilir, hepsi en fazla 2 cevapta düzeldi; 28 s, 0.005 $. Haiku'nun hataları hep aynı türdü: `focus`'ta `must_show`'da olmayan bir id. Toplam 0.33 $, duvar saatiyle 1 dk |
+
+![23. adım: eval'in 16:9 kareleri](plan/adim-23-yatay.png)
+
+![23. adım: eval'in 9:16 kareleri](plan/adim-23-dikey.png)
+
+**Resimlere bakınca (galeri).** READY, kontrollerin bir şey bulmadığını söylüyor; resimlerin iyi olduğunu söylemiyor. Kırk kareye tek tek baktım:
+
+- Matematik baktıklarımda doğru: kökler, tepe noktaları, eğimler, açılar, alanlar.
+- Metin çakışması ya da kadraj taşması yok.
+- Üç tür kusur var, hiçbirini kontroller ölçmüyor:
+  1. Özellikle 9:16'da çizim karenin küçük bir kısmını kullanıyor, büyük boş alanlar kalıyor.
+  2. "Area grows with r squared" (9:16) karesinde dört küçük dairenin büyük daireyi "doldurduğu" figür üst üste binen dairelerle çizilmiş; söylediğini göstermiyor.
+  3. Secant→tangent karelerinde nokta etiketleri (Q, P) ve doğrular sıkışık.
+
+  Bunlar 21. adım raporunda da not edilen "yakınlık/kalabalık" boşluğu ve analizin görsel eleştirmeni.
+
+**Nasıl çalışıyor.**
+
+1. **Regresyon.** `irpipe regress` iki tür klasörü vaka sayar: `brief.json` ve `build_ir.py` olan klasörler orchestrator'la, `ir.json` olanlar render'la çizilir. Vakalar `runs/regression/<vaka>/` altına aynı anda çizilir. Her `frame.png` `examples/<vaka>/reference.png` ile karşılaştırılır. Uygunluk testlerinin eşikleri kullanılır: mürekkebin en fazla %0.1'i güçlü farklı olabilir, ortalama fark en fazla 0.1. Sonuç:
+   - "same", "changed" (yanına `difference.png` yazılır), "new" ya da "missing";
+   - değişen ya da READY olmayan vaka varsa çıkış kodu 1.
+
+   `--update` bu koşunun resimlerini referans yapar.
+2. **Eval.** `irpipe eval eval/lessons.toml` dosyadaki matrisin her hücresini (konu × oran × model çifti × tekrar) ayrı bir süreçte koşar.
+   - Hücre `irpipe lesson`'ı çalıştırır. Oran ve kare sayısı kullanıcı isteği olarak verilir; modeller ve backend hücrenin `pipeline.toml` kopyasına yazılır.
+   - Her hücre bitince bir satır basılır.
+   - Sonunda `evals/<dosya>/` altına üç dosya yazılır: `results.json`, `summary.md` ve `gallery.html` (her kare, durumuyla).
+3. **Paralellik.** Her süreç kendi Manim önbelleğini kullanır, çünkü Manim formül dosyalarını atomik yazmıyor. Ölçüm önbelleği atomik yazdığı için paylaşılıyor.
+
+```
+$ irpipe eval eval/lessons.toml
+20 cells, 8 at once -> evals/lessons
+[1/20] t03-16x9-m1-r1 'The area of a circle': 2 of 2 frames READY, $0.043, 129 s
+…
+- Frames READY: 40 of 40 (100%)
+- Cost: $1.26 (planner $0.50, agent $0.77)
+- Time: 10.1 min in all; a cell 3.2 min on average, the longest 4.8 min
+```
+
+**Üretilen dosyalar.** Yeni dosyalar (Dosya kaydı'nda):
+
+- `src/irpipe/evaluation/` altında 8 dosya;
+- `tests/evaluation/` altında 2 dosya;
+- eval dosyaları `eval/lessons.toml` ve `eval/planners.toml`;
+- referans resimler `examples/{components,projection,regions,tangents}/reference.png`;
+- rapordaki iki temas sayfası `docs/plan/adim-23-yatay.png` ve `adim-23-dikey.png`.
+
+Değişenler:
+
+- `cli.py`: `regress` ve `eval` komutları.
+- `Makefile`: `make regress`, `make eval`.
+- `.gitignore`: `evals/`.
+- README: "Measure it" bölümü.
+- `SEMANTICS.md`: Evaluation bölümü.
+- 22. adımın planner test fixture'ları `tests/planner/conftest.py`'den `tests/conftest.py`'ye taşındı; eval testleri de kullanıyor. İçerik aynı.
+
+**Plandan sapmalar.**
+
+- Analizin matrisinde altyazı modları ve fontlar da vardı. Font çifti tek (Inter + latin-modern) olduğu için bir boyut değil. Altyazı modu bir eval anahtarı olarak eklenmedi; gerekirse `[eval]`'e bir alan.
+- Matris tek tekrarla koşuldu (`repeats = 1`). Modeller her seferinde farklı cevap verdiğinden oranlar kaba; zaman kısıtı yüzünden.
+- Gerçek koşuda planner'a geri dönüş olmadı: 2 karelik kısa derslerde her brief sığdı. Dönüş yolu 22. adımın testleriyle doğrulanmıştı.
+
+**Bulunan sorunlar.** Önceki adımlarda yeni bir hata yok. Yukarıdaki üç görsel kusur bir hata değil, kontrollerin ölçmediği bir boşluk ("Açık kalanlar").
+
+**Varsayımlar.**
+
+- Referans resimler bu makinede (Pango 1.57, Manim 0.22.1) üretildi. Başka sürümlerle metinler birkaç piksel farklı çizilebilir ve vaka "changed" görünebilir. O makinede bir kez `make regress UPDATE=1`, ya da referansları tek makinede üretme kuralı.
+- Eval sayıları bu makinenin 8 paralel işiyle ölçüldü. Süreler yük altında; tek başına koşan bir hücre biraz daha hızlı olur.
+- Maliyetler CLI'ın bildirdiği liste fiyatı karşılığı; abonelikte kotadan düşer.
+
+**Kararlar.** K175–K181 (Karar günlüğü).
+
+**Nasıl denenir.**
+
+- Regresyon (modelsiz): `make regress`; referansları yenilemek için `make regress UPDATE=1`.
+- Eval (modelleri çağırır): `make eval` (~10 dk, ~1.3 $) ya da `make eval EVAL=eval/planners.toml` (~1 dk, ~0.3 $). Ardından `evals/lessons/gallery.html` tarayıcıda açılır.
+- Modelsiz testler: `.venv/bin/pytest tests/evaluation`.
+
+**Açık kalanlar.**
+
+- Kontrollere bir "doluluk" ölçütü: çizimin güvenli alanı ne kadar kullandığı. Ayrıca bir "yakınlık" ölçütü: etiketle çizgi ve etiketle etiket arasındaki en küçük mesafe. Ya da analizin görsel eleştirmeni.
+- Tekrarlı (`repeats = 3`) ve daha geniş bir matris.
+- Altyazı modu boyutu.
+- Haiku planner, prompt'ta `focus` kuralı vurgulanınca ilk cevapta düzelir mi?
+
+Commit edildi.
 
 ### Adım 22 — Planner ve geri dönüş yolu · 11 Kasım 2026
 
@@ -1563,7 +1675,7 @@ make check    # lint + mypy + testler
 | `src/irpipe/frontend/resolve.py` | 6, 9, 10, 11, 12 | "resolve" aşaması: normalize edilmiş, mutlak konumlu IR'yi LIR'e çevirir; gruplar, z sırası, opaklık, metin yerleşimi | `Resolve: ir_placed, measured -> lir`, `Resolver(document, measured)`, `arrow_length()` |
 | `src/irpipe/frontend/paint.py` | 6, 9, 10, 11, 12, 13 | Boya mirası (tema → sınıflar → nesne) ve renk adlarının hex'e çevrilmesi; normalize sonucu nesneye yazar, resolve oradan okur | `PaintResolver(document).paint(obj)`, `.normalized(obj)`, `painted(obj)`, `foreground_for()` |
 | `src/irpipe/frontend/shapes.py` | 6, 11 | Her IR şeklini LIR geometrisine (path + ipucu), grup dönüşümünü matrise çevirir; backend'lerin şekil bilmek zorunda kalmaması buradan geliyor | `outline(shape)`, `ellipse()`, `rect()`, `polyline()`, `arc()`, `sector()`, `group_matrix()`, `arrowhead()`, `mapped_hint()` |
-| `tests/conftest.py` (önceden `tests/frontend/conftest.py`) | 6, 13 | Front-end testlerinin ortak küçük IR kurucuları | `fixture: ir, ir_text, document` |
+| `tests/conftest.py` (önceden `tests/frontend/conftest.py`) | 6, 13, 23 | Front-end testlerinin ortak küçük IR kurucuları; 23'ten beri planner ve eval testlerinin senaryolu LLM istemcisi, örnekten cevaplar, `[planner]` ayarlı pipeline.toml ve `llm` testlerinin atlanması (22'de `tests/planner/conftest.py`'deydi) | fixture: `ir`, `ir_text`, `document`, `scripted`, `kit`, `planner_config` |
 | `tests/frontend/test_validate.py` | 6, 8, 11 | Her hata türünün yolu, mesajı ve önerisi; durma kuralı; E-ALLOW'un durdurmaması | pytest testi (40) |
 | `tests/frontend/test_resolve.py` | 6, 9, 10, 11 | IR'den LIR'e: gruplar, z sırası, şekiller, boya, opaklık, metin yerleşimi, ölçücü seçimi | pytest testi (34) |
 | `tests/frontend/test_paint.py` | 6 | Kademenin sırası, tema rengi, renk adları ve karışım | pytest testi (12) |
@@ -1576,7 +1688,7 @@ make check    # lint + mypy + testler
 | `src/irpipe/backends/svg/__init__.py` | 7 | SVG referans backend'i: frame.svg ve frame.png yazar; ayarı png | `SvgBackend ("svg"), SvgOptions` |
 | `src/irpipe/backends/svg/writer.py` | 7, 14 | LIR'i saf Python'la SVG metnine çevirir: birimden piksele, matrisler, boya, metin, formül ve görsel | `to_svg(lir), Frame, path_data(), num()` |
 | `src/irpipe/backends/svg/raster.py` | 7 | SVG'yi cairosvg ile PNG'ye çevirir; cairosvg yalnızca burada ve yalnızca PNG istenince yüklenir | `svg_to_png(svg, path, size)` |
-| `src/irpipe/cli.py` | 7, 19, 21, 22 | irpipe komutu: bir ir.json'u pipeline.toml'daki aşamalardan geçirip resmi, lir.json'u ve raporu yazar; brief'ten kare çizer (orchestrator, ajan); konudan ders planlar ve çizer (planner) | `irpipe render IR`, `irpipe run BRIEF SCRIPT`, `irpipe agent BRIEF`, `irpipe plan TOPIC`, `irpipe lesson TOPIC` (`--frames`, `--aspect`, `--platform`, `--lang`, `-o`, `--config`) |
+| `src/irpipe/cli.py` | 7, 19, 21, 22, 23 | irpipe komutu: bir ir.json'u pipeline.toml'daki aşamalardan geçirip resmi, lir.json'u ve raporu yazar; brief'ten kare çizer (orchestrator, ajan); konudan ders planlar ve çizer (planner) | `irpipe render IR`, `irpipe run BRIEF SCRIPT`, `irpipe agent BRIEF`, `irpipe plan TOPIC`, `irpipe lesson TOPIC` (`--frames`, `--aspect`, `--platform`, `--lang`, `-o`, `--config`), `irpipe regress [--update] [--jobs N]`, `irpipe eval FILE [--jobs N]` |
 | `tests/backends/conftest.py` | 7 | Backend testlerinin ortak LIR kurucuları | `fixture: make_lir, group, line` |
 | `tests/backends/test_base.py` | 7, 14 | Özellik tespiti, backend adı geçmeyen E-CAPABILITY, ayar doğrulaması, kayıt | pytest testi (6) |
 | `tests/backends/test_svg.py` | 7, 14 | Piksel dönüşümü, gruplar, boya, 4K ölçeği, metin, formül, matrisler, PNG ve cairosvg yokken davranış | pytest testi (17) |
@@ -1729,7 +1841,16 @@ make check    # lint + mypy + testler
 | `src/irpipe/planner/answer.py` | 22 | Cevabın JSON'u, taslak dosyaları ve sorunları: orchestrator'ın okuması ve şemanın söylemediği denetimler | `extract(text)`, `write_draft(...)`, `read_draft(draft)`, `plan_problems(...)`, `Draft`, `briefs_in(folder)`, `brief_file(id)` |
 | `src/irpipe/planner/session.py` | 22 | Planlama ve revizyon oturumu: döngü, ders klasörü, kayıtlar | `plan(topic, folder, wishes=, config_path=, client=)`, `revise(request, folder, ...)`, `PlanResult`, `PlannerError` |
 | `src/irpipe/planner/lesson.py` | 22 | Bütün ders: planla, her kareyi ajana çizdir, sığmayanı planner'a geri gönder, lesson.json | `run_lesson(topic, folder, wishes=, config_path=, planner_client=, agent_client=, sandbox=)`, `LessonResult`, `FrameRun`, `Return`, `fix_request(frame, issues)` |
-| `tests/planner/conftest.py` | 22 | Senaryolu LLM istemcisi, örnekten cevaplar, SVG ile çizen ve `[planner]` ayarlı pipeline.toml; `llm` testlerinin atlanması | fixture: `scripted`, `kit`, `planner_config` |
 | `tests/planner/test_answer.py` | 22 | Cevabın JSON'u, biçim hataları, taslağın okunması, sorunlar, kullanıcının istekleri, revizyon kuralları | pytest testi (16) |
 | `tests/planner/test_session.py` | 22 | Plan: ders klasörü, kayıtlar, geri gönderilen cevap, başarısızlık, istekler; kısaltma; bölme; komut; gerçek modelle (llm) | pytest testi (8 + 1 llm) |
 | `tests/planner/test_lesson.py` | 22 | Ders: gerçek ajanla çizim ve kısaltılıp yeniden çizilen kare; bölme, dönüş sınırı, fix isteği, durdurma (vekil ajanla) | pytest testi (6) |
+| `src/irpipe/evaluation/__init__.py` | 23 | Ölçüm paketi; docstring'i modül haritasını verir | `regress`, `evaluate`, `read_matrix`, `run_cell`, `cases_in`, sonuç tipleri |
+| `src/irpipe/evaluation/images.py` | 23 | İki resmi karşılaştırır: güçlü farklı mürekkep pikselleri, ortalama fark; fark resmi | `compare(reference, picture) -> Difference` (`same`, `describe()`, `save(path)`) |
+| `src/irpipe/evaluation/configs.py` | 23 | Paralel bir işçinin pipeline.toml kopyası: değişiklikler, kendi Manim önbelleği, mutlak örnek yolları | `worker_config(base, folder, cache, changes)`, `dump_toml(data)` |
+| `src/irpipe/evaluation/regression.py` | 23 | Regresyon: örnekler paralel çizilir ve referans resimle karşılaştırılır | `cases_in(examples)`, `regress(examples, out, config_path=, jobs=, update=)`, `RegressionResult`, `CaseResult` |
+| `src/irpipe/evaluation/matrix.py` | 23 | Eval dosyası ve hücreleri | `read_matrix(path) -> EvalMatrix`, `.cells()`, `Cell`, `ModelPair` |
+| `src/irpipe/evaluation/cells.py` | 23 | Bir hücre: dersi planlar ve çizer, sayıları kayıtlardan okur; hata diğer hücreleri durdurmaz | `run_cell(cell, out, base_config, ...) -> CellResult`, `FrameResult` |
+| `src/irpipe/evaluation/run.py` | 23 | Bütün matris: hücreler paralel, ilerleme satırları, eval klasörü | `evaluate(matrix_path, out, config_path=, jobs=, ...) -> EvalResult` |
+| `src/irpipe/evaluation/summary.py` | 23 | Sayıların özeti ve kareler galerisi | `summary(results, title=, wall_seconds=)`, `gallery(results)` |
+| `tests/evaluation/test_regression.py` | 23 | Resim karşılaştırma; örneklerin çizilip karşılaştırılması, değişikliğin gösterilmesi, paralel koşu, komutun çıkış kodları; işçinin config'i | pytest testi (4) |
+| `tests/evaluation/test_eval.py` | 23 | Eval dosyasının hücreleri ve hataları; senaryolu modellerle çizen ve yalnızca planlayan bir eval; başarısız hücre | pytest testi (3) |

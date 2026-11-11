@@ -1,0 +1,27 @@
+# Two planners compared (irpipe eval eval/planners.toml): the same topics, planned only,
+# so it is fast and cheap. The frames are not drawn: what counts is whether a usable
+# lesson comes out, in how many answers, at what cost and time.
+
+[eval]
+topics = [
+    "The Pythagorean theorem",
+    "The sum of the angles of a triangle",
+    "The area of a circle",
+    "The slope of a line through two points",
+    "The derivative as the slope of the tangent line",
+    "The definite integral as the area under a curve",
+    "Adding vectors with the parallelogram rule",
+    "Sine and cosine on the unit circle",
+    "The inscribed angle theorem",
+    "The vertex and the roots of a quadratic function",
+]
+aspects = ["16:9"]
+frames = 3
+draw = false
+jobs = 10
+
+[[eval.models]]
+planner = "claude-sonnet-5-5"
+
+[[eval.models]]
+planner = "claude-haiku-5-5"

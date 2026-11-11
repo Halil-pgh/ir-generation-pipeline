@@ -14,8 +14,10 @@ BRIEF  ?= examples/projection/brief.json
 SCRIPT ?= examples/projection/build_ir.py
 # The topic `make plan` and `make lesson` give the planner: make plan TOPIC="vector projection"
 TOPIC  ?= projecting one vector onto another
+# The eval file `make eval` runs: make eval EVAL=eval/planners.toml
+EVAL   ?= eval/lessons.toml
 
-.PHONY: venv test lint format typecheck spec check render run agent plan lesson
+.PHONY: venv test lint format typecheck spec check render run agent plan lesson regress eval
 
 venv:            ## create .venv and install the package with dev tools, pango, both backends, sympy
 	python3 -m venv $(VENV)
@@ -54,3 +56,9 @@ plan:            ## let the planner write a lesson (calls the model): make plan 
 
 lesson:          ## plan a lesson and draw every frame (calls the models): make lesson [TOPIC="..."] [OUT=folder]
 	$(BIN)/irpipe lesson "$(TOPIC)" $(if $(OUT),-o $(OUT))
+
+regress:         ## draw every example again and compare it with its reference: make regress [UPDATE=1]
+	$(BIN)/irpipe regress $(if $(UPDATE),--update)
+
+eval:            ## run an eval file (calls the models; many cells at once): make eval [EVAL=eval/lessons.toml]
+	$(BIN)/irpipe eval $(EVAL)

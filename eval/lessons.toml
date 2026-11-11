@@ -1,0 +1,27 @@
+# The eval of whole lessons (irpipe eval eval/lessons.toml): each topic planned and drawn,
+# in each aspect, by each model pair. Our own corpus of math and geometry topics; the
+# vector projection is left out, since it is the planner's example.
+
+[eval]
+topics = [
+    "The Pythagorean theorem",
+    "The sum of the angles of a triangle",
+    "The area of a circle",
+    "The slope of a line through two points",
+    "The derivative as the slope of the tangent line",
+    "The definite integral as the area under a curve",
+    "Adding vectors with the parallelogram rule",
+    "Sine and cosine on the unit circle",
+    "The inscribed angle theorem",
+    "The vertex and the roots of a quadratic function",
+]
+aspects = ["16:9", "9:16"]   # the user's wish for every lesson
+frames = 2                   # frames per lesson; leave out to let the planner choose
+repeats = 1                  # runs of each cell (the models answer differently each time)
+draw = true                  # plan and draw; false: plan only
+backend = "manim"
+jobs = 8                     # cells at once
+
+[[eval.models]]
+planner = "claude-sonnet-5-5"
+agent = "claude-haiku-5-5"

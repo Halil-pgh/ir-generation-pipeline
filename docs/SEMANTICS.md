@@ -284,6 +284,46 @@ An entry `{"code", "objects", "reason"}` accepts issues on purpose.
   each session (what it was asked, each answer's problems, cost, ending);
   `planner/transcript.md` every message.
 
+## Evaluation
+
+- `irpipe regress` takes every folder of `examples/` that holds a
+  `brief.json` and a `build_ir.py` (drawn as `irpipe run` draws it, with
+  the lesson plan beside it) or else an `ir.json` (drawn as `irpipe render`
+  draws it); other folders are not cases. Each is drawn with the project's
+  `pipeline.toml` into `runs/regression/<case>/`, `--jobs` at once.
+- Its `frame.png` is compared with `examples/<case>/reference.png`. A pixel
+  is ink when a channel is more than 32 from the background (the top-left
+  pixel); two pixels disagree strongly when a channel differs by more than
+  128. The pictures are the same when at most 0.1% of the ink disagrees
+  strongly and the mean difference over the frame (largest channel, 0-255)
+  is at most 0.1; pictures of different sizes never are. A changed picture
+  gets `difference.png` beside it. Without a reference the picture is
+  `new`; with nothing drawn, `missing`.
+- The exit status is 1 when a case is not READY, or its picture changed or
+  is missing; a case whose drawing raised an exception is `FAILED` and the
+  others go on. `--update` copies this run's pictures over the references
+  and exits 0. `regression.json` holds every case.
+- `irpipe eval file.toml` reads its `[eval]` table (unknown keys are
+  refused): `topics`, `aspects`, `models` (planner and agent pairs),
+  `repeats`, `frames`, `lang`, `draw`, `backend`, `jobs`. Its cells are
+  every topic x aspect x model pair x repeat, named
+  `t<topic>-<aspect>-m<pair>-r<repeat>`.
+- A cell runs `irpipe lesson` (or `irpipe plan` when `draw` is false) on
+  its topic, with its aspect, `frames` and `lang` as the user's wishes, in
+  `evals/<file>/cells/<cell>/`, with a copy of `pipeline.toml` that names
+  the cell's models and backend. Cells run `jobs` at once, each in a
+  process of its own; `--jobs 1` runs them one after the other.
+- Every worker (regression or eval) has its own Manim cache folder: Manim
+  writes typeset formulas and texts without renaming them into place. The
+  measure stage's cache renames, so it is shared.
+- A cell that fails (no lesson, a fault) keeps its error and the others go
+  on. `results.json` holds every cell: the planner's answers to the first
+  plan and their problems, each frame's status, turns, messages, returns,
+  open issue codes, cost and picture, the planner's and the whole cost, and
+  the time. `summary.md` puts them together, as a whole and by aspect,
+  model pair and topic, with the issue codes left open in frames that are
+  not READY and the cells that failed; `gallery.html` shows every frame.
+
 ## IR document
 
 - `ir.json` is one flat object: the header fields (`version`, `intent`,

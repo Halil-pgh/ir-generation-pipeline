@@ -6,6 +6,8 @@
     irpipe agent examples/projection/brief.json        # the agent writes build_ir.py
     irpipe plan "vector projection" --frames 3         # the planner: into lessons/<topic>/
     irpipe lesson "vector projection" --aspect 9:16    # plan, then draw every frame
+    irpipe regress [--update]                          # every example drawn and compared
+    irpipe eval eval/lessons.toml [--jobs 8]           # the eval matrix, many cells at once
 
 ``render`` runs the stages ``pipeline.toml`` lists on an IR written by hand.
 Next to the backend's files it writes lir.json and report.json, then
@@ -26,6 +28,12 @@ and a brief per frame, in lessons/<topic> by default; ``lesson`` then has
 the agent draw every frame, sends a frame that does not fit back to the
 planner, and writes lesson.json. ``--frames``, ``--aspect``, ``--platform``
 and ``--lang`` are the user's wishes: they win over the planner's choice.
+
+``regress`` draws every example of examples/ again (no model) and compares
+each picture with its reference.png; ``--update`` makes this run's pictures
+the references. ``eval`` runs an eval file's matrix of lessons, planned and
+drawn by the models, and writes results.json, summary.md and gallery.html
+(irpipe/evaluation).
 
 The exit status is 0 when the picture is READY, 1 when it is not, 2 when
 the command itself could not run.
@@ -87,8 +95,23 @@ def main(argv: list[str] | None = None) -> int:
         command.add_argument(
             "--config", type=Path, default=Path("pipeline.toml"), help="pipeline file to run"
         )
+    regress = commands.add_parser("regress", help="draw every example again and compare it")
+    regress.add_argument("--examples", type=Path, default=Path("examples"), help="the examples")
+    regress.add_argument("-o", "--out", type=Path, default=Path("runs/regression"))
+    regress.add_argument("--jobs", type=int, default=4, help="examples drawn at once")
+    regress.add_argument("--update", action="store_true", help="make these pictures the references")
+    regress.add_argument("--config", type=Path, default=Path("pipeline.toml"))
+    evaluate = commands.add_parser("eval", help="run an eval file: lessons planned and drawn")
+    evaluate.add_argument("matrix", type=Path, help="the eval file, such as eval/lessons.toml")
+    evaluate.add_argument("-o", "--out", type=Path, help="eval folder (default: evals/<file name>)")
+    evaluate.add_argument("--jobs", type=int, help="cells at once (default: the file's jobs)")
+    evaluate.add_argument("--config", type=Path, default=Path("pipeline.toml"))
     args = parser.parse_args(argv)
     try:
+        if args.command == "regress":
+            return regress_command(args)
+        if args.command == "eval":
+            return eval_command(args)
         if args.command in ("plan", "lesson"):
             return plan_command(args)
         if args.command == "run":
@@ -215,6 +238,35 @@ def plan_command(args: argparse.Namespace) -> int:
     cost = f" (${lesson.cost_usd:.4f})" if lesson.cost_usd else ""
     print(f"{lesson.ended}{cost} -> {folder / 'lesson.json'}")
     return 0 if lesson.ready else 1
+
+
+def regress_command(args: argparse.Namespace) -> int:
+    from irpipe.evaluation import regress
+
+    result = regress(
+        args.examples, args.out, config_path=args.config, jobs=args.jobs, update=args.update
+    )
+    for case in result.cases:
+        status = case.status.replace("_", " ")
+        codes = f" ({', '.join(case.codes)})" if case.codes else ""
+        said = f": {case.difference}" if case.picture in ("changed", "missing") else ""
+        print(f"{case.name}: {status}{codes}; picture {case.picture}{said} ({case.seconds:.0f} s)")
+    print(f"{result.ready} of {len(result.cases)} READY -> {args.out / 'regression.json'}")
+    if args.update:
+        print(f"the references in {args.examples} are now this run's pictures")
+        return 0
+    return 0 if result.ok else 1
+
+
+def eval_command(args: argparse.Namespace) -> int:
+    from irpipe.evaluation import evaluate
+
+    out = args.out or Path("evals") / args.matrix.stem
+    result = evaluate(args.matrix, out, config_path=args.config, jobs=args.jobs)
+    print()
+    print(result.summary, end="")
+    print(f"-> {out / 'summary.md'}, {out / 'gallery.html'}, {out / 'results.json'}")
+    return 0
 
 
 def slug(topic: str) -> str:
